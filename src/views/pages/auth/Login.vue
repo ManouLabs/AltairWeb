@@ -1,9 +1,33 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/useAuthStore'; // Import the Pinia store
 
+// Refs for form data
 const email = ref('');
 const password = ref('');
 const checked = ref(false);
+
+// Access the Pinia store
+const authStore = useAuthStore();
+
+// Router for redirect after login
+const router = useRouter();
+
+// Function to handle login using the Pinia store
+const loginUser = async () => {
+    try {
+        // Use Pinia's login action
+        await authStore.login(email.value, password.value);
+
+        // Redirect to home or dashboard after successful login
+        router.push('/');
+    } catch (error) {
+        // Handle login error
+        console.error('Login failed: ', error.message);
+        alert('Login failed: Please check your credentials');
+    }
+};
 </script>
 
 <template>
@@ -47,7 +71,9 @@ const checked = ref(false);
                             </div>
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">{{ $t('login.forgot_password') }}</span>
                         </div>
-                        <Button :label="$t('login.sign_in')" class="w-full" as="router-link" to="/"></Button>
+
+                        <!-- Trigger loginUser method on form submission -->
+                        <Button :label="$t('login.sign_in')" class="w-full" @click="loginUser"></Button>
                     </div>
                 </div>
             </div>
@@ -60,7 +86,6 @@ const checked = ref(false);
     transform: scale(1.6);
     margin-right: 1rem;
 }
-
 .pi-eye-slash {
     transform: scale(1.6);
     margin-right: 1rem;
