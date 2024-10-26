@@ -1,11 +1,12 @@
 import { createPinia } from 'pinia';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import { createApp } from 'vue';
 import { createI18n } from 'vue-i18n';
 
 import App from './App.vue';
 import router from './router';
 
-import Lara from '@primevue/themes/lara';
+import Aura from '@primevue/themes/aura';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
@@ -43,16 +44,17 @@ const i18n = createI18n({
 });
 
 const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
 
 const app = createApp(App);
 
 app.use(pinia);
-app.use(i18n);
+//app.use(i18n);
 app.use(router);
 app.use(PrimeVue, {
     ripple: true,
     theme: {
-        preset: Lara,
+        preset: Aura,
         options: {
             darkModeSelector: '.app-dark'
         }

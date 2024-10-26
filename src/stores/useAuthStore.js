@@ -13,10 +13,10 @@ export const useAuthStore = defineStore('auth', {
         async login(email, password) {
             try {
                 // Step 1: Get the CSRF cookie from Sanctum
-                await apiClient.get('/sanctum/csrf-cookie');
+                await apiClient.get('sanctum/csrf-cookie');
 
                 // Step 2: Send login request to the API
-                await apiClient.post('/login', {
+                await apiClient.post('login', {
                     email: email,
                     password: password
                 });
@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', {
                 this.isAuthenticated = true;
 
                 // Optionally, fetch user data after login
-                // await this.fetchUser();
+                await this.fetchUser();
             } catch (error) {
                 this.errors = error.response.data.errors;
                 throw new Error(error);
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore('auth', {
 
         async fetchUser() {
             try {
-                const response = await apiClient.get('/user'); // Adjust API endpoint as needed
+                const response = await apiClient.get('/api/user'); // Adjust API endpoint as needed
                 this.user = response.data;
             } catch (error) {
                 console.error('Failed to fetch user:', error);
@@ -45,5 +45,18 @@ export const useAuthStore = defineStore('auth', {
             this.user = null;
             this.isAuthenticated = false;
         }
+    },
+    persist: {
+        enabled: true, // This will enable persistence for this store
+        strategies: [
+            {
+                key: 'auth',
+                storage: localStorage
+            },
+            {
+                key: 'settings',
+                storage: localStorage
+            }
+        ]
     }
 });

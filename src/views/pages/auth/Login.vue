@@ -7,7 +7,6 @@ import { useToast } from 'primevue/usetoast';
 // Refs for form data
 const email = ref('');
 const password = ref('');
-const checked = ref(false);
 
 const toast = useToast();
 
@@ -24,7 +23,7 @@ const loginUser = async () => {
         await authStore.login(email.value, password.value);
 
         // Redirect to home or dashboard after successful login
-        router.push('/dashboard');
+        router.push('/admin/dashboard');
     } catch (error) {
         toast.add({
             severity: 'error',
@@ -63,30 +62,25 @@ const loginUser = async () => {
                         <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">{{ $t('login.welcome') }}</div>
                         <span class="text-muted-color font-medium">{{ $t('login.sign_in_message') }}</span>
                     </div>
-
-                    <div>
+                    <form @submit.prevent="loginUser">
                         <div>
                             <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">{{ $t('login.email') }}</label>
 
-                            <InputText id="email1" type="text" :placeholder="$t('login.email')" class="w-full md:w-[30rem] mb-4" v-model="email" :invalid="authStore.errors.email ? true : false" />
+                            <InputText id="email1" type="email" :placeholder="$t('login.email')" class="w-full md:w-[30rem] mb-2" v-model="email" :invalid="authStore.errors.email ? true : false" required />
                             <small v-if="authStore.errors.email" class="block text-red-500 mb-6">{{ authStore.errors.email[0] }}</small>
                         </div>
                         <div>
                             <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">{{ $t('login.password') }}</label>
-                            <Password id="password1" v-model="password" :placeholder="$t('login.password')" :toggleMask="true" class="mb-4" fluid :feedback="false" :invalid="authStore.errors.password ? true : false" />
+                            <Password id="password1" v-model="password" :placeholder="$t('login.password')" :toggleMask="true" class="mb-4" fluid :feedback="false" :invalid="authStore.errors.password ? true : false" required />
                             <small v-if="authStore.errors.password" class="block text-red-500 mb-6">{{ authStore.errors.password[0] }}</small>
                         </div>
                         <div class="flex items-center justify-between mt-2 mb-8 gap-8">
-                            <div class="flex items-center">
-                                <Checkbox v-model="checked" id="rememberme1" binary class="mr-2"></Checkbox>
-                                <label for="rememberme1">{{ $t('login.remember_me') }}</label>
-                            </div>
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">{{ $t('login.forgot_password') }}</span>
                         </div>
 
                         <!-- Trigger loginUser method on form submission -->
-                        <Button :label="$t('login.sign_in')" class="w-full" @click="loginUser"></Button>
-                    </div>
+                        <Button type="submit" :label="$t('login.sign_in')" class="w-full" />
+                    </form>
                 </div>
             </div>
         </div>

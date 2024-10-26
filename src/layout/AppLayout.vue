@@ -4,6 +4,12 @@ import { computed, ref, watch } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
+import { useLoading } from '@/stores/useLoadingStore'; // Import the loading store
+import ProgressBar from 'primevue/progressbar'; // Import PrimeVue's ProgressBar
+import Toast from 'primevue/toast';
+
+// Access the loading store using Pinia
+const loading = useLoading();
 
 const { layoutConfig, layoutState, isSidebarActive, resetMenu } = useLayout();
 
@@ -55,6 +61,15 @@ function isOutsideClicked(event) {
 
 <template>
     <div class="layout-wrapper" :class="containerClass">
+        <Toast position="center" group="center" />
+        <Toast position="top-left" group="tl" />
+        <Toast position="top-center" group="tc" />
+        <Toast position="top-right" group="tr" />
+        <Toast position="bottom-left" group="bl" />
+        <Toast position="bottom-center" group="bc" />
+        <Toast position="bottom-right" group="br" />
+
+        <ProgressBar v-if="loading.isLoading" mode="indeterminate" style="height: 4px" />
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div class="layout-main-container">

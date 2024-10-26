@@ -4,8 +4,9 @@ import axios from 'axios';
 // Create an axios instance
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
+    headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
     withCredentials: true,
-    withXSRFToken: true // Ensure credentials (cookies) are sent with each request
+    withXSRFToken: true
 });
 
 // Axios request interceptor
