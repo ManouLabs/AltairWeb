@@ -5,7 +5,7 @@ import { createI18n } from 'vue-i18n';
 import App from './App.vue';
 import router from './router';
 
-import Aura from '@primevue/themes/aura';
+import Lara from '@primevue/themes/lara';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
@@ -50,8 +50,9 @@ app.use(pinia);
 app.use(i18n);
 app.use(router);
 app.use(PrimeVue, {
+    ripple: true,
     theme: {
-        preset: Aura,
+        preset: Lara,
         options: {
             darkModeSelector: '.app-dark'
         }

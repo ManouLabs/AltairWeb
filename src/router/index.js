@@ -1,4 +1,5 @@
 import AppLayout from '@/layout/AppLayout.vue';
+import { useLoading } from '@/stores/useLoadingStore';
 import { createRouter, createWebHistory } from 'vue-router';
 
 const router = createRouter({
@@ -133,6 +134,18 @@ const router = createRouter({
             component: () => import('@/views/pages/auth/Error.vue')
         }
     ]
+});
+
+// Navigation Guards to handle the loading state
+router.beforeEach((to, from, next) => {
+    const loadingStore = useLoading();
+    loadingStore.startLoading(); // Start loading before each route
+    next();
+});
+
+router.afterEach(() => {
+    const loadingStore = useLoading();
+    loadingStore.stopLoading(); // Stop loading after route is resolved
 });
 
 export default router;

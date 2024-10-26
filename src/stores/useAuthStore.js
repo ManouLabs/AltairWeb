@@ -1,24 +1,22 @@
 // stores/useAuthStore.js
-import axios from 'axios';
+import apiClient from '@/service/axios';
 import { defineStore } from 'pinia';
 
-axios.defaults.baseURL = 'localhost:8000';
-axios.defaults.withCredentials = true;
-axios.defaults.withXSRFToken = true;
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null, // Store the user info if needed
-        isAuthenticated: false // Tracks if the user is logged in
+        isAuthenticated: false, // Tracks if the user is logged in
+        errors: {}
     }),
 
     actions: {
         async login(email, password) {
             try {
                 // Step 1: Get the CSRF cookie from Sanctum
-                await axios.get('http://localhost:8000/sanctum/csrf-cookie');
+                await apiClient.get('/sanctum/csrf-cookie');
 
                 // Step 2: Send login request to the API
-                await axios.post('http://localhost:8000/login', {
+                await apiClient.post('/login', {
                     email: email,
                     password: password
                 });
@@ -27,15 +25,16 @@ export const useAuthStore = defineStore('auth', {
                 this.isAuthenticated = true;
 
                 // Optionally, fetch user data after login
-                await this.fetchUser();
+                // await this.fetchUser();
             } catch (error) {
-                throw new Error('Login failed: ' + error.response?.data?.message || error.message);
+                this.errors = error.response.data.errors;
+                throw new Error(error);
             }
         },
 
         async fetchUser() {
             try {
-                const response = await axios.get('http://localhost:8000/user'); // Adjust API endpoint as needed
+                const response = await apiClient.get('/user'); // Adjust API endpoint as needed
                 this.user = response.data;
             } catch (error) {
                 console.error('Failed to fetch user:', error);
@@ -45,7 +44,6 @@ export const useAuthStore = defineStore('auth', {
         logout() {
             this.user = null;
             this.isAuthenticated = false;
-            localStorage.removeItem('token'); // If storing token
         }
     }
 });
