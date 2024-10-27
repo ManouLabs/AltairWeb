@@ -1,7 +1,7 @@
 <script setup>
+import { useAuthStore } from '@/stores/useAuthStore'; // Import the Pinia store
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/useAuthStore'; // Import the Pinia store
 
 import { useToast } from 'primevue/usetoast';
 // Refs for form data

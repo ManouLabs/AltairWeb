@@ -1,7 +1,7 @@
+//main.js
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import { createApp } from 'vue';
-import { createI18n } from 'vue-i18n';
 
 import App from './App.vue';
 import router from './router';
@@ -14,34 +14,7 @@ import ToastService from 'primevue/toastservice';
 import '@/assets/styles.scss';
 import '@/assets/tailwind.css';
 
-const i18n = createI18n({
-    locale: 'fr',
-    fallbackLocale: 'fr',
-    messages: {
-        en: {
-            login: {
-                welcome: 'Welcome to Altair!',
-                sign_in_message: 'Sign in to continue',
-                email: 'Email',
-                password: 'Password',
-                remember_me: 'Remember me',
-                forgot_password: 'Forgot password?',
-                sign_in: 'Sign in'
-            }
-        },
-        fr: {
-            login: {
-                welcome: 'Bienvenue a Altair!',
-                sign_in_message: 'Connectez-vous pour continuer',
-                email: 'Email',
-                password: 'Mot de passe',
-                remember_me: 'Se souvenir de moi',
-                forgot_password: 'Mot de passe oublié ?',
-                sign_in: 'Connexion'
-            }
-        }
-    }
-});
+import i18n from './i18n';
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
@@ -49,7 +22,7 @@ pinia.use(piniaPluginPersistedstate);
 const app = createApp(App);
 
 app.use(pinia);
-//app.use(i18n);
+app.use(i18n);
 app.use(router);
 app.use(PrimeVue, {
     ripple: true,

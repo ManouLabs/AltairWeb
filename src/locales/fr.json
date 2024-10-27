@@ -1,0 +1,10 @@
+{
+    "login": {
+        "welcome": "Bienvenue",
+        "sign_in_message": "Veuillez vous connecter",
+        "email": "Adresse e-mail",
+        "password": "Mot de passe",
+        "sign_in": "Se connecter",
+        "forgot_password": "Mot de passe oublié"
+    }
+}

@@ -13,10 +13,10 @@ export const useAuthStore = defineStore('auth', {
         async login(email, password) {
             try {
                 // Step 1: Get the CSRF cookie from Sanctum
-                await apiClient.get('sanctum/csrf-cookie');
+                await apiClient.get('/sanctum/csrf-cookie');
 
                 // Step 2: Send login request to the API
-                await apiClient.post('login', {
+                await apiClient.post('/login', {
                     email: email,
                     password: password
                 });
