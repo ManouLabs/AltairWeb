@@ -2,7 +2,11 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { createRouter, createWebHistory } from 'vue-router';
 
-const adminRoutes = [{ path: 'dashboard', name: 'dashboard', component: () => import('@/views/Dashboard.vue') }];
+const adminRoutes = [
+    { path: 'dashboard', name: 'dashboard', component: () => import('@/views/admin/Dashboard.vue') },
+    { path: 'users', name: 'users', component: () => import('@/views/admin/Users.vue') },
+    { path: 'roles', name: 'roles', component: () => import('@/views/admin/Roles.vue') }
+];
 
 const routes = [
     {
@@ -46,10 +50,8 @@ const router = createRouter({
 
 // Navigation Guards to handle loading state and auth logic
 router.beforeEach((to, from, next) => {
-    const loadingStore = useLoading();
     const { isAuthenticated } = useAuthStore();
-
-    loadingStore.startLoading();
+    useLoading().startLoading();
 
     if (to.meta.requiresAuth && !isAuthenticated) {
         next({ name: 'login' });

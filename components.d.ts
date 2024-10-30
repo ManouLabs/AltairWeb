@@ -8,12 +8,25 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Button: typeof import('primevue/button')['default']
+    Column: typeof import('primevue/column')['default']
+    DataTable: typeof import('primevue/datatable')['default']
+    Dialog: typeof import('primevue/dialog')['default']
     Divider: typeof import('primevue/divider')['default']
     FloatingConfigurator: typeof import('./src/components/FloatingConfigurator.vue')['default']
+    IconField: typeof import('primevue/iconfield')['default']
+    InputIcon: typeof import('primevue/inputicon')['default']
+    InputNumber: typeof import('primevue/inputnumber')['default']
     InputText: typeof import('primevue/inputtext')['default']
     Password: typeof import('primevue/password')['default']
+    RadioButton: typeof import('primevue/radiobutton')['default']
+    Rating: typeof import('primevue/rating')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Select: typeof import('primevue/select')['default']
+    SelectButton: typeof import('primevue/selectbutton')['default']
+    Tag: typeof import('primevue/tag')['default']
+    Textarea: typeof import('primevue/textarea')['default']
+    Toolbar: typeof import('primevue/toolbar')['default']
   }
   export interface ComponentCustomProperties {
     StyleClass: typeof import('primevue/styleclass')['default']

@@ -6,5 +6,12 @@
         "password": "Mot de passe",
         "sign_in": "Se connecter",
         "forgot_password": "Mot de passe oublié"
+    },
+    "admin": {
+        "home": "Accueil",
+        "dashboard": "Panneau de contrôle",
+        "user": "Utilisateur",
+        "users": "Utilisateurs",
+        "roles": "Rôles"
     }
 }
