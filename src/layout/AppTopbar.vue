@@ -1,7 +1,9 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
-
+import { useAuthStore } from '@/stores/useAuthStore';
 const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+
+const user = useAuthStore().user;
 </script>
 
 <template>
@@ -46,6 +48,7 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
                         <i class="pi pi-user"></i>
                         <span>Profile</span>
                     </button>
+                    <div class="flex justify-center items-center">{{ user.name }}</div>
                 </div>
             </div>
         </div>

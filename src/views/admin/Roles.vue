@@ -154,7 +154,7 @@ function getStatusLabel(status) {
                 :value="products"
                 dataKey="id"
                 :paginator="true"
-                :rows="10"
+                :rows="5"
                 :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"

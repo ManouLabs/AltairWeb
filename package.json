@@ -1,6 +1,6 @@
 {
-    "name": "sakai-vue",
-    "version": "4.1.0",
+    "name": "altair",
+    "version": "1.0",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
