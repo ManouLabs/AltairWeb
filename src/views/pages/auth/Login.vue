@@ -1,28 +1,20 @@
 <script setup>
-import { useAuthStore } from '@/stores/useAuthStore'; // Import the Pinia store
+import { useAuthStore } from '@/stores/useAuthStore';
+import Message from 'primevue/message';
+import { useToast } from 'primevue/usetoast';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { useToast } from 'primevue/usetoast';
-// Refs for form data
 const email = ref('');
 const password = ref('');
-
 const toast = useToast();
-
-// Access the Pinia store
 const authStore = useAuthStore();
-
-// Router for redirect after login
 const router = useRouter();
 
-// Function to handle login using the Pinia store
 const loginUser = async () => {
     try {
-        // Use Pinia's login action
         await authStore.login(email.value, password.value);
 
-        // Redirect to home or dashboard after successful login
         router.push('/admin/dashboard');
     } catch (error) {
         toast.add({
@@ -67,12 +59,14 @@ const loginUser = async () => {
                             <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">{{ $t('login.email') }}</label>
 
                             <InputText id="email1" type="email" :placeholder="$t('login.email')" class="w-full md:w-[30rem] mb-2" v-model="email" :invalid="authStore.errors.email ? true : false" required />
-                            <small v-if="authStore.errors.email" class="block text-red-500 mb-6">{{ authStore.errors.email[0] }}</small>
+
+                            <Message v-if="authStore.errors.email" severity="error" size="small" variant="simple">{{ authStore.errors.email[0] }}</Message>
                         </div>
                         <div>
                             <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">{{ $t('login.password') }}</label>
                             <Password id="password1" v-model="password" :placeholder="$t('login.password')" :toggleMask="true" class="mb-4" fluid :feedback="false" :invalid="authStore.errors.password ? true : false" required />
-                            <small v-if="authStore.errors.password" class="block text-red-500 mb-6">{{ authStore.errors.password[0] }}</small>
+
+                            <Message v-if="authStore.errors.password" severity="error" size="small" variant="simple">{{ authStore.errors.password[0] }}</Message>
                         </div>
                         <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">{{ $t('login.forgot_password') }}</span>

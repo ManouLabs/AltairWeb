@@ -1,9 +1,57 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
 import { useAuthStore } from '@/stores/useAuthStore';
-const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+import Menu from 'primevue/menu';
+import { useToast } from 'primevue/usetoast';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
+const authStore = useAuthStore();
+const toast = useToast();
 
-const user = useAuthStore().user;
+const logoutUser = async () => {
+    try {
+        await authStore.logout();
+
+        router.push('/auth/login');
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Logout Failed',
+            detail: 'Logout failed. Please try again.',
+            group: 'tc',
+            life: 8000
+        });
+    }
+};
+const user = authStore.user;
+
+const userMenu = ref();
+
+const menuItems = ref([
+    {
+        label: user.name,
+        items: [
+            {
+                label: 'Profil',
+                icon: 'pi pi-user'
+            },
+            {
+                label: 'Logout',
+                icon: 'pi pi-power-off',
+                command: () => {
+                    logoutUser();
+                }
+            }
+        ]
+    }
+]);
+
+const toggle = (event) => {
+    userMenu.value.toggle(event);
+};
+
+const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 </script>
 
 <template>
@@ -44,11 +92,8 @@ const user = useAuthStore().user;
 
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-user"></i>
-                        <span>Profile</span>
-                    </button>
-                    <div class="flex justify-center items-center">{{ user.name }}</div>
+                    <Button type="button" icon="pi pi-user" @click="toggle" aria-haspopup="true" aria-controls="overlay_menu" />
+                    <Menu ref="userMenu" id="overlay_menu" :model="menuItems" :popup="true" />
                 </div>
             </div>
         </div>

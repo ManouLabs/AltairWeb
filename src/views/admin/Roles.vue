@@ -1,16 +1,16 @@
 <script setup>
-import { ProductService } from '@/service/ProductService';
+import { useRoleService } from '@/service/useRoleService';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
-
 onMounted(() => {
-    ProductService.getProducts().then((data) => (products.value = data));
+    //ProductService.getProducts().then((data) => (products.value = data));
+    useRoleService.getRoles().then((data) => (roles.value = data));
 });
 
 const toast = useToast();
 const dt = ref();
-const products = ref();
+const roles = ref();
 const productDialog = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
@@ -48,14 +48,14 @@ function saveProduct() {
     if (product?.value.name?.trim()) {
         if (product.value.id) {
             product.value.inventoryStatus = product.value.inventoryStatus.value ? product.value.inventoryStatus.value : product.value.inventoryStatus;
-            products.value[findIndexById(product.value.id)] = product.value;
+            roles.value[findIndexById(product.value.id)] = product.value;
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
         } else {
             product.value.id = createId();
             product.value.code = createId();
             product.value.image = 'product-placeholder.svg';
             product.value.inventoryStatus = product.value.inventoryStatus ? product.value.inventoryStatus.value : 'INSTOCK';
-            products.value.push(product.value);
+            roles.value.push(product.value);
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
         }
 
@@ -75,7 +75,7 @@ function confirmDeleteProduct(prod) {
 }
 
 function deleteProduct() {
-    products.value = products.value.filter((val) => val.id !== product.value.id);
+    roles.value = roles.value.filter((val) => val.id !== product.value.id);
     deleteProductDialog.value = false;
     product.value = {};
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
@@ -83,8 +83,8 @@ function deleteProduct() {
 
 function findIndexById(id) {
     let index = -1;
-    for (let i = 0; i < products.value.length; i++) {
-        if (products.value[i].id === id) {
+    for (let i = 0; i < roles.value.length; i++) {
+        if (roles.value[i].id === id) {
             index = i;
             break;
         }
@@ -111,7 +111,7 @@ function confirmDeleteSelected() {
 }
 
 function deleteSelectedProducts() {
-    products.value = products.value.filter((val) => !selectedProducts.value.includes(val));
+    roles.value = roles.value.filter((val) => !selectedProducts.value.includes(val));
     deleteProductsDialog.value = false;
     selectedProducts.value = null;
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
@@ -151,14 +151,14 @@ function getStatusLabel(status) {
             <DataTable
                 ref="dt"
                 v-model:selection="selectedProducts"
-                :value="products"
+                :value="roles"
                 dataKey="id"
                 :paginator="true"
                 :rows="5"
                 :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} roles"
             >
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -279,7 +279,7 @@ function getStatusLabel(status) {
         <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product">Are you sure you want to delete the selected products?</span>
+                <span v-if="product">Are you sure you want to delete the selected roles?</span>
             </div>
             <template #footer>
                 <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
