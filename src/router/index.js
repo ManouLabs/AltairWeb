@@ -1,3 +1,4 @@
+//router/index.js
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { createRouter, createWebHistory } from 'vue-router';

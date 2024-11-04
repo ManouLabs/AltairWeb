@@ -1,6 +1,8 @@
-// axios.js
+import router from '@/router';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import axios from 'axios';
+
 // Create an axios instance
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -9,16 +11,18 @@ const apiClient = axios.create({
     withXSRFToken: true
 });
 
+// Reusable loading functions
+const startLoading = () => useLoading().startLoading();
+const stopLoading = () => useLoading().stopLoading();
+
 // Axios request interceptor
 apiClient.interceptors.request.use(
-    (config) => {
-        const loadingStore = useLoading();
-        loadingStore.startLoading(); // Start the loading progress before the request is sent
+    async (config) => {
+        startLoading();
         return config;
     },
     (error) => {
-        const loadingStore = useLoading();
-        loadingStore.stopLoading(); // Stop loading in case of error
+        stopLoading();
         return Promise.reject(error);
     }
 );
@@ -26,14 +30,21 @@ apiClient.interceptors.request.use(
 // Axios response interceptor
 apiClient.interceptors.response.use(
     (response) => {
-        const loadingStore = useLoading();
-        loadingStore.stopLoading(); // Stop the loading progress when a response is received
+        stopLoading();
         return response;
     },
-    (error) => {
-        const loadingStore = useLoading();
-        loadingStore.stopLoading(); // Stop loading in case of error
+    async (error) => {
+        stopLoading();
+
+        // Handle 401 error by updating auth state
+        if (error.status === 401) {
+            const authStore = useAuthStore();
+            authStore.user = null;
+            authStore.isAuthenticated = false;
+            router.push({ name: 'login' });
+        }
         return Promise.reject(error);
     }
 );
+
 export default apiClient;
