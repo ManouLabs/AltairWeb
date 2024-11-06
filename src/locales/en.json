@@ -1,10 +1,21 @@
 {
     "login": {
-        "welcome": "Bienvenue",
-        "sign_in_message": "Veuillez vous connecter",
-        "email": "Adresse e-mail",
-        "password": "Mot de passe",
-        "sign_in": "Se connecter",
-        "forgot_password": "Mot de passe oublié"
+        "welcome": "Welcome",
+        "sign_in_message": "Please sign in",
+        "email": "Email address",
+        "password": "Password",
+        "sign_in": "Sign in",
+        "forgot_password": "Forgot password",
+        "error": "Login error"
+    },
+    "logout": {
+        "error": "Logout error"
+    },
+    "admin": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "user": "User",
+        "users": "Users",
+        "roles": "Roles"
     }
 }

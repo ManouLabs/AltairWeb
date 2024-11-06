@@ -1,14 +1,27 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useThemeStore } from '@/stores/useThemeStore';
 import Menu from 'primevue/menu';
+import SelectButton from 'primevue/selectbutton';
 import { useToast } from 'primevue/usetoast';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+
+const themeStore = useThemeStore();
+const { t } = useI18n();
 const router = useRouter();
 const authStore = useAuthStore();
 const toast = useToast();
 
+const supportedLocales = ref(import.meta.env.VITE_SUPPORTED_LOCALES ? import.meta.env.VITE_SUPPORTED_LOCALES.split(',') : ['fr', 'en', 'ar']);
+const localeFlags = ref(Object.fromEntries(import.meta.env.VITE_LOCALE_FLAGS.split(',').map((item) => item.split(':'))));
+
+const setLocale = (locale) => {
+    themeStore.setLocale(locale);
+    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+};
 const logoutUser = async () => {
     try {
         await authStore.logout();
@@ -17,8 +30,8 @@ const logoutUser = async () => {
     } catch (error) {
         toast.add({
             severity: 'error',
-            summary: 'Logout Failed',
-            detail: 'Logout failed. Please try again.',
+            summary: t('logout.error'),
+            detail: error.response?.data?.message || error.message,
             group: 'tc',
             life: 8000
         });
@@ -84,6 +97,14 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
         </div>
 
         <div class="layout-topbar-actions">
+            <SelectButton v-model="themeStore.locale" :options="supportedLocales" @change="setLocale(themeStore.locale)" :allowEmpty="false">
+                <template #option="slotProps">
+                    <div class="flex items-center">
+                        <img :alt="slotProps.option" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${localeFlags[slotProps.option]} mr-2`" style="width: 18px" />
+                        <span class="uppercase">{{ slotProps.option }}</span>
+                    </div>
+                </template>
+            </SelectButton>
             <div class="layout-config-menu">
                 <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
                     <i :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"></i>

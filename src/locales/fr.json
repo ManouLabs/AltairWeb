@@ -5,7 +5,11 @@
         "email": "Adresse e-mail",
         "password": "Mot de passe",
         "sign_in": "Se connecter",
-        "forgot_password": "Mot de passe oublié"
+        "forgot_password": "Mot de passe oublié",
+        "error": "Erreur de connexion"
+    },
+    "logout": {
+        "error": "Erreur de déconnexion"
     },
     "admin": {
         "home": "Accueil",

@@ -1,6 +1,7 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
 import { useLoading } from '@/stores/useLoadingStore'; // Import the loading store
+import { useThemeStore } from '@/stores/useThemeStore';
 import ProgressBar from 'primevue/progressbar'; // Import PrimeVue's ProgressBar
 import Toast from 'primevue/toast';
 import { computed, ref, watch } from 'vue';
@@ -8,6 +9,7 @@ import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
 
+const themeStore = useThemeStore();
 // Access the loading store using Pinia
 const loading = useLoading();
 

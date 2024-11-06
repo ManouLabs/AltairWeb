@@ -3,8 +3,10 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
+const { t } = useI18n();
 const email = ref('');
 const password = ref('');
 const toast = useToast();
@@ -14,13 +16,12 @@ const router = useRouter();
 const loginUser = async () => {
     try {
         await authStore.login(email.value, password.value);
-
         router.push('/admin/dashboard');
     } catch (error) {
         toast.add({
             severity: 'error',
-            summary: 'Login Failed',
-            detail: 'Login failed. Please try again.',
+            summary: t('login.error'),
+            detail: error.response?.data?.message || error.message,
             group: 'tc',
             life: 8000
         });
