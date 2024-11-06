@@ -1,11 +1,11 @@
 <script setup>
-import { useLayout } from '@/layout/composables/layout';
+import { useLayoutStore } from '@/stores/useLayoutStore';
 import { onBeforeMount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
 
-const { layoutState, setActiveMenuItem, onMenuToggle } = useLayout();
+const layoutStore = useLayoutStore();
 
 const props = defineProps({
     item: {
@@ -32,13 +32,13 @@ const itemKey = ref(null);
 onBeforeMount(() => {
     itemKey.value = props.parentItemKey ? props.parentItemKey + '-' + props.index : String(props.index);
 
-    const activeItem = layoutState.activeMenuItem;
+    const activeItem = layoutStore.activeMenuItem;
 
     isActiveMenu.value = activeItem === itemKey.value || activeItem ? activeItem.startsWith(itemKey.value + '-') : false;
 });
 
 watch(
-    () => layoutState.activeMenuItem,
+    () => layoutStore.activeMenuItem,
     (newVal) => {
         isActiveMenu.value = newVal === itemKey.value || newVal.startsWith(itemKey.value + '-');
     }
@@ -50,8 +50,8 @@ function itemClick(event, item) {
         return;
     }
 
-    if ((item.to || item.url) && (layoutState.staticMenuMobileActive || layoutState.overlayMenuActive)) {
-        onMenuToggle();
+    if ((item.to || item.url) && (layoutStore.staticMenuMobileActive || layoutStore.overlayMenuActive)) {
+        layoutStore.onMenuToggle();
     }
 
     if (item.command) {
@@ -60,7 +60,7 @@ function itemClick(event, item) {
 
     const foundItemKey = item.items ? (isActiveMenu.value ? props.parentItemKey : itemKey) : itemKey.value;
 
-    setActiveMenuItem(foundItemKey);
+    layoutStore.setActiveMenuItem(foundItemKey);
 }
 
 function checkActiveRoute(item) {

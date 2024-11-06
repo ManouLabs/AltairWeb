@@ -1,7 +1,6 @@
 <script setup>
-import { useLayout } from '@/layout/composables/layout';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useThemeStore } from '@/stores/useThemeStore';
+import { useLayoutStore } from '@/stores/useLayoutStore';
 import Menu from 'primevue/menu';
 import SelectButton from 'primevue/selectbutton';
 import { useToast } from 'primevue/usetoast';
@@ -9,7 +8,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
-const themeStore = useThemeStore();
+const layoutStore = useLayoutStore();
 const { t } = useI18n();
 const router = useRouter();
 const authStore = useAuthStore();
@@ -19,8 +18,7 @@ const supportedLocales = ref(import.meta.env.VITE_SUPPORTED_LOCALES ? import.met
 const localeFlags = ref(Object.fromEntries(import.meta.env.VITE_LOCALE_FLAGS.split(',').map((item) => item.split(':'))));
 
 const setLocale = (locale) => {
-    themeStore.setLocale(locale);
-    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+    layoutStore.setLocale(locale);
 };
 const logoutUser = async () => {
     try {
@@ -63,14 +61,12 @@ const menuItems = ref([
 const toggle = (event) => {
     userMenu.value.toggle(event);
 };
-
-const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 </script>
 
 <template>
     <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
-            <button class="layout-menu-button layout-topbar-action" @click="onMenuToggle">
+            <button class="layout-menu-button layout-topbar-action" @click="layoutStore.onMenuToggle">
                 <i class="pi pi-bars"></i>
             </button>
             <router-link to="/admin/dashboard" class="layout-topbar-logo">
@@ -97,7 +93,7 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
         </div>
 
         <div class="layout-topbar-actions">
-            <SelectButton v-model="themeStore.locale" :options="supportedLocales" @change="setLocale(themeStore.locale)" :allowEmpty="false">
+            <SelectButton v-model="layoutStore.locale" :options="supportedLocales" @change="setLocale(layoutStore.locale)" :allowEmpty="false">
                 <template #option="slotProps">
                     <div class="flex items-center">
                         <img :alt="slotProps.option" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${localeFlags[slotProps.option]} mr-2`" style="width: 18px" />
@@ -106,8 +102,8 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
                 </template>
             </SelectButton>
             <div class="layout-config-menu">
-                <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
-                    <i :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"></i>
+                <button type="button" class="layout-topbar-action" @click="layoutStore.toggleDarkMode">
+                    <i :class="['pi', { 'pi-moon': layoutStore.isDarkTheme, 'pi-sun': !layoutStore.isDarkTheme }]"></i>
                 </button>
             </div>
 

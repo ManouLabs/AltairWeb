@@ -1,20 +1,20 @@
 <script setup>
-import { useLayout } from '@/layout/composables/layout';
+import { useLayoutStore } from '@/stores/useLayoutStore';
 import { $t, updatePreset, updateSurfacePalette } from '@primevue/themes';
 import Aura from '@primevue/themes/aura';
 import Lara from '@primevue/themes/lara';
 import { ref } from 'vue';
 
-const { layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode } = useLayout();
+const layoutStore = useLayoutStore();
 
 const presets = {
     Aura,
     Lara
 };
-const preset = ref(layoutConfig.preset);
+const preset = ref(layoutStore.preset);
 const presetOptions = ref(Object.keys(presets));
 
-const menuMode = ref(layoutConfig.menuMode);
+const menuMode = ref(layoutStore.menuMode);
 const menuModeOptions = ref([
     { label: 'Static', value: 'static' },
     { label: 'Overlay', value: 'overlay' }
@@ -76,7 +76,7 @@ const surfaces = ref([
 ]);
 
 function getPresetExt() {
-    const color = primaryColors.value.find((c) => c.name === layoutConfig.primary);
+    const color = primaryColors.value.find((c) => c.name === layoutStore.primary);
 
     if (color.name === 'noir') {
         return {
@@ -167,9 +167,9 @@ function getPresetExt() {
 
 function updateColors(type, color) {
     if (type === 'primary') {
-        setPrimary(color.name);
+        layoutStore.setPrimary(color.name);
     } else if (type === 'surface') {
-        setSurface(color.name);
+        layoutStore.setSurface(color.name);
     }
 
     applyTheme(type, color);
@@ -184,15 +184,15 @@ function applyTheme(type, color) {
 }
 
 function onPresetChange() {
-    setPreset(preset.value);
+    layoutStore.setPreset(preset.value);
     const presetValue = presets[preset.value];
-    const surfacePalette = surfaces.value.find((s) => s.name === layoutConfig.surface)?.palette;
+    const surfacePalette = surfaces.value.find((s) => s.name === layoutStore.surface)?.palette;
 
     $t().preset(presetValue).preset(getPresetExt()).surfacePalette(surfacePalette).use({ useDefaultOptions: true });
 }
 
 function onMenuModeChange() {
-    setMenuMode(menuMode.value);
+    layoutStore.setMenuMode(menuMode.value);
 }
 </script>
 
@@ -210,7 +210,7 @@ function onMenuModeChange() {
                         type="button"
                         :title="primaryColor.name"
                         @click="updateColors('primary', primaryColor)"
-                        :class="['border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1', { 'outline-primary': layoutConfig.primary === primaryColor.name }]"
+                        :class="['border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1', { 'outline-primary': layoutStore.primary === primaryColor.name }]"
                         :style="{ backgroundColor: `${primaryColor.name === 'noir' ? 'var(--text-color)' : primaryColor.palette['500']}` }"
                     ></button>
                 </div>
@@ -226,7 +226,7 @@ function onMenuModeChange() {
                         @click="updateColors('surface', surface)"
                         :class="[
                             'border-none w-5 h-5 rounded-full p-0 cursor-pointer outline-none outline-offset-1',
-                            { 'outline-primary': layoutConfig.surface ? layoutConfig.surface === surface.name : isDarkTheme ? surface.name === 'zinc' : surface.name === 'slate' }
+                            { 'outline-primary': layoutStore.surface ? layoutStore.surface === surface.name : layoutStore.isDarkTheme ? surface.name === 'zinc' : surface.name === 'slate' }
                         ]"
                         :style="{ backgroundColor: `${surface.palette['500']}` }"
                     ></button>

@@ -1,22 +1,18 @@
 <script setup>
-import { useLayout } from '@/layout/composables/layout';
-import { useLoading } from '@/stores/useLoadingStore'; // Import the loading store
-import { useThemeStore } from '@/stores/useThemeStore';
-import ProgressBar from 'primevue/progressbar'; // Import PrimeVue's ProgressBar
+import { useLayoutStore } from '@/stores/useLayoutStore';
+import { useLoading } from '@/stores/useLoadingStore';
+import ProgressBar from 'primevue/progressbar';
 import Toast from 'primevue/toast';
 import { computed, ref, watch } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
 
-const themeStore = useThemeStore();
-// Access the loading store using Pinia
 const loading = useLoading();
-
-const { layoutConfig, layoutState, isSidebarActive, resetMenu } = useLayout();
+const layoutStore = useLayoutStore();
 
 const outsideClickListener = ref(null);
-
+const isSidebarActive = computed(() => layoutStore.isSidebarActive);
 watch(isSidebarActive, (newVal) => {
     if (newVal) {
         bindOutsideClickListener();
@@ -27,11 +23,18 @@ watch(isSidebarActive, (newVal) => {
 
 const containerClass = computed(() => {
     return {
-        'layout-overlay': layoutConfig.menuMode === 'overlay',
-        'layout-static': layoutConfig.menuMode === 'static',
-        'layout-static-inactive': layoutState.staticMenuDesktopInactive && layoutConfig.menuMode === 'static',
-        'layout-overlay-active': layoutState.overlayMenuActive,
-        'layout-mobile-active': layoutState.staticMenuMobileActive
+        'layout-overlay': layoutStore.menuMode === 'overlay',
+        'layout-static': layoutStore.menuMode === 'static',
+        'layout-static-inactive': layoutStore.staticMenuDesktopInactive && layoutStore.menuMode === 'static',
+        'layout-overlay-active': layoutStore.overlayMenuActive,
+        'layout-mobile-active': layoutStore.staticMenuMobileActive
+    };
+});
+
+const layoutMainContainer = computed(() => {
+    return {
+        'layout-main-container': layoutStore.locale !== 'ar' && layoutStore.menuMode === 'static',
+        'layout-main-container-ar': layoutStore.locale === 'ar' && layoutStore.menuMode === 'static'
     };
 });
 
@@ -39,7 +42,7 @@ function bindOutsideClickListener() {
     if (!outsideClickListener.value) {
         outsideClickListener.value = (event) => {
             if (isOutsideClicked(event)) {
-                resetMenu();
+                layoutStore.resetMenu();
             }
         };
         document.addEventListener('click', outsideClickListener.value);
@@ -75,7 +78,7 @@ function isOutsideClicked(event) {
 
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
-        <div class="layout-main-container">
+        <div :class="layoutMainContainer">
             <div class="layout-main">
                 <router-view></router-view>
             </div>
