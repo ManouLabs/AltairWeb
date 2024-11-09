@@ -17,5 +17,9 @@
         "user": "Utilisateur",
         "users": "Utilisateurs",
         "roles": "Rôles"
+    },
+    "apptopbar": {
+        "profile": "Profil",
+        "logout": "Déconnexion"
     }
 }

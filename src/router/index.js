@@ -1,4 +1,3 @@
-//router/index.js
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { createRouter, createWebHistory } from 'vue-router';
@@ -16,32 +15,16 @@ const routes = [
         meta: { requiresAuth: true },
         children: adminRoutes
     },
-    {
-        path: '/',
-        name: 'home',
-        component: () => import('@/views/Home.vue')
-    },
-    {
-        path: '/pages/notfound',
-        name: 'notfound',
-        component: () => import('@/views/pages/NotFound.vue')
-    },
+    { path: '/', name: 'home', component: () => import('@/views/Home.vue') },
+    { path: '/pages/notfound', name: 'notfound', component: () => import('@/views/pages/NotFound.vue') },
     {
         path: '/auth/login',
         name: 'login',
         component: () => import('@/views/pages/auth/Login.vue'),
         meta: { requiresGuest: true }
     },
-    {
-        path: '/auth/access',
-        name: 'accessDenied',
-        component: () => import('@/views/pages/auth/Access.vue')
-    },
-    {
-        path: '/auth/error',
-        name: 'error',
-        component: () => import('@/views/pages/auth/Error.vue')
-    }
+    { path: '/auth/access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
+    { path: '/auth/error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') }
 ];
 
 const router = createRouter({
@@ -49,22 +32,35 @@ const router = createRouter({
     routes
 });
 
-// Navigation Guards to handle loading state and auth logic
-router.beforeEach((to, from, next) => {
-    const { isAuthenticated } = useAuthStore();
-    useLoading().startLoading();
-
-    if (to.meta.requiresAuth && !isAuthenticated) {
-        next({ name: 'login' });
-    } else if (to.meta.requiresGuest && isAuthenticated) {
-        next({ name: 'dashboard' });
-    } else {
-        next();
+const handleRouteGuard = async (to, next, authStore) => {
+    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+        return next({ name: 'login' });
     }
-});
 
-router.afterEach(() => {
-    useLoading().stopLoading();
+    if (to.meta.requiresGuest && authStore.isAuthenticated) {
+        return next({ name: 'dashboard' });
+    }
+
+    next();
+};
+
+router.beforeEach(async (to, from, next) => {
+    const loadingStore = useLoading();
+    const authStore = useAuthStore();
+
+    loadingStore.startLoading();
+
+    try {
+        if (authStore.isAuthenticated) {
+            await authStore.fetchUser();
+        }
+
+        await handleRouteGuard(to, next, authStore);
+    } catch (error) {
+        next({ name: 'error' });
+    } finally {
+        loadingStore.stopLoading();
+    }
 });
 
 export default router;

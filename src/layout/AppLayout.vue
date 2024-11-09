@@ -7,7 +7,6 @@ import { computed, ref, watch } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
-
 const loading = useLoading();
 const layoutStore = useLayoutStore();
 
@@ -25,7 +24,8 @@ const containerClass = computed(() => {
     return {
         'layout-overlay': layoutStore.menuMode === 'overlay',
         'layout-static': layoutStore.menuMode === 'static',
-        'layout-static-inactive': layoutStore.staticMenuDesktopInactive && layoutStore.menuMode === 'static',
+        'layout-static-inactive': layoutStore.staticMenuDesktopInactive && layoutStore.menuMode === 'static' && layoutStore.locale != 'ar',
+        'layout-static-inactive-ar': layoutStore.staticMenuDesktopInactive && layoutStore.menuMode === 'static' && layoutStore.locale == 'ar',
         'layout-overlay-active': layoutStore.overlayMenuActive,
         'layout-mobile-active': layoutStore.staticMenuMobileActive
     };

@@ -7,7 +7,6 @@ export const useRoleService = {
             const response = await apiClient.get('/api/admin/roles');
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch roles:', error);
             throw error;
         }
     },
@@ -17,7 +16,6 @@ export const useRoleService = {
             const response = await apiClient.post('/api/admin/roles', roleData);
             return response.data;
         } catch (error) {
-            console.error('Failed to add role:', error);
             throw error;
         }
     },
@@ -27,7 +25,6 @@ export const useRoleService = {
             const response = await apiClient.put(`/api/admin/roles/${roleId}`, updatedData);
             return response.data;
         } catch (error) {
-            console.error('Failed to update role:', error);
             throw error;
         }
     },

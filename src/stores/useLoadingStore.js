@@ -5,17 +5,22 @@ import { ref } from 'vue';
 export const useLoading = defineStore('loading', () => {
     const isLoading = ref(false);
 
-    function startLoading() {
+    const startLoading = () => {
         isLoading.value = true;
-    }
+    };
 
-    function stopLoading() {
+    const stopLoading = () => {
         isLoading.value = false;
-    }
+    };
+
+    const toggleLoading = () => {
+        isLoading.value = !isLoading.value;
+    };
 
     return {
         isLoading,
         startLoading,
-        stopLoading
+        stopLoading,
+        toggleLoading
     };
 });

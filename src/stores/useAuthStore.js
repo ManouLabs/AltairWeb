@@ -1,6 +1,7 @@
 // stores/useAuthStore.js
 import apiClient from '@/service/axios';
 import { defineStore } from 'pinia';
+import router from '../router';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -14,12 +15,10 @@ export const useAuthStore = defineStore('auth', {
             try {
                 await apiClient.get('/sanctum/csrf-cookie');
                 await apiClient.post('/login', { email, password });
-
                 this.isAuthenticated = true;
                 await this.fetchUser();
             } catch (error) {
-                this.errors = error.response?.data?.errors || { general: 'Login failed' };
-                console.error('Login error:', this.errors);
+                this.processError(error, 'Login failed');
                 throw error;
             }
         },
@@ -29,7 +28,12 @@ export const useAuthStore = defineStore('auth', {
                 const response = await apiClient.get('/api/user');
                 this.user = response.data;
             } catch (error) {
-                console.error('Failed to fetch user:', error);
+                if (error.response?.status === 401) {
+                    router.push('/auth/login');
+                } else {
+                    this.processError(error, 'Fetch User Error');
+                    throw error;
+                }
             }
         },
 
@@ -37,23 +41,39 @@ export const useAuthStore = defineStore('auth', {
             try {
                 await apiClient.get('/sanctum/csrf-cookie');
                 await apiClient.post('/logout');
-
+                this.stopListening();
                 this.$reset();
+                router.push('/auth/login');
             } catch (error) {
-                this.errors = error.response?.data?.errors || { general: 'Logout failed' };
-                console.error('Logout error:', this.errors);
+                this.processError(error, 'Logout failed');
                 throw error;
             }
+        },
+
+        listenToSessionEvents() {
+            if (this.user?.id) {
+                Echo.private(`App.Models.User.${this.user.id}`).listen('SessionExpired', () => {
+                    this.logout();
+                });
+            }
+        },
+
+        stopListening() {
+            if (this.user?.id) {
+                Echo.leave(`App.Models.User.${this.user.id}`);
+            }
+        },
+
+        processError(error, defaultMessage) {
+            this.errors = error.response?.data?.errors || {
+                general: defaultMessage || 'An unexpected error occurred'
+            };
         }
     },
+
     persist: {
-        enabled: true,
-        strategies: [
-            {
-                key: 'auth',
-                storage: localStorage,
-                paths: ['user', 'isAuthenticated']
-            }
-        ]
+        key: 'auth',
+        storage: localStorage,
+        pick: ['user', 'isAuthenticated']
     }
 });

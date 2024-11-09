@@ -1,16 +1,16 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
+
 import Menu from 'primevue/menu';
 import SelectButton from 'primevue/selectbutton';
 import { useToast } from 'primevue/usetoast';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 
 const layoutStore = useLayoutStore();
+
 const { t } = useI18n();
-const router = useRouter();
 const authStore = useAuthStore();
 const toast = useToast();
 
@@ -23,8 +23,6 @@ const setLocale = (locale) => {
 const logoutUser = async () => {
     try {
         await authStore.logout();
-
-        router.push('/auth/login');
     } catch (error) {
         toast.add({
             severity: 'error',
@@ -39,26 +37,24 @@ const user = authStore.user;
 
 const userMenu = ref();
 
-const menuItems = ref([
+const menuItems = computed(() => [
     {
         label: user.name,
         items: [
             {
-                label: 'Profil',
+                label: t('apptopbar.profile'),
                 icon: 'pi pi-user'
             },
             {
-                label: 'Logout',
+                label: t('apptopbar.logout'),
                 icon: 'pi pi-power-off',
-                command: () => {
-                    logoutUser();
-                }
+                command: logoutUser
             }
         ]
     }
 ]);
 
-const toggle = (event) => {
+const toggleMenu = (event) => {
     userMenu.value.toggle(event);
 };
 </script>
@@ -92,11 +88,16 @@ const toggle = (event) => {
             </router-link>
         </div>
 
-        <div class="layout-topbar-actions">
+        <div class="layout-topbar-actions" :class="layoutStore.locale === 'ar' ? 'mr-auto' : 'ml-auto'">
             <SelectButton v-model="layoutStore.locale" :options="supportedLocales" @change="setLocale(layoutStore.locale)" :allowEmpty="false">
                 <template #option="slotProps">
                     <div class="flex items-center">
-                        <img :alt="slotProps.option" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${localeFlags[slotProps.option]} mr-2`" style="width: 18px" />
+                        <img
+                            :alt="slotProps.option"
+                            src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png"
+                            :class="`flag flag-${localeFlags[slotProps.option]} ${layoutStore.locale === 'ar' ? 'ml-2' : 'mr-2'}`"
+                            style="width: 18px"
+                        />
                         <span class="uppercase">{{ slotProps.option }}</span>
                     </div>
                 </template>
@@ -109,7 +110,7 @@ const toggle = (event) => {
 
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
-                    <Button type="button" icon="pi pi-user" @click="toggle" aria-haspopup="true" aria-controls="overlay_menu" />
+                    <Button type="button" icon="pi pi-user" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
                     <Menu ref="userMenu" id="overlay_menu" :model="menuItems" :popup="true" />
                 </div>
             </div>

@@ -57,6 +57,17 @@
                     padding-left: 2rem;
                 }
             }
+            &.layout-static-inactive-ar {
+                .layout-sidebar {
+                    transform: translateX(100%);
+                    right: 0;
+                }
+
+                .layout-main-container-ar {
+                    margin-right: 0;
+                    padding-right: 2rem;
+                }
+            }
         }
 
         .layout-mask {

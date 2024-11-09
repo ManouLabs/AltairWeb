@@ -29,12 +29,14 @@ const props = defineProps({
 const isActiveMenu = ref(false);
 const itemKey = ref(null);
 
-onBeforeMount(() => {
+const checkActiveMenu = () => {
     itemKey.value = props.parentItemKey ? props.parentItemKey + '-' + props.index : String(props.index);
-
     const activeItem = layoutStore.activeMenuItem;
+    isActiveMenu.value = activeItem === itemKey.value || (activeItem ? activeItem.startsWith(itemKey.value + '-') : false);
+};
 
-    isActiveMenu.value = activeItem === itemKey.value || activeItem ? activeItem.startsWith(itemKey.value + '-') : false;
+onBeforeMount(() => {
+    checkActiveMenu();
 });
 
 watch(
