@@ -1,5 +1,5 @@
 <script setup>
-import { useRoleService } from '@/service/useRoleService';
+import { useRoleService } from '@/services/useRoleService';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';

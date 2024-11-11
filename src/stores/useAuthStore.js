@@ -1,5 +1,5 @@
 // stores/useAuthStore.js
-import apiClient from '@/service/axios';
+import apiClient from '@/services/axios';
 import { defineStore } from 'pinia';
 import router from '../router';
 

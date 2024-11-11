@@ -1,4 +1,4 @@
-//i18n.js
+// plusgins/i18n.js
 import messages from '@intlify/unplugin-vue-i18n/messages';
 import { createI18n } from 'vue-i18n';
 const storage = JSON.parse(localStorage.getItem('layout'));

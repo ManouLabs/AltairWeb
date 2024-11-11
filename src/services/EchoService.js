@@ -1,4 +1,4 @@
-import apiClient from '@/service/axios';
+import apiClient from '@/services/axios';
 import Echo from 'laravel-echo';
 
 window.Echo = new Echo({

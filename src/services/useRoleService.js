@@ -1,5 +1,5 @@
-// service/useRoleService.js
-import apiClient from '@/service/axios';
+// services/useRoleService.js
+import apiClient from '@/services/axios';
 
 export const useRoleService = {
     async getRoles() {
