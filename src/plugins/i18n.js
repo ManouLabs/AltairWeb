@@ -6,8 +6,8 @@ const locale = storage?.locale || import.meta.env.VITE_DEFAULT_LOCALE || 'fr';
 
 const i18n = createI18n({
     locale: locale || import.meta.env.VITE_DEFAULT_LOCALE || 'fr',
-    fallbackLocale: import.meta.env.VITE_FALLBACK_LOCALE || 'fr', // Fallback locale
-    legacy: false, // Composition API mode
+    fallbackLocale: import.meta.env.VITE_FALLBACK_LOCALE || 'fr',
+    legacy: false,
     globalInjection: true,
     messages
 });

@@ -21,5 +21,15 @@
     "apptopbar": {
         "profile": "Profile",
         "logout": "Logout"
+    },
+    "role": {
+        "name": "Name",
+        "guard_name": "Guard name",
+        "new": "New",
+        "delete_selected": "Delete selected",
+        "displayed_column": "Displayed columns",
+        "search_placeholder": "Search...",
+        "export": "Export",
+        "manage_role": "Manage roles"
     }
 }

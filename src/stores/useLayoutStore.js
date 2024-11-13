@@ -1,3 +1,4 @@
+// stores/useLayoutStore.js
 import i18n from '@/plugins/i18n';
 import { defineStore } from 'pinia';
 import { useLoading } from './useLoadingStore';

@@ -1,8 +1,6 @@
 <script setup>
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useLoading } from '@/stores/useLoadingStore';
-import ProgressBar from 'primevue/progressbar';
-import Toast from 'primevue/toast';
 import { computed, ref, watch } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';

@@ -21,5 +21,15 @@
     "apptopbar": {
         "profile": "Profil",
         "logout": "Déconnexion"
+    },
+    "role": {
+        "name": "Nom",
+        "guard_name": "Nom du garde",
+        "new": "Nouveau",
+        "delete_selected": "Supprimer la sélection",
+        "displayed_column": "Colonnes affichées",
+        "search_placeholder": "Rechercher...",
+        "export": "Exporter",
+        "manage_role": "Gestion des rôles"
     }
 }

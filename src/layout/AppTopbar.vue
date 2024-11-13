@@ -1,9 +1,6 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
-
-import Menu from 'primevue/menu';
-import SelectButton from 'primevue/selectbutton';
 import { useToast } from 'primevue/usetoast';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

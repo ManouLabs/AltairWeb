@@ -1,6 +1,5 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
-import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';

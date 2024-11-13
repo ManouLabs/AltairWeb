@@ -21,5 +21,15 @@
     "apptopbar": {
         "profile": "الملف الشخصي",
         "logout": "تسجيل الخروج"
+    },
+    "role": {
+        "name": "الاسم",
+        "guard_name": "اسم الحارس",
+        "new": "جديد",
+        "delete_selected": "حذف المحدد",
+        "displayed_column": "الأعمدة المعروضة",
+        "search_placeholder": "بحث...",
+        "export": "تصدير",
+        "manage_role": "إدارة الأدوار"
     }
 }
