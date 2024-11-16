@@ -30,6 +30,13 @@
         "displayed_column": "Displayed columns",
         "search_placeholder": "Search...",
         "export": "Export",
-        "manage_role": "Manage roles"
+        "manage_role": "Manage roles",
+        "lock_row_tooltip": "Lock this row",
+        "edit_tooltip": "Edit role",
+        "delete_tooltip": "Delete role",
+        "add_tooltip": "Add role",
+        "delete_selected_tooltip": "Delete selected roles",
+        "actions": "Actions",
+        "view_tooltip": "View role"
     }
 }

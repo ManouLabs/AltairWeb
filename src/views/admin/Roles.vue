@@ -1,6 +1,7 @@
 <script setup>
 import { useRoleService } from '@/services/useRoleService';
 import { FilterMatchMode } from '@primevue/core/api';
+import { DataTable } from 'primevue';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -10,12 +11,12 @@ const columnStore = useColumnStore();
 const toast = useToast();
 const { t } = useI18n();
 const dt = ref();
-const roles = ref();
-const roleDialog = ref(false);
-const deleteRoleDialog = ref(false);
-const deleteRolesDialog = ref(false);
-const role = ref({});
-const selectedRoles = ref();
+const reccords = ref();
+const reccordDialog = ref(false);
+const deleteReccordDialog = ref(false);
+const deleteReccordsDialog = ref(false);
+const reccord = ref({});
+const selectedReccords = ref();
 
 const defaultColumns = ref([
     { field: 'name', header: t('role.name') },
@@ -24,7 +25,7 @@ const defaultColumns = ref([
 
 const selectedColumns = ref([]);
 onMounted(() => {
-    useRoleService.getRoles().then((paginate) => (console.log(paginate), (roles.value = paginate.data)));
+    useRoleService.getRoles().then((paginate) => (console.log(paginate), (reccords.value = paginate.data)));
     selectedColumns.value = columnStore.getColumns('rolesColumns') || defaultColumns.value;
 });
 
@@ -38,63 +39,91 @@ const columnChanged = (newColumns) => {
     selectedColumns.value = newColumns;
     columnStore.setColumns('rolesColumns', newColumns);
 };
+const lockedRow = ref([]);
+
+const toggleLock = (data, frozen, index) => {
+    if (frozen) {
+        lockedRow.value = lockedRow.value.filter((c, i) => i !== index);
+        reccords.value.push(data);
+    } else {
+        reccords.value = reccords.value.filter((c, i) => i !== index);
+        lockedRow.value.push(data);
+    }
+
+    reccords.value.sort((val1, val2) => {
+        return val1.id < val2.id ? -1 : 1;
+    });
+};
+
+const frozenColumns = ref({
+    name: false,
+    guard_name: false
+});
+
+const toggleColumnFrozen = (column) => {
+    frozenColumns.value[column] = !frozenColumns.value[column];
+};
+
 const submitted = ref(false);
 
 function openNew() {
-    role.value = {};
+    reccord.value = {};
     submitted.value = false;
-    roleDialog.value = true;
+    reccordDialog.value = true;
 }
 
-function saveRole() {
+function saveReccord() {
     submitted.value = true;
 
-    if (role?.value.name?.trim()) {
-        if (role.value.id) {
-            role.value.inventoryStatus = role.value.inventoryStatus.value ? role.value.inventoryStatus.value : role.value.inventoryStatus;
-            roles.value[findIndexById(role.value.id)] = role.value;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Role Updated', life: 3000 });
+    if (reccord?.value.name?.trim()) {
+        if (reccord.value.id) {
+            reccord.value.inventoryStatus = reccord.value.inventoryStatus.value ? reccord.value.inventoryStatus.value : reccord.value.inventoryStatus;
+
+            toast.add({
+                severity: 'success',
+                summary: 'Successful',
+                detail: 'Role Updated',
+                life: 3000
+            });
         } else {
-            role.value.id = createId();
-            role.value.code = createId();
-            role.value.image = 'role-placeholder.svg';
-            role.value.inventoryStatus = role.value.inventoryStatus ? role.value.inventoryStatus.value : 'INSTOCK';
-            roles.value.push(role.value);
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Role Created', life: 3000 });
+            reccord.value.id = createId();
+            reccord.value.code = createId();
+            reccord.value.image = 'role-placeholder.svg';
+            reccord.value.inventoryStatus = reccord.value.inventoryStatus ? reccord.value.inventoryStatus.value : 'INSTOCK';
+            reccords.value.push(reccord.value);
+            toast.add({
+                severity: 'success',
+                summary: 'Successful',
+                detail: 'Role Created',
+                life: 3000
+            });
         }
 
-        roleDialog.value = false;
-        role.value = {};
+        reccordDialog.value = false;
+        reccord.value = {};
     }
 }
 
-function editRole(prod) {
-    role.value = { ...prod };
-    roleDialog.value = true;
+function editReccord(prod) {
+    reccord.value = { ...prod };
+    reccordDialog.value = true;
 }
 
-function confirmDeleteRole(prod) {
-    role.value = prod;
-    deleteRoleDialog.value = true;
+function confirmDeleteReccord(prod) {
+    reccord.value = prod;
+    deleteReccordDialog.value = true;
 }
 
-function deleteRole() {
-    roles.value = roles.value.filter((val) => val.id !== role.value.id);
-    deleteRoleDialog.value = false;
-    role.value = {};
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Role Deleted', life: 3000 });
-}
-
-function findIndexById(id) {
-    let index = -1;
-    for (let i = 0; i < roles.value.length; i++) {
-        if (roles.value[i].id === id) {
-            index = i;
-            break;
-        }
-    }
-
-    return index;
+function deleteReccord() {
+    reccords.value = reccords.value.filter((val) => val.id !== reccord.value.id);
+    deleteReccordDialog.value = false;
+    reccord.value = {};
+    toast.add({
+        severity: 'success',
+        summary: 'Successful',
+        detail: 'Role Deleted',
+        life: 3000
+    });
 }
 
 function createId() {
@@ -111,14 +140,19 @@ function exportCSV() {
 }
 
 function confirmDeleteSelected() {
-    deleteRolesDialog.value = true;
+    deleteReccordsDialog.value = true;
 }
 
-function deleteselectedRoles() {
-    roles.value = roles.value.filter((val) => !selectedRoles.value.includes(val));
-    deleteRolesDialog.value = false;
-    selectedRoles.value = null;
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Roles Deleted', life: 3000 });
+function deleteSelectedReccords() {
+    reccords.value = reccords.value.filter((val) => !selectedReccords.value.includes(val));
+    deleteReccordsDialog.value = false;
+    selectedReccords.value = null;
+    toast.add({
+        severity: 'success',
+        summary: 'Successful',
+        detail: 'Roles Deleted',
+        life: 3000
+    });
 }
 </script>
 
@@ -127,8 +161,8 @@ function deleteselectedRoles() {
         <div class="card">
             <DataTable
                 ref="dt"
-                v-model:selection="selectedRoles"
-                :value="roles"
+                v-model:selection="selectedReccords"
+                :value="reccords"
                 dataKey="id"
                 stripedRows
                 removableSort
@@ -141,14 +175,35 @@ function deleteselectedRoles() {
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} roles"
+                :frozenValue="lockedRow"
+                scrollable
+                scrollHeight="400px"
+                :pt="{
+                    table: { style: 'min-width: 50rem' },
+                    bodyrow: ({ props }) => ({
+                        class: [{ 'font-bold': props.frozenRow }]
+                    })
+                }"
             >
                 <template #header>
                     <div class="flex items-center">
-                        <h2 class="text-xl font-bold min-w-40">{{ t('role.manage_role') }}</h2>
+                        <h2 class="text-xl font-bold min-w-40">
+                            {{ t('role.manage_role') }}
+                        </h2>
                         <Toolbar class="w-full">
                             <template #start>
-                                <Button :label="t('role.new')" icon="pi pi-plus" severity="primary" class="mr-2" @click="openNew" outlined />
-                                <Button :label="t('role.delete_selected')" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" outlined :disabled="!selectedRoles || !selectedRoles.length" />
+                                <div class="flex space-x-2">
+                                    <Button v-tooltip.top="t('role.add_tooltip')" :label="t('role.new')" icon="pi pi-plus" severity="primary" @click="openNew" outlined />
+                                    <Button
+                                        v-tooltip.top="t('role.delete_selected_tooltip')"
+                                        :label="t('role.delete_selected')"
+                                        icon="pi pi-trash"
+                                        severity="danger"
+                                        @click="confirmDeleteSelected"
+                                        outlined
+                                        :disabled="!selectedReccords || !selectedReccords.length"
+                                    />
+                                </div>
                             </template>
                             <template #center>
                                 <FloatLabel class="w-full" variant="on">
@@ -175,52 +230,78 @@ function deleteselectedRoles() {
                 </template>
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
-                <Column field="id" header="ID" sortable style="min-width: 12rem" :reorderableColumn="false" />
-                <Column v-if="selectedColumns.some((column) => column.field === 'name')" field="name" :header="t('role.name')" sortable style="min-width: 16rem" />
-                <Column v-if="selectedColumns.some((column) => column.field === 'guard_name')" field="guard_name" :header="t('role.guard_name')" sortable style="min-width: 16rem" />
-                <Column :exportable="false" style="min-width: 12rem">
-                    <template #body="slotProps">
-                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editRole(slotProps.data)" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteRole(slotProps.data)" />
+                <Column field="id" header="ID" sortable class="min-w-32" :reorderableColumn="false" />
+                <Column :frozen="frozenColumns.name" v-if="selectedColumns.some((column) => column.field === 'name')" field="name" sortable class="min-w-32">
+                    <template #header>
+                        <div class="flex justify-between w-full items-center">
+                            <div :class="{ 'font-bold': frozenColumns.name }">{{ t('role.name') }}</div>
+                            <Button v-tooltip.top="t('role.lock_row_tooltip')" :icon="frozenColumns.name ? 'pi pi-lock' : 'pi pi-lock-open'" text @click="toggleColumnFrozen('name')" severity="contrast" />
+                        </div>
+                    </template>
+                    <template #body="{ data }">
+                        <div :class="{ 'font-bold': frozenColumns.name }">{{ data.name }}</div>
+                    </template>
+                </Column>
+                <Column :frozen="frozenColumns.guard_name" v-if="selectedColumns.some((column) => column.field === 'guard_name')" field="guard_name" sortable class="min-w-32">
+                    <template #header>
+                        <div class="flex justify-between w-full items-center">
+                            <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ t('role.guard_name') }}</div>
+                            <Button v-tooltip.top="t('role.lock_row_tooltip')" :icon="frozenColumns.guard_name ? 'pi pi-lock' : 'pi pi-lock-open'" text @click="toggleColumnFrozen('guard_name')" severity="contrast" />
+                        </div>
+                    </template>
+                    <template #body="{ data }">
+                        <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ data.name }}</div>
+                    </template>
+                </Column>
+                <Column :exportable="false" style="min-width: 12rem" :header="t('role.actions')">
+                    <template #body="{ data, frozenRow, index }">
+                        <div class="flex justify-between">
+                            <div class="flex space-x-2">
+                                <Button v-tooltip.top="t('role.view_tooltip')" icon="pi pi-eye" outlined rounded @click="editReccord(data)" severity="secondary" />
+                                <Button v-tooltip.top="t('role.edit_tooltip')" icon="pi pi-pencil" outlined rounded @click="editReccord(data)" />
+                                <Button v-tooltip.top="t('role.delete_tooltip')" icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteReccord(data)" />
+                            </div>
+                            <Button v-tooltip.top="t('role.lock_row_tooltip')" :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'" text @click="toggleLock(data, frozenRow, index)" severity="contrast" />
+                        </div>
                     </template>
                 </Column>
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="roleDialog" :style="{ width: '450px' }" header="Role Details" :modal="true">
+        <Dialog v-model:visible="reccordDialog" :style="{ width: '450px' }" header="Role Details" :modal="true">
             <div class="flex flex-col gap-6">
-                <img v-if="role.image" :src="`https://primefaces.org/cdn/primevue/images/role/${role.image}`" :alt="role.image" class="block m-auto pb-4" />
+                <img v-if="reccord.image" :src="`https://primefaces.org/cdn/primevue/images/role/${reccord.image}`" :alt="reccord.image" class="block m-auto pb-4" />
                 <div>
                     <label for="name" class="block font-bold mb-3">Name</label>
-                    <InputText id="name" v-model.trim="role.name" required="true" autofocus :invalid="submitted && !role.name" fluid />
-                    <small v-if="submitted && !role.name" class="text-red-500">Name is required.</small>
+                    <InputText id="name" v-model.trim="reccord.name" required="true" autofocus :invalid="submitted && !reccord.name" fluid />
+                    <small v-if="submitted && !reccord.name" class="text-red-500">Name is required.</small>
                 </div>
                 <div>
                     <label for="description" class="block font-bold mb-3">Description</label>
-                    <Textarea id="description" v-model="role.description" required="true" rows="3" cols="20" fluid />
+                    <Textarea id="description" v-model="reccord.description" required="true" rows="3" cols="20" fluid />
                 </div>
                 <div>
                     <label for="inventoryStatus" class="block font-bold mb-3">Inventory Status</label>
-                    <Select id="inventoryStatus" v-model="role.inventoryStatus" :options="statuses" optionLabel="label" placeholder="Select a Status" fluid></Select>
+                    <Select id="inventoryStatus" v-model="reccord.inventoryStatus" :options="statuses" optionLabel="label" placeholder="Select a Status" fluid></Select>
                 </div>
 
                 <div>
                     <span class="block font-bold mb-4">Category</span>
                     <div class="grid grid-cols-12 gap-4">
                         <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category1" v-model="role.category" name="category" value="Accessories" />
+                            <RadioButton id="category1" v-model="reccord.category" name="category" value="Accessories" />
                             <label for="category1">Accessories</label>
                         </div>
                         <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category2" v-model="role.category" name="category" value="Clothing" />
+                            <RadioButton id="category2" v-model="reccord.category" name="category" value="Clothing" />
                             <label for="category2">Clothing</label>
                         </div>
                         <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category3" v-model="role.category" name="category" value="Electronics" />
+                            <RadioButton id="category3" v-model="reccord.category" name="category" value="Electronics" />
                             <label for="category3">Electronics</label>
                         </div>
                         <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category4" v-model="role.category" name="category" value="Fitness" />
+                            <RadioButton id="category4" v-model="reccord.category" name="category" value="Fitness" />
                             <label for="category4">Fitness</label>
                         </div>
                     </div>
@@ -229,43 +310,43 @@ function deleteselectedRoles() {
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-6">
                         <label for="price" class="block font-bold mb-3">Price</label>
-                        <InputNumber id="price" v-model="role.price" mode="currency" currency="USD" locale="en-US" fluid />
+                        <InputNumber id="price" v-model="reccord.price" mode="currency" currency="USD" locale="en-US" fluid />
                     </div>
                     <div class="col-span-6">
                         <label for="quantity" class="block font-bold mb-3">Quantity</label>
-                        <InputNumber id="quantity" v-model="role.quantity" integeronly fluid />
+                        <InputNumber id="quantity" v-model="reccord.quantity" integeronly fluid />
                     </div>
                 </div>
             </div>
 
             <template #footer>
                 <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Save" icon="pi pi-check" @click="saveRole" />
+                <Button label="Save" icon="pi pi-check" @click="saveReccord" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteRoleDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteReccordDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="role"
-                    >Are you sure you want to delete <b>{{ role.name }}</b
+                <span v-if="reccord"
+                    >Are you sure you want to delete <b>{{ reccord.name }}</b
                     >?</span
                 >
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteRoleDialog = false" />
-                <Button label="Yes" icon="pi pi-check" @click="deleteRole" />
+                <Button label="No" icon="pi pi-times" text @click="deleteReccordDialog = false" />
+                <Button label="Yes" icon="pi pi-check" @click="deleteReccord" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteRolesDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteReccordsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="role">Are you sure you want to delete the selected roles?</span>
+                <span v-if="reccord">Are you sure you want to delete the selected reccords?</span>
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteRolesDialog = false" />
-                <Button label="Yes" icon="pi pi-check" text @click="deleteselectedRoles" />
+                <Button label="No" icon="pi pi-times" text @click="deleteReccordsDialog = false" />
+                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedReccords" />
             </template>
         </Dialog>
     </div>

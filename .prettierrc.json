@@ -7,5 +7,6 @@
     "vueIndentScriptAndStyle": false,
     "printWidth": 250,
     "bracketSameLine": false,
+    "arrowParens": "always",
     "endOfLine": "lf"
 }
