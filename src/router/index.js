@@ -5,7 +5,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 const adminRoutes = [
     { path: 'dashboard', name: 'dashboard', component: () => import('@/views/admin/Dashboard.vue') },
     { path: 'users', name: 'users', component: () => import('@/views/admin/Users.vue') },
-    { path: 'roles', name: 'roles', component: () => import('@/views/admin/Roles.vue') }
+    { path: 'roles', name: 'roles', component: () => import('@/views/admin/roles/Roles.vue') }
 ];
 
 const routes = [

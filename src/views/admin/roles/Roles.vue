@@ -4,9 +4,10 @@ import { useLoading } from '@/stores/useLoadingStore';
 import { FilterMatchMode } from '@primevue/core/api';
 import { DataTable } from 'primevue';
 import { useToast } from 'primevue/usetoast';
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useColumnStore } from '../../stores/useColumnStore';
+import { useColumnStore } from '../../../stores/useColumnStore';
+
 const loading = useLoading();
 const errors = ref();
 const columnStore = useColumnStore();
@@ -28,7 +29,18 @@ const defaultColumns = ref([
 ]);
 
 const selectedColumns = ref([]);
+const subscription = ref(null);
 onMounted(() => {
+    subscription.value = Echo.private('super-admin').listen('RoleCreated', (event) => {
+        console.log('New Role Created:', event);
+        toast.add({
+            severity: 'success',
+            summary: 'New Role Created',
+            detail: `Role: ${event.role.name}`,
+            life: 3000
+        });
+        reccords.value.push(event.role);
+    });
     useRoleService
         .getRoles()
         .then((data) => {
@@ -88,26 +100,28 @@ function hideDialog() {
 }
 
 function openNew() {
-    reccord.value = { name: null, guard_name: null, permissions: permissionsOptions.value };
+    reccord.value = { name: null, guard_name: null, permissions: [] };
     errors.value = null;
     reccordDialog.value = true;
 }
 
 function saveReccord() {
-    reccord.value.permissions = reccord.value.permissions[1].map((permission) => permission.id);
+    reccord.value.permissions = permissionsOptions.value[1].map((permission) => permission.id);
     loading.startLoading();
     useRoleService
         .storeRole(reccord.value)
-        .then((data) => {
-            console.log('data', data);
-            reccords.value.push(data.role);
+        .then((response) => {
+            console.log('response', response);
+
+            console.log('reccords', reccords.value);
             reccordDialog.value = false;
-            toast.add({
-                severity: 'success',
-                summary: 'Role Created',
-                detail: 'The Role has been created successfully',
-                life: 3000
-            });
+            reccord.value = {};
+            // toast.add({
+            //     severity: 'success',
+            //     summary: 'Role Created',
+            //     detail: 'The Role has been created successfully',
+            //     life: 3000
+            // });
         })
         .catch((error) => {
             console.log('error', error);
@@ -121,7 +135,6 @@ function saveReccord() {
             });
         })
         .finally(() => {
-            reccord.value = {};
             loading.stopLoading();
         });
 }
@@ -167,6 +180,12 @@ function deleteSelectedReccords() {
         life: 3000
     });
 }
+onUnmounted(() => {
+    // Unsubscribe from Echo channel when the component is unmounted
+    if (subscription.value) {
+        subscription.value.stopListening('RoleCreated');
+    }
+});
 </script>
 
 <template>
@@ -322,20 +341,44 @@ function deleteSelectedReccords() {
                 <div>
                     <FloatLabel variant="on">
                         <label for="name" class="block font-bold mb-3">{{ t('role.columns.name') }}</label>
-                        <InputText id="name" v-model.trim="reccord.name" required="true" autofocus fluid :invalid="errors?.name ? true : false" />
+                        <InputText :disabled="loading.isLoading" id="name" v-model.trim="reccord.name" required="true" autofocus fluid :invalid="errors?.name ? true : false" />
                     </FloatLabel>
                     <ErrorMessage field="name" :errors="errors" />
                 </div>
                 <div>
                     <FloatLabel>
                         <label for="guard_name" class="block font-bold mb-3">{{ t('role.columns.guard_name') }}</label>
-                        <Select id="guard_name" v-model="reccord.guard_name" :options="['api', 'web']" :placeholder="t('role.placeholders.select_guard_name')" fluid checkmark showClear :invalid="errors?.guard_name ? true : false"></Select>
+                        <Select
+                            :disabled="loading.isLoading"
+                            id="guard_name"
+                            v-model="reccord.guard_name"
+                            :options="['api', 'web']"
+                            :placeholder="t('role.placeholders.select_guard_name')"
+                            fluid
+                            checkmark
+                            showClear
+                            :invalid="errors?.guard_name ? true : false"
+                        ></Select>
                     </FloatLabel>
                     <ErrorMessage field="guard_name" :errors="errors" />
                 </div>
                 <div>
                     <ErrorMessage field="permissions" :errors="errors" />
-                    <PickList v-model="reccord.permissions" dataKey="id" breakpoint="1400px" striped :invalid="errors?.permissions ? true : false" pt:header:class="bg-blue-500">
+                    <PickList
+                        :disabled="loading.isLoading"
+                        v-model="permissionsOptions"
+                        dataKey="id"
+                        breakpoint="1400px"
+                        :showSourceControls="false"
+                        :showTargetControls="false"
+                        striped
+                        :invalid="errors?.permissions ? true : false"
+                        pt:header:class="bg-blue-500"
+                        :pt="{
+                            sourceListContainer: { class: errors?.permissions ? 'rounded-md border border-red-500' : '' },
+                            targetListContainer: { class: errors?.permissions ? 'rounded-md border border-red-500' : '' }
+                        }"
+                    >
                         <template #sourceheader>
                             {{ t('role.placeholders.permissions_available') }}
                         </template>
@@ -348,10 +391,9 @@ function deleteSelectedReccords() {
                     </PickList>
                 </div>
             </div>
-
             <template #footer>
                 <Button :label="t('common.actions.cancel')" icon="pi pi-times" text @click="hideDialog" />
-                <Button :label="t('common.actions.save')" icon="pi pi-check" @click="saveReccord" />
+                <Button :label="t('common.actions.save')" icon="pi pi-check" @click="saveReccord" :loading="loading.isLoading" />
             </template>
         </Dialog>
 
