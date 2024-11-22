@@ -1,4 +1,48 @@
 {
+    "common": {
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete",
+            "view": "View",
+            "save": "Save",
+            "cancel": "Cancel",
+            "close": "Close",
+            "add": "Add",
+            "update": "Update",
+            "back": "Back",
+            "submit": "Submit",
+            "reset": "Reset",
+            "search": "Search",
+            "clear": "Clear",
+            "confirm": "Confirm",
+            "yes": "Yes",
+            "no": "No",
+            "ok": "Ok",
+            "new": "New",
+            "delete_selected": "Delete selected",
+            "export": "Export"
+        },
+        "tooltips": {
+            "delete_selected": "Delete selected",
+            "export": "Export",
+            "lock_row": "Lock this row",
+            "unlock_row": "Unlock this row",
+            "lock_column": "Lock this column",
+            "unlock_column": "Unlock this column"
+        },
+        "columns": {
+            "id": "ID",
+            "created_at": "Created at",
+            "updated_at": "Updated at",
+            "actions": "Actions"
+        },
+        "placeholders": {
+            "search": "Search...",
+            "select": "Select...",
+            "type": "Type...",
+            "displayed_columns": "Displayed columns"
+        }
+    },
     "login": {
         "welcome": "Welcome",
         "sign_in_message": "Please sign in",
@@ -11,32 +55,48 @@
     "logout": {
         "error": "Logout error"
     },
-    "admin": {
-        "home": "Home",
-        "dashboard": "Dashboard",
-        "user": "User",
-        "users": "Users",
-        "roles": "Roles"
-    },
-    "apptopbar": {
-        "profile": "Profile",
-        "logout": "Logout"
+    "navigation": {
+        "side_bar": {
+            "home": "Home",
+            "dashboard": "Dashboard",
+            "user": "User",
+            "users": "Users",
+            "roles": "Roles",
+            "profile": "Profile",
+            "logout": "Logout"
+        },
+        "top_bar": {
+            "search": "Search...",
+            "notifications": "Notifications",
+            "settings": "Settings",
+            "profile": "Profile",
+            "logout": "Logout"
+        }
     },
     "role": {
-        "name": "Name",
-        "guard_name": "Guard name",
-        "new": "New",
-        "delete_selected": "Delete selected",
-        "displayed_column": "Displayed columns",
-        "search_placeholder": "Search...",
-        "export": "Export",
-        "manage_role": "Manage roles",
-        "lock_row_tooltip": "Lock this row",
-        "edit_tooltip": "Edit role",
-        "delete_tooltip": "Delete role",
-        "add_tooltip": "Add role",
-        "delete_selected_tooltip": "Delete selected roles",
-        "actions": "Actions",
-        "view_tooltip": "View role"
+        "titles": {
+            "manage": "Manage roles",
+            "add": "Add new role"
+        },
+        "placeholders": {
+            "select_guard_name": "Select guard name",
+            "permissions_available": "Permissions available",
+            "permissions_selected": "Permissions selected"
+        },
+        "columns": {
+            "name": "Name",
+            "guard_name": "Guard name",
+            "permissions": "Permissions"
+        },
+        "tooltips": {
+            "edit": "Edit role",
+            "delete": "Delete role",
+            "add": "Add role",
+            "delete_selected": "Delete selected roles",
+            "view": "View role"
+        },
+        "paggination": {
+            "showing_to_of_roles": "Showing {first} to {last} of {totalRecords} roles"
+        }
     }
 }

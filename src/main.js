@@ -1,6 +1,7 @@
 //main.js
 import '@/assets/styles.scss';
 import '@/assets/tailwind.css';
+import i18n from '@/plugins/i18n';
 import '@/services/EchoService';
 import Aura from '@primevue/themes/aura';
 import { createPinia } from 'pinia';
@@ -12,14 +13,10 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 
-import i18n from '@/plugins/i18n';
-
-import Tooltip from 'primevue/tooltip';
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 
 const app = createApp(App);
-app.directive('tooltip', Tooltip);
 app.use(pinia);
 
 app.use(i18n);

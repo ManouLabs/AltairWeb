@@ -1,8 +1,18 @@
 {
+    "common": {
+        "new": "جديد",
+        "delete_selected": "حذف المحدد",
+        "actions": "إجراءات",
+        "displayed_column": "الأعمدة المعروضة",
+        "search_placeholder": "بحث...",
+        "export": "تصدير",
+        "lock_row_tooltip": "قفل هذا الصف",
+        "unlock_row_tooltip": "فتح قفل هذا الصف"
+    },
     "login": {
-        "welcome": "أهلا بك",
+        "welcome": "مرحبا",
         "sign_in_message": "يرجى تسجيل الدخول",
-        "email": "البريد الإلكتروني",
+        "email": "عنوان البريد الإلكتروني",
         "password": "كلمة المرور",
         "sign_in": "تسجيل الدخول",
         "forgot_password": "نسيت كلمة المرور",
@@ -11,25 +21,23 @@
     "logout": {
         "error": "خطأ في تسجيل الخروج"
     },
-    "admin": {
-        "home": "الصفحة الرئيسية",
+    "navigation": {
+        "home": "الرئيسية",
         "dashboard": "لوحة التحكم",
         "user": "مستخدم",
         "users": "المستخدمون",
-        "roles": "الأدوار"
-    },
-    "apptopbar": {
+        "roles": "الأدوار",
         "profile": "الملف الشخصي",
         "logout": "تسجيل الخروج"
     },
     "role": {
         "name": "الاسم",
         "guard_name": "اسم الحارس",
-        "new": "جديد",
-        "delete_selected": "حذف المحدد",
-        "displayed_column": "الأعمدة المعروضة",
-        "search_placeholder": "بحث...",
-        "export": "تصدير",
-        "manage_role": "إدارة الأدوار"
+        "manage_role": "إدارة الأدوار",
+        "edit_tooltip": "تحرير الدور",
+        "delete_tooltip": "حذف الدور",
+        "add_tooltip": "إضافة دور",
+        "delete_selected_tooltip": "حذف الأدوار المحددة",
+        "view_tooltip": "عرض الدور"
     }
 }

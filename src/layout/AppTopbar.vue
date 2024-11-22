@@ -39,11 +39,11 @@ const menuItems = computed(() => [
         label: user.name,
         items: [
             {
-                label: t('apptopbar.profile'),
+                label: t('navigation.top_bar.profile'),
                 icon: 'pi pi-user'
             },
             {
-                label: t('apptopbar.logout'),
+                label: t('navigation.top_bar.logout'),
                 icon: 'pi pi-power-off',
                 command: logoutUser
             }

@@ -1,4 +1,14 @@
 {
+    "common": {
+        "new": "Nouveau",
+        "delete_selected": "Supprimer la sélection",
+        "actions": "Actions",
+        "displayed_column": "Colonnes affichées",
+        "search_placeholder": "Rechercher...",
+        "export": "Exporter",
+        "lock_row_tooltip": "Verrouiller cette ligne",
+        "unlock_row_tooltip": "Déverrouiller cette ligne"
+    },
     "login": {
         "welcome": "Bienvenue",
         "sign_in_message": "Veuillez vous connecter",
@@ -11,25 +21,23 @@
     "logout": {
         "error": "Erreur de déconnexion"
     },
-    "admin": {
+    "navigation": {
         "home": "Accueil",
-        "dashboard": "Panneau de contrôle",
+        "dashboard": "Tableau de bord",
         "user": "Utilisateur",
         "users": "Utilisateurs",
-        "roles": "Rôles"
-    },
-    "apptopbar": {
+        "roles": "Rôles",
         "profile": "Profil",
         "logout": "Déconnexion"
     },
     "role": {
         "name": "Nom",
-        "guard_name": "Nom du garde",
-        "new": "Nouveau",
-        "delete_selected": "Supprimer la sélection",
-        "displayed_column": "Colonnes affichées",
-        "search_placeholder": "Rechercher...",
-        "export": "Exporter",
-        "manage_role": "Gestion des rôles"
+        "guard_name": "Nom de garde",
+        "manage_role": "Gérer les rôles",
+        "edit_tooltip": "Modifier le rôle",
+        "delete_tooltip": "Supprimer le rôle",
+        "add_tooltip": "Ajouter un rôle",
+        "delete_selected_tooltip": "Supprimer les rôles sélectionnés",
+        "view_tooltip": "Voir le rôle"
     }
 }

@@ -1,6 +1,6 @@
 <script setup>
-import { useLoading } from '@/stores/useLoadingStore'; // Import the loading store
-import ProgressBar from 'primevue/progressbar'; // Import PrimeVue's ProgressBar
+import { useLoading } from '@/stores/useLoadingStore';
+import ProgressBar from 'primevue/progressbar';
 import Toast from 'primevue/toast';
 
 // Access the loading store using Pinia

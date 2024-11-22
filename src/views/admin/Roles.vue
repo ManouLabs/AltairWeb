@@ -1,12 +1,14 @@
 <script setup>
 import { useRoleService } from '@/services/useRoleService';
+import { useLoading } from '@/stores/useLoadingStore';
 import { FilterMatchMode } from '@primevue/core/api';
 import { DataTable } from 'primevue';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useColumnStore } from '../../stores/useColumnStore';
-
+const loading = useLoading();
+const errors = ref();
 const columnStore = useColumnStore();
 const toast = useToast();
 const { t } = useI18n();
@@ -15,24 +17,41 @@ const reccords = ref();
 const reccordDialog = ref(false);
 const deleteReccordDialog = ref(false);
 const deleteReccordsDialog = ref(false);
-const reccord = ref({});
+const permissionsOptions = ref(null);
+const reccord = ref(null);
 const selectedReccords = ref();
 
 const defaultColumns = ref([
-    { field: 'name', header: t('role.name') },
-    { field: 'guard_name', header: t('role.guard_name') }
+    { field: 'name', header: t('role.columns.name') },
+    { field: 'guard_name', header: t('role.columns.guard_name') },
+    { field: 'permissions', header: t('role.columns.permissions') }
 ]);
 
 const selectedColumns = ref([]);
 onMounted(() => {
-    useRoleService.getRoles().then((paginate) => (console.log(paginate), (reccords.value = paginate.data)));
+    useRoleService
+        .getRoles()
+        .then((data) => {
+            reccords.value = data.roles;
+            permissionsOptions.value = [data.permissions, []];
+        })
+        .catch((error) => {
+            toast.add({
+                severity: 'error',
+                summary: error.message,
+                detail: error.response.data.message,
+                group: 'tc',
+                life: 3000
+            });
+        });
     selectedColumns.value = columnStore.getColumns('rolesColumns') || defaultColumns.value;
 });
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    guard_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
+    guard_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+    permissions: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
 });
 
 const columnChanged = (newColumns) => {
@@ -49,7 +68,6 @@ const toggleLock = (data, frozen, index) => {
         reccords.value = reccords.value.filter((c, i) => i !== index);
         lockedRow.value.push(data);
     }
-
     reccords.value.sort((val1, val2) => {
         return val1.id < val2.id ? -1 : 1;
     });
@@ -57,55 +75,59 @@ const toggleLock = (data, frozen, index) => {
 
 const frozenColumns = ref({
     name: false,
-    guard_name: false
+    guard_name: false,
+    permissions: false
 });
 
 const toggleColumnFrozen = (column) => {
     frozenColumns.value[column] = !frozenColumns.value[column];
 };
 
-const submitted = ref(false);
+function hideDialog() {
+    reccordDialog.value = false;
+}
 
 function openNew() {
-    reccord.value = {};
-    submitted.value = false;
+    reccord.value = { name: null, guard_name: null, permissions: permissionsOptions.value };
+    errors.value = null;
     reccordDialog.value = true;
 }
 
 function saveReccord() {
-    submitted.value = true;
-
-    if (reccord?.value.name?.trim()) {
-        if (reccord.value.id) {
-            reccord.value.inventoryStatus = reccord.value.inventoryStatus.value ? reccord.value.inventoryStatus.value : reccord.value.inventoryStatus;
-
+    reccord.value.permissions = reccord.value.permissions[1].map((permission) => permission.id);
+    loading.startLoading();
+    useRoleService
+        .storeRole(reccord.value)
+        .then((data) => {
+            console.log('data', data);
+            reccords.value.push(data.role);
+            reccordDialog.value = false;
             toast.add({
                 severity: 'success',
-                summary: 'Successful',
-                detail: 'Role Updated',
+                summary: 'Role Created',
+                detail: 'The Role has been created successfully',
                 life: 3000
             });
-        } else {
-            reccord.value.id = createId();
-            reccord.value.code = createId();
-            reccord.value.image = 'role-placeholder.svg';
-            reccord.value.inventoryStatus = reccord.value.inventoryStatus ? reccord.value.inventoryStatus.value : 'INSTOCK';
-            reccords.value.push(reccord.value);
+        })
+        .catch((error) => {
+            console.log('error', error);
+            errors.value = error.response.data.errors;
             toast.add({
-                severity: 'success',
-                summary: 'Successful',
-                detail: 'Role Created',
+                severity: 'error',
+                summary: error.message,
+                detail: error.response.data.message,
+                group: 'tc',
                 life: 3000
             });
-        }
-
-        reccordDialog.value = false;
-        reccord.value = {};
-    }
+        })
+        .finally(() => {
+            reccord.value = {};
+            loading.stopLoading();
+        });
 }
 
-function editReccord(prod) {
-    reccord.value = { ...prod };
+function editReccord(row) {
+    reccord.value = { ...row };
     reccordDialog.value = true;
 }
 
@@ -124,15 +146,6 @@ function deleteReccord() {
         detail: 'Role Deleted',
         life: 3000
     });
-}
-
-function createId() {
-    let id = '';
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (var i = 0; i < 5; i++) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return id;
 }
 
 function exportCSV() {
@@ -174,10 +187,9 @@ function deleteSelectedReccords() {
                 :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} roles"
+                :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} roles'"
                 :frozenValue="lockedRow"
                 scrollable
-                scrollHeight="400px"
                 :pt="{
                     table: { style: 'min-width: 50rem' },
                     bodyrow: ({ props }) => ({
@@ -188,15 +200,15 @@ function deleteSelectedReccords() {
                 <template #header>
                     <div class="flex items-center">
                         <h2 class="text-xl font-bold min-w-40">
-                            {{ t('role.manage_role') }}
+                            {{ t('role.titles.manage') }}
                         </h2>
                         <Toolbar class="w-full">
                             <template #start>
                                 <div class="flex space-x-2">
-                                    <Button v-tooltip.top="t('role.add_tooltip')" :label="t('role.new')" icon="pi pi-plus" severity="primary" @click="openNew" outlined />
+                                    <Button v-tooltip.top="t('role.tooltips.add')" :label="t('common.actions.new')" icon="pi pi-plus" severity="primary" @click="openNew" outlined />
                                     <Button
-                                        v-tooltip.top="t('role.delete_selected_tooltip')"
-                                        :label="t('role.delete_selected')"
+                                        v-tooltip.top="t('role.tooltips.delete_selected')"
+                                        :label="t('common.actions.delete_selected')"
                                         icon="pi pi-trash"
                                         severity="danger"
                                         @click="confirmDeleteSelected"
@@ -208,7 +220,7 @@ function deleteSelectedReccords() {
                             <template #center>
                                 <FloatLabel class="w-full" variant="on">
                                     <MultiSelect id="selected_columns" :modelValue="selectedColumns" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
-                                    <label for="selected_columns">{{ t('role.displayed_column') }}</label>
+                                    <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
                                 </FloatLabel>
                             </template>
                             <template #end>
@@ -219,10 +231,10 @@ function deleteSelectedReccords() {
                                                 <i class="pi pi-search" />
                                             </InputIcon>
                                             <InputText id="global_search" v-model="filters['global'].value" />
-                                            <label for="global_search">{{ t('role.search_placeholder') }}</label>
+                                            <label for="global_search">{{ t('common.placeholders.search') }}</label>
                                         </IconField>
                                     </FloatLabel>
-                                    <Button :label="t('role.export')" icon="pi pi-upload" class="min-w-28 ml-2" outlined severity="info" @click="exportCSV($event)" />
+                                    <Button :label="t('common.actions.export')" icon="pi pi-upload" class="min-w-28 ml-2" outlined severity="info" @click="exportCSV($event)" />
                                 </div>
                             </template>
                         </Toolbar>
@@ -234,8 +246,14 @@ function deleteSelectedReccords() {
                 <Column :frozen="frozenColumns.name" v-if="selectedColumns.some((column) => column.field === 'name')" field="name" sortable class="min-w-32">
                     <template #header>
                         <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.name }">{{ t('role.name') }}</div>
-                            <Button v-tooltip.top="t('role.lock_row_tooltip')" :icon="frozenColumns.name ? 'pi pi-lock' : 'pi pi-lock-open'" text @click="toggleColumnFrozen('name')" severity="contrast" />
+                            <div :class="{ 'font-bold': frozenColumns.name }">{{ t('role.columns.name') }}</div>
+                            <Button
+                                v-tooltip.top="frozenColumns.name ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
+                                :icon="frozenColumns.name ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                text
+                                @click="toggleColumnFrozen('name')"
+                                severity="contrast"
+                            />
                         </div>
                     </template>
                     <template #body="{ data }">
@@ -245,83 +263,95 @@ function deleteSelectedReccords() {
                 <Column :frozen="frozenColumns.guard_name" v-if="selectedColumns.some((column) => column.field === 'guard_name')" field="guard_name" sortable class="min-w-32">
                     <template #header>
                         <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ t('role.guard_name') }}</div>
-                            <Button v-tooltip.top="t('role.lock_row_tooltip')" :icon="frozenColumns.guard_name ? 'pi pi-lock' : 'pi pi-lock-open'" text @click="toggleColumnFrozen('guard_name')" severity="contrast" />
+                            <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ t('role.columns.guard_name') }}</div>
+                            <Button
+                                v-tooltip.top="frozenColumns.guard_name ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
+                                :icon="frozenColumns.guard_name ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                text
+                                @click="toggleColumnFrozen('guard_name')"
+                                severity="contrast"
+                            />
                         </div>
                     </template>
                     <template #body="{ data }">
-                        <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ data.name }}</div>
+                        <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ data.guard_name }}</div>
                     </template>
                 </Column>
-                <Column :exportable="false" style="min-width: 12rem" :header="t('role.actions')">
+                <Column :frozen="frozenColumns.permissions" v-if="selectedColumns.some((column) => column.field === 'permissions')" field="permissions" sortable class="min-w-32">
+                    <template #header>
+                        <div class="flex justify-between w-full items-center">
+                            <div :class="{ 'font-bold': frozenColumns.permissions }">{{ t('role.columns.permissions') }}</div>
+                            <Button
+                                v-tooltip.top="frozenColumns.permissions ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
+                                :icon="frozenColumns.permissions ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                text
+                                @click="toggleColumnFrozen('permissions')"
+                                severity="contrast"
+                            />
+                        </div>
+                    </template>
+                    <template #body="{ data }">
+                        <div v-for="permission in data.permissions" :key="permission.id">
+                            <Tag severity="info" :value="permission.name" :class="{ 'font-bold': frozenColumns.permissions }" />
+                        </div>
+                    </template>
+                </Column>
+                <Column :exportable="false" style="min-width: 12rem" :header="t('common.columns.actions')">
                     <template #body="{ data, frozenRow, index }">
                         <div class="flex justify-between">
                             <div class="flex space-x-2">
-                                <Button v-tooltip.top="t('role.view_tooltip')" icon="pi pi-eye" outlined rounded @click="editReccord(data)" severity="secondary" />
-                                <Button v-tooltip.top="t('role.edit_tooltip')" icon="pi pi-pencil" outlined rounded @click="editReccord(data)" />
-                                <Button v-tooltip.top="t('role.delete_tooltip')" icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteReccord(data)" />
+                                <Button v-tooltip.top="t('role.tooltips.view')" icon="pi pi-eye" outlined rounded @click="editReccord(data)" severity="secondary" />
+                                <Button v-tooltip.top="t('role.tooltips.edit')" icon="pi pi-pencil" outlined rounded @click="editReccord(data)" />
+                                <Button v-tooltip.top="t('role.tooltips.delete')" icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteReccord(data)" />
                             </div>
-                            <Button v-tooltip.top="t('role.lock_row_tooltip')" :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'" text @click="toggleLock(data, frozenRow, index)" severity="contrast" />
+                            <Button
+                                v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"
+                                :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                text
+                                @click="toggleLock(data, frozenRow, index)"
+                                severity="contrast"
+                            />
                         </div>
                     </template>
                 </Column>
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="reccordDialog" :style="{ width: '450px' }" header="Role Details" :modal="true">
-            <div class="flex flex-col gap-6">
-                <img v-if="reccord.image" :src="`https://primefaces.org/cdn/primevue/images/role/${reccord.image}`" :alt="reccord.image" class="block m-auto pb-4" />
+        <Dialog v-model:visible="reccordDialog" :header="t('role.titles.add')" :modal="true">
+            <div class="flex flex-col gap-8 pt-2">
                 <div>
-                    <label for="name" class="block font-bold mb-3">Name</label>
-                    <InputText id="name" v-model.trim="reccord.name" required="true" autofocus :invalid="submitted && !reccord.name" fluid />
-                    <small v-if="submitted && !reccord.name" class="text-red-500">Name is required.</small>
+                    <FloatLabel variant="on">
+                        <label for="name" class="block font-bold mb-3">{{ t('role.columns.name') }}</label>
+                        <InputText id="name" v-model.trim="reccord.name" required="true" autofocus fluid :invalid="errors?.name ? true : false" />
+                    </FloatLabel>
+                    <ErrorMessage field="name" :errors="errors" />
                 </div>
                 <div>
-                    <label for="description" class="block font-bold mb-3">Description</label>
-                    <Textarea id="description" v-model="reccord.description" required="true" rows="3" cols="20" fluid />
+                    <FloatLabel>
+                        <label for="guard_name" class="block font-bold mb-3">{{ t('role.columns.guard_name') }}</label>
+                        <Select id="guard_name" v-model="reccord.guard_name" :options="['api', 'web']" :placeholder="t('role.placeholders.select_guard_name')" fluid checkmark showClear :invalid="errors?.guard_name ? true : false"></Select>
+                    </FloatLabel>
+                    <ErrorMessage field="guard_name" :errors="errors" />
                 </div>
                 <div>
-                    <label for="inventoryStatus" class="block font-bold mb-3">Inventory Status</label>
-                    <Select id="inventoryStatus" v-model="reccord.inventoryStatus" :options="statuses" optionLabel="label" placeholder="Select a Status" fluid></Select>
-                </div>
-
-                <div>
-                    <span class="block font-bold mb-4">Category</span>
-                    <div class="grid grid-cols-12 gap-4">
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category1" v-model="reccord.category" name="category" value="Accessories" />
-                            <label for="category1">Accessories</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category2" v-model="reccord.category" name="category" value="Clothing" />
-                            <label for="category2">Clothing</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category3" v-model="reccord.category" name="category" value="Electronics" />
-                            <label for="category3">Electronics</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category4" v-model="reccord.category" name="category" value="Fitness" />
-                            <label for="category4">Fitness</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-6">
-                        <label for="price" class="block font-bold mb-3">Price</label>
-                        <InputNumber id="price" v-model="reccord.price" mode="currency" currency="USD" locale="en-US" fluid />
-                    </div>
-                    <div class="col-span-6">
-                        <label for="quantity" class="block font-bold mb-3">Quantity</label>
-                        <InputNumber id="quantity" v-model="reccord.quantity" integeronly fluid />
-                    </div>
+                    <ErrorMessage field="permissions" :errors="errors" />
+                    <PickList v-model="reccord.permissions" dataKey="id" breakpoint="1400px" striped :invalid="errors?.permissions ? true : false" pt:header:class="bg-blue-500">
+                        <template #sourceheader>
+                            {{ t('role.placeholders.permissions_available') }}
+                        </template>
+                        <template #targetheader>
+                            {{ t('role.placeholders.permissions_selected') }}
+                        </template>
+                        <template #option="{ option }">
+                            {{ option.name }}
+                        </template>
+                    </PickList>
                 </div>
             </div>
 
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Save" icon="pi pi-check" @click="saveReccord" />
+                <Button :label="t('common.actions.cancel')" icon="pi pi-times" text @click="hideDialog" />
+                <Button :label="t('common.actions.save')" icon="pi pi-check" @click="saveReccord" />
             </template>
         </Dialog>
 

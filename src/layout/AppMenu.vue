@@ -8,20 +8,20 @@ const { t } = useI18n();
 
 const model = computed(() => [
     {
-        label: t('admin.home'),
+        label: t('navigation.side_bar.home'),
         items: [
-            { label: t('admin.dashboard'), icon: 'pi pi-fw pi-home', to: '/admin/dashboard' },
+            { label: t('navigation.side_bar.dashboard'), icon: 'pi pi-fw pi-home', to: '/admin/dashboard' },
             {
-                label: t('admin.user'),
+                label: t('navigation.side_bar.user'),
                 icon: 'pi pi-fw pi-user',
                 items: [
                     {
-                        label: t('admin.users'),
+                        label: t('navigation.side_bar.users'),
                         icon: 'pi pi-fw pi-users',
                         to: '/admin/users'
                     },
                     {
-                        label: t('admin.roles'),
+                        label: t('navigation.side_bar.roles'),
                         icon: 'pi pi-fw pi-wrench',
                         to: '/admin/roles'
                     }
