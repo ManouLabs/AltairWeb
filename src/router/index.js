@@ -51,8 +51,10 @@ router.beforeEach(async (to, from, next) => {
     loadingStore.startLoading();
 
     try {
-        if (authStore.isAuthenticated) {
-            await authStore.fetchUser();
+        if (to.meta.requiresAuth) {
+            if (!authStore.isAuthenticated || !authStore.user) {
+                await authStore.fetchUser();
+            }
         }
 
         await handleRouteGuard(to, next, authStore);

@@ -30,16 +30,20 @@ const defaultColumns = ref([
 
 const selectedColumns = ref([]);
 const subscription = ref(null);
+
 onMounted(() => {
-    subscription.value = Echo.private('super-admin').listen('RoleCreated', (event) => {
-        console.log('New Role Created:', event);
-        toast.add({
-            severity: 'success',
-            summary: 'New Role Created',
-            detail: `Role: ${event.role.name}`,
-            life: 3000
-        });
-        reccords.value.push(event.role);
+    subscription.value = Echo.private('data-stream.role').listen('DataStream', (event) => {
+        const exists = reccords.value.some((record) => record.id === event.data.id);
+        if (!exists) {
+            reccords.value.unshift(event.data);
+            toast.add({
+                severity: 'success',
+                summary: t('common.toasts.new.summary', { entity: 'Role' }),
+                detail: t('common.toasts.new.detail', { entity: 'Role' }),
+                life: 8000,
+                group: 'br'
+            });
+        }
     });
     useRoleService
         .getRoles()
@@ -53,7 +57,7 @@ onMounted(() => {
                 summary: error.message,
                 detail: error.response.data.message,
                 group: 'tc',
-                life: 3000
+                life: 8000
             });
         });
     selectedColumns.value = columnStore.getColumns('rolesColumns') || defaultColumns.value;
@@ -111,17 +115,16 @@ function saveReccord() {
     useRoleService
         .storeRole(reccord.value)
         .then((response) => {
-            console.log('response', response);
-
-            console.log('reccords', reccords.value);
+            reccords.value.unshift(response.data);
             reccordDialog.value = false;
             reccord.value = {};
-            // toast.add({
-            //     severity: 'success',
-            //     summary: 'Role Created',
-            //     detail: 'The Role has been created successfully',
-            //     life: 3000
-            // });
+            toast.add({
+                severity: 'success',
+                summary: t('common.toasts.created.summary', { entity: 'Role' }),
+                detail: t('common.toasts.created.detail', { entity: 'Role' }),
+                life: 8000,
+                group: 'tc'
+            });
         })
         .catch((error) => {
             console.log('error', error);
@@ -131,7 +134,7 @@ function saveReccord() {
                 summary: error.message,
                 detail: error.response.data.message,
                 group: 'tc',
-                life: 3000
+                life: 8000
             });
         })
         .finally(() => {
@@ -157,7 +160,7 @@ function deleteReccord() {
         severity: 'success',
         summary: 'Successful',
         detail: 'Role Deleted',
-        life: 3000
+        life: 8000
     });
 }
 
@@ -177,11 +180,10 @@ function deleteSelectedReccords() {
         severity: 'success',
         summary: 'Successful',
         detail: 'Roles Deleted',
-        life: 3000
+        life: 8000
     });
 }
 onUnmounted(() => {
-    // Unsubscribe from Echo channel when the component is unmounted
     if (subscription.value) {
         subscription.value.stopListening('RoleCreated');
     }

@@ -41,6 +41,33 @@
             "select": "Select...",
             "type": "Type...",
             "displayed_columns": "Displayed columns"
+        },
+
+        "toasts": {
+            "created": {
+                "summary": "{entity} creation was successful",
+                "detail": "The {entity} has been successfully created and is ready for use"
+            },
+            "updated": {
+                "summary": "{entity} update was successful",
+                "detail": "The {entity} has been successfully updated and is ready for use"
+            },
+            "deleted": {
+                "summary": "{entity} deletion was successful",
+                "detail": "The {entity} has been successfully deleted"
+            },
+            "delete_selected": {
+                "summary": "Selected {entity} deletion was successful",
+                "detail": "The selected {entity} have been successfully deleted"
+            },
+            "error": {
+                "summary": "An error occurred",
+                "detail": "An error occurred while processing your request"
+            },
+            "new": {
+                "summary": "New {entity}",
+                "detail": "New {entity} has been created"
+            }
         }
     },
     "login": {

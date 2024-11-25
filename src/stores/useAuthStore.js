@@ -7,7 +7,9 @@ export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null,
         isAuthenticated: false,
-        errors: {}
+        errors: {},
+        isAdmin: false,
+        permissions: []
     }),
 
     actions: {
@@ -15,7 +17,6 @@ export const useAuthStore = defineStore('auth', {
             try {
                 await apiClient.get('/sanctum/csrf-cookie');
                 await apiClient.post('/login', { email, password });
-                this.isAuthenticated = true;
                 await this.fetchUser();
             } catch (error) {
                 this.processError(error, 'Login failed');
@@ -26,7 +27,10 @@ export const useAuthStore = defineStore('auth', {
         async fetchUser() {
             try {
                 const response = await apiClient.get('/api/user');
-                this.user = response.data;
+                this.isAuthenticated = true;
+                this.user = response.data.user;
+                this.isAdmin = response.data.isAdmin;
+                this.permissions = response.data.permissions;
             } catch (error) {
                 if (error.response?.status === 401) {
                     router.push('/auth/login');
@@ -69,11 +73,5 @@ export const useAuthStore = defineStore('auth', {
                 general: defaultMessage || 'An unexpected error occurred'
             };
         }
-    },
-
-    persist: {
-        key: 'auth',
-        storage: localStorage,
-        pick: ['user', 'isAuthenticated']
     }
 });
