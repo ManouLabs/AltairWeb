@@ -1,26 +1,27 @@
 <script setup>
 import { useRoleService } from '@/services/useRoleService';
+import { useColumnStore } from '@/stores/useColumnStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { ACTIONS, findRecordIndex, useShowToast } from '@/utilities/actions';
 import { FilterMatchMode } from '@primevue/core/api';
-import { DataTable } from 'primevue';
-import { useToast } from 'primevue/usetoast';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { useConfirm } from 'primevue/useconfirm';
+import { useDialog } from 'primevue/usedialog';
+import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useColumnStore } from '../../../stores/useColumnStore';
 
 const loading = useLoading();
-const errors = ref();
 const columnStore = useColumnStore();
-const toast = useToast();
+
+const confirm = useConfirm();
+const dialog = useDialog();
+const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
+const { showToast } = useShowToast();
 const { t } = useI18n();
 const dt = ref();
-const reccords = ref();
-const reccordDialog = ref(false);
-const deleteReccordDialog = ref(false);
-const deleteReccordsDialog = ref(false);
-const permissionsOptions = ref(null);
-const reccord = ref(null);
-const selectedReccords = ref();
+const records = ref();
+
+const record = ref(null);
+const selectedRecords = ref();
 
 const defaultColumns = ref([
     { field: 'name', header: t('role.columns.name') },
@@ -31,34 +32,49 @@ const defaultColumns = ref([
 const selectedColumns = ref([]);
 const subscription = ref(null);
 
+const allPermissions = ref(null);
+const permissionsOptions = ref([], []);
+
 onMounted(() => {
     subscription.value = Echo.private('data-stream.role').listen('DataStream', (event) => {
-        const exists = reccords.value.some((record) => record.id === event.data.id);
-        if (!exists) {
-            reccords.value.unshift(event.data);
-            toast.add({
-                severity: 'success',
-                summary: t('common.toasts.new.summary', { entity: 'Role' }),
-                detail: t('common.toasts.new.detail', { entity: 'Role' }),
-                life: 8000,
-                group: 'br'
-            });
+        switch (event.action) {
+            case ACTIONS.DELETE: {
+                const index = findRecordIndex(records, event.data.id);
+                if (index !== -1) {
+                    records.value.splice(index, 1);
+                }
+                break;
+            }
+            case ACTIONS.UPDATE: {
+                const index = findRecordIndex(records, event.data.id);
+                if (index !== -1) {
+                    records.value[index] = event.data;
+                }
+                break;
+            }
+            case ACTIONS.STORE: {
+                const exists = records.value.some((record) => record.id === event.data.id);
+                if (!exists) {
+                    records.value.unshift(event.data);
+                }
+                break;
+            }
+            default:
+                console.error(`Unhandled action: ${event.action}`);
         }
     });
+    loading.startDataLoading();
     useRoleService
         .getRoles()
         .then((data) => {
-            reccords.value = data.roles;
-            permissionsOptions.value = [data.permissions, []];
+            records.value = data.roles;
+            allPermissions.value = [data.permissions, []];
         })
         .catch((error) => {
-            toast.add({
-                severity: 'error',
-                summary: error.message,
-                detail: error.response.data.message,
-                group: 'tc',
-                life: 8000
-            });
+            showToast('error', 'error', 'role');
+        })
+        .finally(() => {
+            loading.stopDataLoading();
         });
     selectedColumns.value = columnStore.getColumns('rolesColumns') || defaultColumns.value;
 });
@@ -79,12 +95,12 @@ const lockedRow = ref([]);
 const toggleLock = (data, frozen, index) => {
     if (frozen) {
         lockedRow.value = lockedRow.value.filter((c, i) => i !== index);
-        reccords.value.push(data);
+        records.value.push(data);
     } else {
-        reccords.value = reccords.value.filter((c, i) => i !== index);
+        records.value = records.value.filter((c, i) => i !== index);
         lockedRow.value.push(data);
     }
-    reccords.value.sort((val1, val2) => {
+    records.value.sort((val1, val2) => {
         return val1.id < val2.id ? -1 : 1;
     });
 };
@@ -99,68 +115,87 @@ const toggleColumnFrozen = (column) => {
     frozenColumns.value[column] = !frozenColumns.value[column];
 };
 
-function hideDialog() {
-    reccordDialog.value = false;
+function addRecord() {
+    record.value = { name: null, guard_name: null, permissions: [] };
+    permissionsOptions.value = allPermissions.value;
+    openDialog();
 }
-
-function openNew() {
-    reccord.value = { name: null, guard_name: null, permissions: [] };
-    errors.value = null;
-    reccordDialog.value = true;
+function editRecord(row) {
+    record.value = row;
+    permissionsOptions.value[1] = row.permissions;
+    permissionsOptions.value[0] = allPermissions.value[0].filter((permission) => !permissionsOptions.value[1].some((sp) => sp.id === permission.id));
+    openDialog();
 }
+const openDialog = () => {
+    dialog.open(formComponent, {
+        props: {
+            header: t('common.titles.add', { entity: t('entity.role') }),
+            style: {
+                width: '30vw'
+            },
+            breakpoints: {
+                '960px': '75vw',
+                '640px': '90vw'
+            },
+            modal: true,
+            maximizable: true
+        },
+        data: {
+            record: record.value,
+            permissionsOptions: permissionsOptions.value,
+            action: record.value.id ? ACTIONS.UPDATE : ACTIONS.STORE
+        },
+        onClose: (result) => {
+            if (result && result.data?.record?.id) {
+                switch (result.data?.action) {
+                    case ACTIONS.STORE:
+                        records.value.unshift(result.data.record);
+                        showToast('success', ACTIONS.STORE, 'role');
+                        break;
+                    case ACTIONS.UPDATE: {
+                        const index = findRecordIndex(records, result.data.record.id);
+                        records.value[index] = result.data.record;
+                        showToast('success', ACTIONS.UPDATE, 'role');
+                        break;
+                    }
+                    default:
+                        console.error(`Unhandled action: ${result.action}`);
+                }
+            }
+        }
+    });
+};
 
-function saveReccord() {
-    reccord.value.permissions = permissionsOptions.value[1].map((permission) => permission.id);
-    loading.startLoading();
-    useRoleService
-        .storeRole(reccord.value)
-        .then((response) => {
-            reccords.value.unshift(response.data);
-            reccordDialog.value = false;
-            reccord.value = {};
-            toast.add({
-                severity: 'success',
-                summary: t('common.toasts.created.summary', { entity: 'Role' }),
-                detail: t('common.toasts.created.detail', { entity: 'Role' }),
-                life: 8000,
-                group: 'tc'
-            });
-        })
-        .catch((error) => {
-            console.log('error', error);
-            errors.value = error.response.data.errors;
-            toast.add({
-                severity: 'error',
-                summary: error.message,
-                detail: error.response.data.message,
-                group: 'tc',
-                life: 8000
-            });
-        })
-        .finally(() => {
-            loading.stopLoading();
-        });
-}
-
-function editReccord(row) {
-    reccord.value = { ...row };
-    reccordDialog.value = true;
-}
-
-function confirmDeleteReccord(prod) {
-    reccord.value = prod;
-    deleteReccordDialog.value = true;
-}
-
-function deleteReccord() {
-    reccords.value = reccords.value.filter((val) => val.id !== reccord.value.id);
-    deleteReccordDialog.value = false;
-    reccord.value = {};
-    toast.add({
-        severity: 'success',
-        summary: 'Successful',
-        detail: 'Role Deleted',
-        life: 8000
+function confirmDeleteRecord(event, rolesIds) {
+    confirm.require({
+        target: event.currentTarget,
+        message: rolesIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.roles') }) : t('common.confirmations.delete.message', { entity: t('entity.role') }),
+        icon: 'pi pi-info-circle',
+        rejectProps: {
+            label: t('common.actions.cancel'),
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: t('common.actions.delete'),
+            severity: 'danger'
+        },
+        accept: () => {
+            useRoleService
+                .deleteRoles(rolesIds)
+                .then(() => {
+                    rolesIds.forEach((id) => {
+                        const index = findRecordIndex(records, id);
+                        if (index !== -1) {
+                            records.value.splice(index, 1);
+                        }
+                    });
+                    showToast('success', 'delete', 'role');
+                })
+                .catch((error) => {
+                    showToast('error', 'error', 'role');
+                });
+        }
     });
 }
 
@@ -168,24 +203,9 @@ function exportCSV() {
     dt.value.exportCSV();
 }
 
-function confirmDeleteSelected() {
-    deleteReccordsDialog.value = true;
-}
-
-function deleteSelectedReccords() {
-    reccords.value = reccords.value.filter((val) => !selectedReccords.value.includes(val));
-    deleteReccordsDialog.value = false;
-    selectedReccords.value = null;
-    toast.add({
-        severity: 'success',
-        summary: 'Successful',
-        detail: 'Roles Deleted',
-        life: 8000
-    });
-}
 onUnmounted(() => {
     if (subscription.value) {
-        subscription.value.stopListening('RoleCreated');
+        subscription.value.stopListening('DataStream');
     }
 });
 </script>
@@ -195,22 +215,22 @@ onUnmounted(() => {
         <div class="card">
             <DataTable
                 ref="dt"
-                v-model:selection="selectedReccords"
-                :value="reccords"
                 dataKey="id"
-                stripedRows
+                v-model:selection="selectedRecords"
+                :value="records"
+                :filters="filters"
                 removableSort
-                :paginator="true"
                 resizableColumns
                 columnResizeMode="fit"
                 :reorderableColumns="true"
+                :paginator="true"
                 :rows="5"
-                :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
-                :currentPageReportTemplate="'Showing {first} to {last} of {totalRecords} roles'"
+                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.roles') })"
                 :frozenValue="lockedRow"
                 scrollable
+                stripedRows
                 :pt="{
                     table: { style: 'min-width: 50rem' },
                     bodyrow: ({ props }) => ({
@@ -221,20 +241,25 @@ onUnmounted(() => {
                 <template #header>
                     <div class="flex items-center">
                         <h2 class="text-xl font-bold min-w-40">
-                            {{ t('role.titles.manage') }}
+                            {{ t('common.titles.manage', { entity: t('entity.roles') }) }}
                         </h2>
                         <Toolbar class="w-full">
                             <template #start>
                                 <div class="flex space-x-2">
-                                    <Button v-tooltip.top="t('role.tooltips.add')" :label="t('common.actions.new')" icon="pi pi-plus" severity="primary" @click="openNew" outlined />
+                                    <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })" :label="t('common.actions.new')" icon="pi pi-plus" severity="primary" @click="addRecord" outlined />
                                     <Button
-                                        v-tooltip.top="t('role.tooltips.delete_selected')"
+                                        v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.roles') })"
                                         :label="t('common.actions.delete_selected')"
                                         icon="pi pi-trash"
                                         severity="danger"
-                                        @click="confirmDeleteSelected"
+                                        @click="
+                                            confirmDeleteRecord(
+                                                $event,
+                                                selectedRecords.map((record) => record.id)
+                                            )
+                                        "
                                         outlined
-                                        :disabled="!selectedReccords || !selectedReccords.length"
+                                        :disabled="!selectedRecords || !selectedRecords.length"
                                     />
                                 </div>
                             </template>
@@ -255,16 +280,28 @@ onUnmounted(() => {
                                             <label for="global_search">{{ t('common.placeholders.search') }}</label>
                                         </IconField>
                                     </FloatLabel>
-                                    <Button :label="t('common.actions.export')" icon="pi pi-upload" class="min-w-28 ml-2" outlined severity="info" @click="exportCSV($event)" />
+                                    <Button
+                                        v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.roles') })"
+                                        :label="t('common.actions.export')"
+                                        icon="pi pi-upload"
+                                        class="min-w-28 ml-2"
+                                        outlined
+                                        severity="info"
+                                        @click="exportCSV($event)"
+                                    />
                                 </div>
                             </template>
                         </Toolbar>
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
-                <Column field="id" header="ID" sortable class="min-w-32" :reorderableColumn="false" />
-                <Column :frozen="frozenColumns.name" v-if="selectedColumns.some((column) => column.field === 'name')" field="name" sortable class="min-w-32">
+                <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
+                <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
+                    <template #body="{ data }">
+                        <DataCell>{{ data.id }}</DataCell>
+                    </template>
+                </Column>
+                <Column columnKey="name" field="name" :frozen="frozenColumns.name" v-if="selectedColumns.some((column) => column.field === 'name')" sortable class="min-w-32">
                     <template #header>
                         <div class="flex justify-between w-full items-center">
                             <div :class="{ 'font-bold': frozenColumns.name }">{{ t('role.columns.name') }}</div>
@@ -278,10 +315,12 @@ onUnmounted(() => {
                         </div>
                     </template>
                     <template #body="{ data }">
-                        <div :class="{ 'font-bold': frozenColumns.name }">{{ data.name }}</div>
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.name }">{{ data.name }}</div></DataCell
+                        >
                     </template>
                 </Column>
-                <Column :frozen="frozenColumns.guard_name" v-if="selectedColumns.some((column) => column.field === 'guard_name')" field="guard_name" sortable class="min-w-32">
+                <Column columnKey="guard_name" field="guard_name" :frozen="frozenColumns.guard_name" v-if="selectedColumns.some((column) => column.field === 'guard_name')" sortable class="min-w-32">
                     <template #header>
                         <div class="flex justify-between w-full items-center">
                             <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ t('role.columns.guard_name') }}</div>
@@ -295,10 +334,12 @@ onUnmounted(() => {
                         </div>
                     </template>
                     <template #body="{ data }">
-                        <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ data.guard_name }}</div>
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ data.guard_name }}</div></DataCell
+                        >
                     </template>
                 </Column>
-                <Column :frozen="frozenColumns.permissions" v-if="selectedColumns.some((column) => column.field === 'permissions')" field="permissions" sortable class="min-w-32">
+                <Column columnKey="permissions" :frozen="frozenColumns.permissions" v-if="selectedColumns.some((column) => column.field === 'permissions')" field="permissions" sortable class="min-w-32">
                     <template #header>
                         <div class="flex justify-between w-full items-center">
                             <div :class="{ 'font-bold': frozenColumns.permissions }">{{ t('role.columns.permissions') }}</div>
@@ -313,115 +354,33 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <div v-for="permission in data.permissions" :key="permission.id">
-                            <Tag severity="info" :value="permission.name" :class="{ 'font-bold': frozenColumns.permissions }" />
+                            <DataCell>
+                                <Tag severity="info" :value="permission.name" :class="{ 'font-bold': frozenColumns.permissions }" />
+                            </DataCell>
                         </div>
                     </template>
                 </Column>
-                <Column :exportable="false" style="min-width: 12rem" :header="t('common.columns.actions')">
+                <Column columnKey="actions" :exportable="false" style="min-width: 12rem" :header="t('common.columns.actions')">
                     <template #body="{ data, frozenRow, index }">
-                        <div class="flex justify-between">
-                            <div class="flex space-x-2">
-                                <Button v-tooltip.top="t('role.tooltips.view')" icon="pi pi-eye" outlined rounded @click="editReccord(data)" severity="secondary" />
-                                <Button v-tooltip.top="t('role.tooltips.edit')" icon="pi pi-pencil" outlined rounded @click="editReccord(data)" />
-                                <Button v-tooltip.top="t('role.tooltips.delete')" icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteReccord(data)" />
+                        <DataCell>
+                            <div class="flex justify-between">
+                                <div class="flex space-x-2">
+                                    <Button v-tooltip.top="t('common.tooltips.view', { entity: t('entity.role') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
+                                    <Button v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.role') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
+                                    <Button v-tooltip.top="t('common.tooltips.delete', { entity: t('entity.role') })" icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteRecord($event, [data.id])" />
+                                </div>
+                                <Button
+                                    v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"
+                                    :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                    text
+                                    @click="toggleLock(data, frozenRow, index)"
+                                    severity="contrast"
+                                />
                             </div>
-                            <Button
-                                v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"
-                                :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleLock(data, frozenRow, index)"
-                                severity="contrast"
-                            />
-                        </div>
+                        </DataCell>
                     </template>
                 </Column>
             </DataTable>
         </div>
-
-        <Dialog v-model:visible="reccordDialog" :header="t('role.titles.add')" :modal="true">
-            <div class="flex flex-col gap-8 pt-2">
-                <div>
-                    <FloatLabel variant="on">
-                        <label for="name" class="block font-bold mb-3">{{ t('role.columns.name') }}</label>
-                        <InputText :disabled="loading.isLoading" id="name" v-model.trim="reccord.name" required="true" autofocus fluid :invalid="errors?.name ? true : false" />
-                    </FloatLabel>
-                    <ErrorMessage field="name" :errors="errors" />
-                </div>
-                <div>
-                    <FloatLabel>
-                        <label for="guard_name" class="block font-bold mb-3">{{ t('role.columns.guard_name') }}</label>
-                        <Select
-                            :disabled="loading.isLoading"
-                            id="guard_name"
-                            v-model="reccord.guard_name"
-                            :options="['api', 'web']"
-                            :placeholder="t('role.placeholders.select_guard_name')"
-                            fluid
-                            checkmark
-                            showClear
-                            :invalid="errors?.guard_name ? true : false"
-                        ></Select>
-                    </FloatLabel>
-                    <ErrorMessage field="guard_name" :errors="errors" />
-                </div>
-                <div>
-                    <ErrorMessage field="permissions" :errors="errors" />
-                    <PickList
-                        :disabled="loading.isLoading"
-                        v-model="permissionsOptions"
-                        dataKey="id"
-                        breakpoint="1400px"
-                        :showSourceControls="false"
-                        :showTargetControls="false"
-                        striped
-                        :invalid="errors?.permissions ? true : false"
-                        pt:header:class="bg-blue-500"
-                        :pt="{
-                            sourceListContainer: { class: errors?.permissions ? 'rounded-md border border-red-500' : '' },
-                            targetListContainer: { class: errors?.permissions ? 'rounded-md border border-red-500' : '' }
-                        }"
-                    >
-                        <template #sourceheader>
-                            {{ t('role.placeholders.permissions_available') }}
-                        </template>
-                        <template #targetheader>
-                            {{ t('role.placeholders.permissions_selected') }}
-                        </template>
-                        <template #option="{ option }">
-                            {{ option.name }}
-                        </template>
-                    </PickList>
-                </div>
-            </div>
-            <template #footer>
-                <Button :label="t('common.actions.cancel')" icon="pi pi-times" text @click="hideDialog" />
-                <Button :label="t('common.actions.save')" icon="pi pi-check" @click="saveReccord" :loading="loading.isLoading" />
-            </template>
-        </Dialog>
-
-        <Dialog v-model:visible="deleteReccordDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="reccord"
-                    >Are you sure you want to delete <b>{{ reccord.name }}</b
-                    >?</span
-                >
-            </div>
-            <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteReccordDialog = false" />
-                <Button label="Yes" icon="pi pi-check" @click="deleteReccord" />
-            </template>
-        </Dialog>
-
-        <Dialog v-model:visible="deleteReccordsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="reccord">Are you sure you want to delete the selected reccords?</span>
-            </div>
-            <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteReccordsDialog = false" />
-                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedReccords" />
-            </template>
-        </Dialog>
     </div>
 </template>

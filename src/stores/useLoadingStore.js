@@ -3,24 +3,34 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export const useLoading = defineStore('loading', () => {
-    const isLoading = ref(false);
+    // Loader for general page load or progress bar
+    const isPageLoading = ref(false);
 
-    const startLoading = () => {
-        isLoading.value = true;
+    // Loader for data-related loading (e.g., skeleton loader)
+    const isDataLoading = ref(false);
+
+    const startPageLoading = () => {
+        isPageLoading.value = true;
     };
 
-    const stopLoading = () => {
-        isLoading.value = false;
+    const stopPageLoading = () => {
+        isPageLoading.value = false;
     };
 
-    const toggleLoading = () => {
-        isLoading.value = !isLoading.value;
+    const startDataLoading = () => {
+        isDataLoading.value = true;
+    };
+
+    const stopDataLoading = () => {
+        isDataLoading.value = false;
     };
 
     return {
-        isLoading,
-        startLoading,
-        stopLoading,
-        toggleLoading
+        isPageLoading,
+        isDataLoading,
+        startPageLoading,
+        stopPageLoading,
+        startDataLoading,
+        stopDataLoading
     };
 });

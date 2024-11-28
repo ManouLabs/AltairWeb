@@ -12,17 +12,17 @@ const apiClient = axios.create({
 });
 
 // Reusable loading functions
-const startLoading = () => useLoading().startLoading();
-const stopLoading = () => useLoading().stopLoading();
+const startPageLoading = () => useLoading().startPageLoading();
+const stopPageLoading = () => useLoading().stopPageLoading();
 
 // Axios request interceptor
 apiClient.interceptors.request.use(
     async (config) => {
-        startLoading();
+        startPageLoading();
         return config;
     },
     (error) => {
-        stopLoading();
+        stopPageLoading();
         return Promise.reject(error);
     }
 );
@@ -30,11 +30,11 @@ apiClient.interceptors.request.use(
 // Axios response interceptor
 apiClient.interceptors.response.use(
     (response) => {
-        stopLoading();
+        stopPageLoading();
         return response;
     },
     async (error) => {
-        stopLoading();
+        stopPageLoading();
 
         // Handle 401 error by updating auth state
         if (error.status === 401) {

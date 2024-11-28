@@ -1,16 +1,103 @@
 {
+    "entity": {
+        "user": "مستخدم",
+        "users": "مستخدمون",
+        "role": "دور",
+        "roles": "أدوار"
+    },
     "common": {
-        "new": "جديد",
-        "delete_selected": "حذف المحدد",
-        "actions": "إجراءات",
-        "displayed_column": "الأعمدة المعروضة",
-        "search_placeholder": "بحث...",
-        "export": "تصدير",
-        "lock_row_tooltip": "قفل هذا الصف",
-        "unlock_row_tooltip": "فتح قفل هذا الصف"
+        "titles": {
+            "manage": "إدارة {entity}",
+            "add": "إضافة {entity} جديد"
+        },
+        "actions": {
+            "edit": "تعديل",
+            "delete": "حذف",
+            "view": "عرض",
+            "save": "حفظ",
+            "cancel": "إلغاء",
+            "close": "إغلاق",
+            "add": "إضافة",
+            "update": "تحديث",
+            "back": "رجوع",
+            "submit": "إرسال",
+            "reset": "إعادة تعيين",
+            "search": "بحث",
+            "clear": "مسح",
+            "confirm": "تأكيد",
+            "yes": "نعم",
+            "no": "لا",
+            "ok": "حسنًا",
+            "new": "جديد",
+            "delete_selected": "حذف المحدد",
+            "export": "تصدير"
+        },
+        "tooltips": {
+            "edit": "تعديل {entity}",
+            "delete": "حذف {entity}",
+            "add": "إضافة {entity}",
+            "view": "عرض {entity}",
+            "delete_selected": "حذف المحدد {entity}",
+            "export_selection": "تصدير المحدد {entity}",
+            "lock_row": "قفل هذا الصف",
+            "unlock_row": "فتح قفل هذا الصف",
+            "lock_column": "قفل هذا العمود",
+            "unlock_column": "فتح قفل هذا العمود"
+        },
+        "columns": {
+            "id": "المعرف",
+            "created_at": "تاريخ الإنشاء",
+            "updated_at": "تاريخ التحديث",
+            "actions": "الإجراءات"
+        },
+        "placeholders": {
+            "search": "بحث...",
+            "select": "اختر...",
+            "type": "اكتب...",
+            "displayed_columns": "الأعمدة المعروضة"
+        },
+        "paggination": {
+            "showing_to_of_entity": "عرض {first} إلى {last} من {totalRecords} {entity}"
+        },
+        "confirmations": {
+            "delete": {
+                "title": "حذف {entity}",
+                "message": "هل أنت متأكد أنك تريد حذف {entity} هذا؟"
+            },
+            "delete_selected": {
+                "title": "حذف المحدد {entity}",
+                "message": "هل أنت متأكد أنك تريد حذف {entity} المحدد؟"
+            }
+        },
+        "toasts": {
+            "created": {
+                "summary": "{entity} تم الإنشاء",
+                "detail": "تم إنشاء {entity} بنجاح"
+            },
+            "updated": {
+                "summary": "{entity} تم التحديث",
+                "detail": "تم تحديث {entity} بنجاح"
+            },
+            "deleted": {
+                "summary": "{entity} تم الحذف",
+                "detail": "تم حذف {entity} بنجاح"
+            },
+            "delete_selected": {
+                "summary": "تم حذف {entity} المحدد",
+                "detail": "تم حذف {entity} المحدد بنجاح"
+            },
+            "error": {
+                "summary": "حدث خطأ",
+                "detail": "حدث خطأ أثناء معالجة طلبك"
+            },
+            "new": {
+                "summary": "{entity} جديد",
+                "detail": "تم إنشاء {entity} جديد"
+            }
+        }
     },
     "login": {
-        "welcome": "مرحبا",
+        "welcome": "مرحبًا",
         "sign_in_message": "يرجى تسجيل الدخول",
         "email": "عنوان البريد الإلكتروني",
         "password": "كلمة المرور",
@@ -22,22 +109,33 @@
         "error": "خطأ في تسجيل الخروج"
     },
     "navigation": {
-        "home": "الرئيسية",
-        "dashboard": "لوحة التحكم",
-        "user": "مستخدم",
-        "users": "المستخدمون",
-        "roles": "الأدوار",
-        "profile": "الملف الشخصي",
-        "logout": "تسجيل الخروج"
+        "side_bar": {
+            "home": "الرئيسية",
+            "dashboard": "لوحة التحكم",
+            "user": "المستخدم",
+            "users": "المستخدمون",
+            "roles": "الأدوار",
+            "profile": "الملف الشخصي",
+            "logout": "تسجيل الخروج"
+        },
+        "top_bar": {
+            "search": "بحث...",
+            "notifications": "الإشعارات",
+            "settings": "الإعدادات",
+            "profile": "الملف الشخصي",
+            "logout": "تسجيل الخروج"
+        }
     },
     "role": {
-        "name": "الاسم",
-        "guard_name": "اسم الحارس",
-        "manage_role": "إدارة الأدوار",
-        "edit_tooltip": "تحرير الدور",
-        "delete_tooltip": "حذف الدور",
-        "add_tooltip": "إضافة دور",
-        "delete_selected_tooltip": "حذف الأدوار المحددة",
-        "view_tooltip": "عرض الدور"
+        "placeholders": {
+            "select_guard_name": "اختر اسم الحارس",
+            "permissions_available": "الأذونات المتاحة",
+            "permissions_selected": "الأذونات المحددة"
+        },
+        "columns": {
+            "name": "الاسم",
+            "guard_name": "اسم الحارس",
+            "permissions": "الأذونات"
+        }
     }
 }

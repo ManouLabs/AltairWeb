@@ -71,8 +71,9 @@ function isOutsideClicked(event) {
         <Toast position="bottom-left" group="bl" />
         <Toast position="bottom-center" group="bc" />
         <Toast position="bottom-right" group="br" />
-
-        <ProgressBar v-if="loading.isLoading" mode="indeterminate" style="height: 4px; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%" />
+        <DynamicDialog />
+        <ConfirmPopup></ConfirmPopup>
+        <ProgressBar v-if="loading.isPageLoading" mode="indeterminate" style="height: 4px; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%" />
 
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>

@@ -1,5 +1,15 @@
 {
+    "entity": {
+        "user": "User",
+        "users": "Users",
+        "role": "Role",
+        "roles": "Roles"
+    },
     "common": {
+        "titles": {
+            "manage": "Manage {entity}",
+            "add": "Add new {entity}"
+        },
         "actions": {
             "edit": "Edit",
             "delete": "Delete",
@@ -23,8 +33,12 @@
             "export": "Export"
         },
         "tooltips": {
-            "delete_selected": "Delete selected",
-            "export": "Export",
+            "edit": "Edit {entity}",
+            "delete": "Delete {entity}",
+            "add": "Add {entity}",
+            "view": "View {entity}",
+            "delete_selected": "Delete selected {entity}",
+            "export_selection": "Export selected {entity}",
             "lock_row": "Lock this row",
             "unlock_row": "Unlock this row",
             "lock_column": "Lock this column",
@@ -42,23 +56,36 @@
             "type": "Type...",
             "displayed_columns": "Displayed columns"
         },
-
-        "toasts": {
-            "created": {
-                "summary": "{entity} creation was successful",
-                "detail": "The {entity} has been successfully created and is ready for use"
-            },
-            "updated": {
-                "summary": "{entity} update was successful",
-                "detail": "The {entity} has been successfully updated and is ready for use"
-            },
-            "deleted": {
-                "summary": "{entity} deletion was successful",
-                "detail": "The {entity} has been successfully deleted"
+        "paggination": {
+            "showing_to_of_entity": "Showing {first} to {last} of {totalRecords} {entity}"
+        },
+        "confirmations": {
+            "delete": {
+                "title": "Delete {entity}",
+                "message": "Are you sure you want to delete this {entity}?"
             },
             "delete_selected": {
-                "summary": "Selected {entity} deletion was successful",
-                "detail": "The selected {entity} have been successfully deleted"
+                "title": "Delete selected {entity}",
+                "message": "Are you sure you want to delete the selected {entity}?"
+            }
+        },
+
+        "toasts": {
+            "store": {
+                "summary": "{entity} created",
+                "detail": "The {entity} has been created successfully"
+            },
+            "update": {
+                "summary": "{entity} updated",
+                "detail": "The {entity} has been updated successfully"
+            },
+            "delete": {
+                "summary": "{entity} deleted",
+                "detail": "The {entity} has been deleted successfully"
+            },
+            "delete_selected": {
+                "summary": "Selected {entity} deleted",
+                "detail": "The selected {entity} have been deleted successfully"
             },
             "error": {
                 "summary": "An error occurred",
@@ -101,10 +128,6 @@
         }
     },
     "role": {
-        "titles": {
-            "manage": "Manage roles",
-            "add": "Add new role"
-        },
         "placeholders": {
             "select_guard_name": "Select guard name",
             "permissions_available": "Permissions available",
@@ -114,16 +137,6 @@
             "name": "Name",
             "guard_name": "Guard name",
             "permissions": "Permissions"
-        },
-        "tooltips": {
-            "edit": "Edit role",
-            "delete": "Delete role",
-            "add": "Add role",
-            "delete_selected": "Delete selected roles",
-            "view": "View role"
-        },
-        "paggination": {
-            "showing_to_of_roles": "Showing {first} to {last} of {totalRecords} roles"
         }
     }
 }

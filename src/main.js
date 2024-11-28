@@ -8,6 +8,7 @@ import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
+import DialogService from 'primevue/dialogservice';
 import ToastService from 'primevue/toastservice';
 import { createApp } from 'vue';
 import App from './App.vue';
@@ -17,9 +18,7 @@ const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 
 const app = createApp(App);
-app.use(pinia);
 
-app.use(i18n);
 app.use(router);
 app.use(PrimeVue, {
     ripple: true,
@@ -30,7 +29,12 @@ app.use(PrimeVue, {
         }
     }
 });
+
+app.use(pinia);
+app.use(i18n);
+
 app.use(ToastService);
 app.use(ConfirmationService);
+app.use(DialogService);
 
 app.mount('#app');

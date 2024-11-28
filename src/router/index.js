@@ -45,10 +45,10 @@ const handleRouteGuard = async (to, next, authStore) => {
 };
 
 router.beforeEach(async (to, from, next) => {
-    const loadingStore = useLoading();
+    const loading = useLoading();
     const authStore = useAuthStore();
 
-    loadingStore.startLoading();
+    loading.startPageLoading();
 
     try {
         if (to.meta.requiresAuth) {
@@ -61,7 +61,7 @@ router.beforeEach(async (to, from, next) => {
     } catch (error) {
         next({ name: 'error' });
     } finally {
-        loadingStore.stopLoading();
+        loading.stopPageLoading();
     }
 });
 

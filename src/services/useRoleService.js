@@ -28,10 +28,14 @@ export const useRoleService = {
         return response.data;
     },
 
-    async deleteRoles(roleIds) {
-        const response = await apiClient.delete('/api/admin/roles', {
-            data: { ids: roleIds }
-        });
-        return response.data.deletedIds;
+    async deleteRoles(rolesIds) {
+        try {
+            await apiClient.get('/sanctum/csrf-cookie');
+            const response = await apiClient.delete('/api/admin/roles', { data: { roles: rolesIds } });
+            return response.data;
+        } catch (error) {
+            console.error('Delete roles:', error.response.data);
+            throw error;
+        }
     }
 };

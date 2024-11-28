@@ -1,13 +1,100 @@
 {
+    "entity": {
+        "user": "Utilisateur",
+        "users": "Utilisateurs",
+        "role": "Rôle",
+        "roles": "Rôles"
+    },
     "common": {
-        "new": "Nouveau",
-        "delete_selected": "Supprimer la sélection",
-        "actions": "Actions",
-        "displayed_column": "Colonnes affichées",
-        "search_placeholder": "Rechercher...",
-        "export": "Exporter",
-        "lock_row_tooltip": "Verrouiller cette ligne",
-        "unlock_row_tooltip": "Déverrouiller cette ligne"
+        "titles": {
+            "manage": "Gérer {entity}",
+            "add": "Ajouter un nouveau {entity}"
+        },
+        "actions": {
+            "edit": "Modifier",
+            "delete": "Supprimer",
+            "view": "Voir",
+            "save": "Enregistrer",
+            "cancel": "Annuler",
+            "close": "Fermer",
+            "add": "Ajouter",
+            "update": "Mettre à jour",
+            "back": "Retour",
+            "submit": "Soumettre",
+            "reset": "Réinitialiser",
+            "search": "Rechercher",
+            "clear": "Effacer",
+            "confirm": "Confirmer",
+            "yes": "Oui",
+            "no": "Non",
+            "ok": "Ok",
+            "new": "Nouveau",
+            "delete_selected": "Supprimer la sélection",
+            "export": "Exporter"
+        },
+        "tooltips": {
+            "edit": "Modifier {entity}",
+            "delete": "Supprimer {entity}",
+            "add": "Ajouter {entity}",
+            "view": "Voir {entity}",
+            "delete_selected": "Supprimer la sélection de {entity}",
+            "export_selection": "Exporter la sélection de {entity}",
+            "lock_row": "Verrouiller cette ligne",
+            "unlock_row": "Déverrouiller cette ligne",
+            "lock_column": "Verrouiller cette colonne",
+            "unlock_column": "Déverrouiller cette colonne"
+        },
+        "columns": {
+            "id": "ID",
+            "created_at": "Créé le",
+            "updated_at": "Mis à jour le",
+            "actions": "Actions"
+        },
+        "placeholders": {
+            "search": "Rechercher...",
+            "select": "Sélectionner...",
+            "type": "Taper...",
+            "displayed_columns": "Colonnes affichées"
+        },
+        "paggination": {
+            "showing_to_of_entity": "Affichage de {first} à {last} sur {totalRecords} {entity}"
+        },
+        "confirmations": {
+            "delete": {
+                "title": "Supprimer {entity}",
+                "message": "Êtes-vous sûr de vouloir supprimer ce {entity}?"
+            },
+            "delete_selected": {
+                "title": "Supprimer la sélection de {entity}",
+                "message": "Êtes-vous sûr de vouloir supprimer la sélection de {entity}?"
+            }
+        },
+        "toasts": {
+            "created": {
+                "summary": "{entity} créé",
+                "detail": "Le {entity} a été créé avec succès"
+            },
+            "updated": {
+                "summary": "{entity} mis à jour",
+                "detail": "Le {entity} a été mis à jour avec succès"
+            },
+            "deleted": {
+                "summary": "{entity} supprimé",
+                "detail": "Le {entity} a été supprimé avec succès"
+            },
+            "delete_selected": {
+                "summary": "Sélection de {entity} supprimée",
+                "detail": "La sélection de {entity} a été supprimée avec succès"
+            },
+            "error": {
+                "summary": "Une erreur est survenue",
+                "detail": "Une erreur est survenue lors du traitement de votre demande"
+            },
+            "new": {
+                "summary": "Nouveau {entity}",
+                "detail": "Un nouveau {entity} a été créé"
+            }
+        }
     },
     "login": {
         "welcome": "Bienvenue",
@@ -22,22 +109,33 @@
         "error": "Erreur de déconnexion"
     },
     "navigation": {
-        "home": "Accueil",
-        "dashboard": "Tableau de bord",
-        "user": "Utilisateur",
-        "users": "Utilisateurs",
-        "roles": "Rôles",
-        "profile": "Profil",
-        "logout": "Déconnexion"
+        "side_bar": {
+            "home": "Accueil",
+            "dashboard": "Tableau de bord",
+            "user": "Utilisateur",
+            "users": "Utilisateurs",
+            "roles": "Rôles",
+            "profile": "Profil",
+            "logout": "Déconnexion"
+        },
+        "top_bar": {
+            "search": "Rechercher...",
+            "notifications": "Notifications",
+            "settings": "Paramètres",
+            "profile": "Profil",
+            "logout": "Déconnexion"
+        }
     },
     "role": {
-        "name": "Nom",
-        "guard_name": "Nom de garde",
-        "manage_role": "Gérer les rôles",
-        "edit_tooltip": "Modifier le rôle",
-        "delete_tooltip": "Supprimer le rôle",
-        "add_tooltip": "Ajouter un rôle",
-        "delete_selected_tooltip": "Supprimer les rôles sélectionnés",
-        "view_tooltip": "Voir le rôle"
+        "placeholders": {
+            "select_guard_name": "Sélectionner le nom du gardien",
+            "permissions_available": "Permissions disponibles",
+            "permissions_selected": "Permissions sélectionnées"
+        },
+        "columns": {
+            "name": "Nom",
+            "guard_name": "Nom du gardien",
+            "permissions": "Permissions"
+        }
     }
 }

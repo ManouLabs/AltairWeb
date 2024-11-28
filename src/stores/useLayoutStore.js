@@ -65,14 +65,14 @@ export const useLayoutStore = defineStore('layout', {
             this.menuHoverActive = false;
         },
         async setLocale(value) {
-            const loadingStore = useLoading();
-            loadingStore.startLoading();
+            const loading = useLoading();
+            loading.startPageLoading();
             try {
                 this.locale = value;
                 i18n.global.locale.value = value;
                 document.documentElement.dir = value === 'ar' ? 'rtl' : 'ltr';
             } finally {
-                loadingStore.stopLoading();
+                loading.stopPageLoading();
             }
         }
     },
