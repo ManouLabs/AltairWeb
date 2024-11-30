@@ -3,9 +3,24 @@ import { useLoading } from '@/stores/useLoadingStore';
 import { createRouter, createWebHistory } from 'vue-router';
 
 const adminRoutes = [
-    { path: 'dashboard', name: 'dashboard', component: () => import('@/views/admin/Dashboard.vue') },
-    { path: 'users', name: 'users', component: () => import('@/views/admin/Users.vue') },
-    { path: 'roles', name: 'roles', component: () => import('@/views/admin/roles/Roles.vue') }
+    {
+        path: 'dashboard',
+        name: 'dashboard',
+        component: () => import('@/views/admin/Dashboard.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_dashboard' }
+    },
+    {
+        path: 'users',
+        name: 'users',
+        component: () => import('@/views/admin/Users.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_users' }
+    },
+    {
+        path: 'roles',
+        name: 'roles',
+        component: () => import('@/views/admin/roles/Roles.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_roles' }
+    }
 ];
 
 const routes = [
@@ -16,7 +31,6 @@ const routes = [
         children: adminRoutes
     },
     { path: '/', name: 'home', component: () => import('@/views/Home.vue') },
-    { path: '/pages/notfound', name: 'notfound', component: () => import('@/views/pages/NotFound.vue') },
     {
         path: '/auth/login',
         name: 'login',
@@ -24,7 +38,12 @@ const routes = [
         meta: { requiresGuest: true }
     },
     { path: '/auth/access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
-    { path: '/auth/error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') }
+    { path: '/auth/error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') },
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'notfound',
+        component: () => import('@/views/pages/NotFound.vue')
+    }
 ];
 
 const router = createRouter({
@@ -33,6 +52,7 @@ const router = createRouter({
 });
 
 const handleRouteGuard = async (to, next, authStore) => {
+    // Authentication and Guest checks
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
         return next({ name: 'login' });
     }
@@ -41,13 +61,16 @@ const handleRouteGuard = async (to, next, authStore) => {
         return next({ name: 'dashboard' });
     }
 
+    if (to.meta.requiresPermission && !authStore.hasPermission(to.meta.requiresPermission)) {
+        return next({ name: 'accessDenied' });
+    }
+
     next();
 };
 
 router.beforeEach(async (to, from, next) => {
     const loading = useLoading();
     const authStore = useAuthStore();
-
     loading.startPageLoading();
 
     try {

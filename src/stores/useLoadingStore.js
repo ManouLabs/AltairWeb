@@ -3,10 +3,8 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export const useLoading = defineStore('loading', () => {
-    // Loader for general page load or progress bar
     const isPageLoading = ref(false);
 
-    // Loader for data-related loading (e.g., skeleton loader)
     const isDataLoading = ref(false);
 
     const startPageLoading = () => {

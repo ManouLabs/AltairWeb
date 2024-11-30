@@ -1,29 +1,33 @@
 <script setup>
+import { useAuthStore } from '@/stores/useAuthStore';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppMenuItem from './AppMenuItem.vue';
 
-// Access the `t` function for translations in JavaScript logic
 const { t } = useI18n();
+const authStore = useAuthStore();
 
 const model = computed(() => [
     {
         label: t('navigation.side_bar.home'),
         items: [
-            { label: t('navigation.side_bar.dashboard'), icon: 'pi pi-fw pi-home', to: '/admin/dashboard' },
+            { label: t('navigation.side_bar.dashboard'), icon: 'pi pi-fw pi-home', to: '/admin/dashboard', visible: authStore.hasPermission('view_dashboard') },
             {
                 label: t('navigation.side_bar.user'),
                 icon: 'pi pi-fw pi-user',
+                visible: authStore.hasPermission('view_users') || authStore.hasPermission('view_roles'),
                 items: [
                     {
                         label: t('navigation.side_bar.users'),
                         icon: 'pi pi-fw pi-users',
-                        to: '/admin/users'
+                        to: '/admin/users',
+                        visible: authStore.hasPermission('view_users')
                     },
                     {
                         label: t('navigation.side_bar.roles'),
                         icon: 'pi pi-fw pi-wrench',
-                        to: '/admin/roles'
+                        to: '/admin/roles',
+                        visible: authStore.hasPermission('view_roles')
                     }
                 ]
             }

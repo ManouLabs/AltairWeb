@@ -6,6 +6,16 @@
         "roles": "Roles"
     },
     "common": {
+        "messages": {
+            "no_records": "No records found",
+            "no_selected_records": "No records selected",
+            "no_search_results": "No search results found",
+            "no_permissions": "You do not have the necessary permisions. Please contact admins.",
+            "error": "An error occurred while processing your request",
+            "access_denied": "Access denied",
+            "not_found": "Not found",
+            "no_resources": "Requested resource is not available."
+        },
         "titles": {
             "manage": "Manage {entity}",
             "add": "Add new {entity}"
@@ -71,11 +81,11 @@
         },
 
         "toasts": {
-            "store": {
+            "create": {
                 "summary": "{entity} created",
                 "detail": "The {entity} has been created successfully"
             },
-            "update": {
+            "edit": {
                 "summary": "{entity} updated",
                 "detail": "The {entity} has been updated successfully"
             },

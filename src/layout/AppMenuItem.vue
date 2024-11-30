@@ -1,7 +1,10 @@
 <script setup>
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { onBeforeMount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+
+const authStore = useAuthStore();
 
 const route = useRoute();
 

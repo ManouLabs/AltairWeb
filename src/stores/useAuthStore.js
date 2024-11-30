@@ -1,7 +1,8 @@
 // stores/useAuthStore.js
+import router from '@/router';
 import apiClient from '@/services/axios';
+import { redirectUser } from '@/utilities/auth';
 import { defineStore } from 'pinia';
-import router from '../router';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -54,6 +55,10 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        hasPermission(permission) {
+            return this.permissions.includes(permission) || this.isAdmin;
+        },
+
         listenToSessionEvents() {
             if (this.user?.id) {
                 Echo.private(`App.Models.User.${this.user.id}`).listen('SessionExpired', () => {
@@ -66,6 +71,10 @@ export const useAuthStore = defineStore('auth', {
             if (this.user?.id) {
                 Echo.leave(`App.Models.User.${this.user.id}`);
             }
+        },
+
+        redirectUser() {
+            redirectUser(this.isAdmin, this.permissions);
         },
 
         processError(error, defaultMessage) {

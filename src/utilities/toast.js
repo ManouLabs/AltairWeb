@@ -1,29 +1,29 @@
+// utilities/toast.js
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 
-const TOAST_LIFE = 8000;
+const TOAST_LIFE = import.meta.env.VITE_TOAST_LIFE || 8000;
 const ACTIONS = {
     DELETE: 'delete',
     UPDATE: 'update',
-    STORE: 'store'
+    STORE: 'store',
+    EDIT: 'edit',
+    CREATE: 'create',
+    SEARCH: 'search'
 };
-
-function findRecordIndex(records, id) {
-    return records.value.findIndex((record) => record.id === id);
-}
 
 function useShowToast() {
     const toast = useToast();
     const { t } = useI18n();
 
-    function showToast(severity, action, entity) {
+    function showToast(severity, action, entity, group) {
         try {
             toast.add({
                 severity,
                 summary: t(`common.toasts.${action}.summary`, { entity: t(`entity.${entity}`) }),
                 detail: t(`common.toasts.${action}.detail`, { entity: t(`entity.${entity}`) }),
                 life: TOAST_LIFE,
-                group: action === 'new' ? 'br' : 'tc'
+                group: group
             });
         } catch (error) {
             console.error('Error displaying toast:', error);
@@ -33,4 +33,4 @@ function useShowToast() {
     return { showToast };
 }
 
-export { ACTIONS, findRecordIndex, useShowToast };
+export { ACTIONS, useShowToast };

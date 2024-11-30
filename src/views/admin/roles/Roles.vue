@@ -1,8 +1,10 @@
 <script setup>
 import { useRoleService } from '@/services/useRoleService';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useColumnStore } from '@/stores/useColumnStore';
 import { useLoading } from '@/stores/useLoadingStore';
-import { ACTIONS, findRecordIndex, useShowToast } from '@/utilities/actions';
+import { findRecordIndex } from '@/utilities/helper';
+import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
@@ -11,13 +13,13 @@ import { useI18n } from 'vue-i18n';
 
 const loading = useLoading();
 const columnStore = useColumnStore();
-
+const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
-const dt = ref();
+const recordDataTable = ref();
 const records = ref();
 
 const record = ref(null);
@@ -36,33 +38,12 @@ const allPermissions = ref(null);
 const permissionsOptions = ref([], []);
 
 onMounted(() => {
-    subscription.value = Echo.private('data-stream.role').listen('DataStream', (event) => {
-        switch (event.action) {
-            case ACTIONS.DELETE: {
-                const index = findRecordIndex(records, event.data.id);
-                if (index !== -1) {
-                    records.value.splice(index, 1);
-                }
-                break;
-            }
-            case ACTIONS.UPDATE: {
-                const index = findRecordIndex(records, event.data.id);
-                if (index !== -1) {
-                    records.value[index] = event.data;
-                }
-                break;
-            }
-            case ACTIONS.STORE: {
-                const exists = records.value.some((record) => record.id === event.data.id);
-                if (!exists) {
-                    records.value.unshift(event.data);
-                }
-                break;
-            }
-            default:
-                console.error(`Unhandled action: ${event.action}`);
-        }
-    });
+    fetchData();
+    subscribeToEcho();
+    initializeColumns();
+});
+
+function fetchData() {
     loading.startDataLoading();
     useRoleService
         .getRoles()
@@ -71,14 +52,61 @@ onMounted(() => {
             allPermissions.value = [data.permissions, []];
         })
         .catch((error) => {
-            showToast('error', 'error', 'role');
+            console.error(error);
+            showToast('error', 'error', 'role', 'tc');
         })
         .finally(() => {
             loading.stopDataLoading();
         });
-    selectedColumns.value = columnStore.getColumns('rolesColumns') || defaultColumns.value;
-});
+}
 
+function subscribeToEcho() {
+    subscription.value = Echo.private('data-stream.role').listen('DataStream', (event) => {
+        handleEchoEvent(event);
+    });
+}
+
+function handleEchoEvent(event) {
+    switch (event.action) {
+        case ACTIONS.DELETE:
+            handleDelete(event);
+            break;
+        case ACTIONS.UPDATE:
+            handleUpdate(event);
+            break;
+        case ACTIONS.STORE:
+            handleStore(event);
+            break;
+        default:
+            console.error(`Unhandled action: ${event.action}`);
+    }
+}
+
+function handleDelete(event) {
+    event.data.forEach((id) => {
+        const index = findRecordIndex(records, id);
+        if (index !== -1) {
+            records.value.splice(index, 1);
+        }
+    });
+}
+
+function handleUpdate(event) {
+    const index = findRecordIndex(records, event.data.id);
+    if (index !== -1) {
+        records.value[index] = event.data;
+    }
+}
+
+function handleStore(event) {
+    const exists = records.value.some((record) => record.id === event.data.id);
+    if (!exists) {
+        records.value.unshift(event.data);
+    }
+}
+function initializeColumns() {
+    selectedColumns.value = columnStore.getColumns('rolesColumns') || defaultColumns.value;
+}
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
@@ -95,14 +123,12 @@ const lockedRow = ref([]);
 const toggleLock = (data, frozen, index) => {
     if (frozen) {
         lockedRow.value = lockedRow.value.filter((c, i) => i !== index);
-        records.value.push(data);
+        records.value = [...records.value, data];
     } else {
         records.value = records.value.filter((c, i) => i !== index);
-        lockedRow.value.push(data);
+        lockedRow.value = [...lockedRow.value, data];
     }
-    records.value.sort((val1, val2) => {
-        return val1.id < val2.id ? -1 : 1;
-    });
+    records.value.sort((val1, val2) => (val1.id < val2.id ? -1 : 1));
 };
 
 const frozenColumns = ref({
@@ -112,7 +138,7 @@ const frozenColumns = ref({
 });
 
 const toggleColumnFrozen = (column) => {
-    frozenColumns.value[column] = !frozenColumns.value[column];
+    frozenColumns.value = { ...frozenColumns.value, [column]: !frozenColumns.value[column] };
 };
 
 function addRecord() {
@@ -143,19 +169,19 @@ const openDialog = () => {
         data: {
             record: record.value,
             permissionsOptions: permissionsOptions.value,
-            action: record.value.id ? ACTIONS.UPDATE : ACTIONS.STORE
+            action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE
         },
         onClose: (result) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
-                    case ACTIONS.STORE:
+                    case ACTIONS.CREATE:
                         records.value.unshift(result.data.record);
-                        showToast('success', ACTIONS.STORE, 'role');
+                        showToast('success', ACTIONS.CREATE, 'role', 'tc');
                         break;
-                    case ACTIONS.UPDATE: {
+                    case ACTIONS.EDIT: {
                         const index = findRecordIndex(records, result.data.record.id);
                         records.value[index] = result.data.record;
-                        showToast('success', ACTIONS.UPDATE, 'role');
+                        showToast('success', ACTIONS.EDIT, 'role', 'tc');
                         break;
                     }
                     default:
@@ -190,17 +216,18 @@ function confirmDeleteRecord(event, rolesIds) {
                             records.value.splice(index, 1);
                         }
                     });
-                    showToast('success', 'delete', 'role');
+                    showToast('success', ACTIONS.DELETE, 'role', 'tc');
                 })
                 .catch((error) => {
-                    showToast('error', 'error', 'role');
+                    console.error(error);
+                    showToast('error', 'error', 'role', 'tc');
                 });
         }
     });
 }
 
 function exportCSV() {
-    dt.value.exportCSV();
+    recordDataTable.value.exportCSV();
 }
 
 onUnmounted(() => {
@@ -214,7 +241,7 @@ onUnmounted(() => {
     <div>
         <div class="card">
             <DataTable
-                ref="dt"
+                ref="recordDataTable"
                 dataKey="id"
                 v-model:selection="selectedRecords"
                 :value="records"
@@ -246,8 +273,17 @@ onUnmounted(() => {
                         <Toolbar class="w-full">
                             <template #start>
                                 <div class="flex space-x-2">
-                                    <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })" :label="t('common.actions.new')" icon="pi pi-plus" severity="primary" @click="addRecord" outlined />
                                     <Button
+                                        v-if="authStore.hasPermission('store_role')"
+                                        v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })"
+                                        :label="t('common.actions.new')"
+                                        icon="pi pi-plus"
+                                        severity="primary"
+                                        @click="addRecord"
+                                        outlined
+                                    />
+                                    <Button
+                                        v-if="authStore.hasPermission('delete_role')"
                                         v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.roles') })"
                                         :label="t('common.actions.delete_selected')"
                                         icon="pi pi-trash"
@@ -281,6 +317,7 @@ onUnmounted(() => {
                                         </IconField>
                                     </FloatLabel>
                                     <Button
+                                        v-if="authStore.hasPermission('export_role')"
                                         v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.roles') })"
                                         :label="t('common.actions.export')"
                                         icon="pi pi-upload"
@@ -365,9 +402,17 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex justify-between">
                                 <div class="flex space-x-2">
-                                    <Button v-tooltip.top="t('common.tooltips.view', { entity: t('entity.role') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
-                                    <Button v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.role') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
-                                    <Button v-tooltip.top="t('common.tooltips.delete', { entity: t('entity.role') })" icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteRecord($event, [data.id])" />
+                                    <Button v-if="authStore.hasPermission('view_role')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.role') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
+                                    <Button v-if="authStore.hasPermission('update_role')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.role') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
+                                    <Button
+                                        v-if="authStore.hasPermission('delete_role')"
+                                        v-tooltip.top="$t('common.tooltips.delete', { entity: t('entity.role') })"
+                                        icon="pi pi-trash"
+                                        outlined
+                                        rounded
+                                        severity="danger"
+                                        @click="confirmDeleteRecord($event, [data.id])"
+                                    />
                                 </div>
                                 <Button
                                     v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"

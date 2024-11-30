@@ -1,16 +1,14 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
-import { useToast } from 'primevue/usetoast';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-
+import { useShowToast } from '../utilities/toast';
 const layoutStore = useLayoutStore();
 
 const { t } = useI18n();
 const authStore = useAuthStore();
-const toast = useToast();
-
+const showToast = useShowToast();
 const supportedLocales = ref(import.meta.env.VITE_SUPPORTED_LOCALES ? import.meta.env.VITE_SUPPORTED_LOCALES.split(',') : ['fr', 'en', 'ar']);
 const localeFlags = ref(Object.fromEntries(import.meta.env.VITE_LOCALE_FLAGS.split(',').map((item) => item.split(':'))));
 
@@ -21,13 +19,7 @@ const logoutUser = async () => {
     try {
         await authStore.logout();
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: t('logout.error'),
-            detail: error.response?.data?.message || error.message,
-            group: 'tc',
-            life: 8000
-        });
+        showToast('error', 'error', 'user', 'tc');
     }
 };
 const user = authStore.user;
@@ -54,6 +46,9 @@ const menuItems = computed(() => [
 const toggleMenu = (event) => {
     userMenu.value.toggle(event);
 };
+const onLogoClick = () => {
+    authStore.redirectUser();
+};
 </script>
 
 <template>
@@ -62,7 +57,7 @@ const toggleMenu = (event) => {
             <button class="layout-menu-button layout-topbar-action" @click="layoutStore.onMenuToggle">
                 <i class="pi pi-bars"></i>
             </button>
-            <router-link to="/admin/dashboard" class="layout-topbar-logo">
+            <router-link @click="onLogoClick" :to="'/'" class="layout-topbar-logo">
                 <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         fill-rule="evenodd"
