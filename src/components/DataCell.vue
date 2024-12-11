@@ -7,7 +7,7 @@ const loading = useLoading();
 
 <template>
     <div>
-        <Skeleton v-if="loading.isDataLoading" class="m-4" />
+        <Skeleton v-if="loading.isDataLoading" class="m-4 w-full" />
         <slot v-else></slot>
     </div>
 </template>

@@ -20,7 +20,7 @@
             "manage": "Manage {entity}",
             "add": "Add new {entity}"
         },
-        "actions": {
+        "labels": {
             "edit": "Edit",
             "delete": "Delete",
             "view": "View",
@@ -33,14 +33,15 @@
             "submit": "Submit",
             "reset": "Reset",
             "search": "Search",
-            "clear": "Clear",
             "confirm": "Confirm",
             "yes": "Yes",
             "no": "No",
             "ok": "Ok",
             "new": "New",
             "delete_selected": "Delete selected",
-            "export": "Export"
+            "export": "Export",
+            "apply": "Apply",
+            "clear": "Clear"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -52,7 +53,8 @@
             "lock_row": "Lock this row",
             "unlock_row": "Unlock this row",
             "lock_column": "Lock this column",
-            "unlock_column": "Unlock this column"
+            "unlock_column": "Unlock this column",
+            "clear_all": "Clear"
         },
         "columns": {
             "id": "ID",

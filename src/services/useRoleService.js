@@ -2,9 +2,9 @@
 import apiClient from '@/services/axios';
 
 export const useRoleService = {
-    async getRoles() {
+    async getRoles(params) {
         try {
-            const response = await apiClient.get('/api/admin/roles');
+            const response = await apiClient.post('/api/admin/roles/filter', { params });
             return response.data;
         } catch (error) {
             console.error('Fetch roles:', error);
@@ -24,8 +24,14 @@ export const useRoleService = {
     },
 
     async updateRole(roleId, updatedData) {
-        const response = await apiClient.put(`/api/admin/roles/${roleId}`, updatedData);
-        return response.data;
+        try {
+            await apiClient.get('/sanctum/csrf-cookie');
+            const response = await apiClient.put(`/api/admin/roles/${roleId}`, updatedData);
+            return response.data;
+        } catch (error) {
+            console.error('Update roles:', error.response.data);
+            throw error;
+        }
     },
 
     async deleteRoles(rolesIds) {

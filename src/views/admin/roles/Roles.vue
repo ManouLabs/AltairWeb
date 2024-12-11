@@ -3,15 +3,25 @@ import { useRoleService } from '@/services/useRoleService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useColumnStore } from '@/stores/useColumnStore';
 import { useLoading } from '@/stores/useLoadingStore';
-import { findRecordIndex } from '@/utilities/helper';
+import { extractLazyParams, findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
+import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+onMounted(() => {
+    loadLazyData();
+    subscribeToEcho();
+    initializeColumns();
+});
+
 const loading = useLoading();
+const lazyParams = ref({});
+const total = ref();
+const rows = ref();
 const columnStore = useColumnStore();
 const authStore = useAuthStore();
 const confirm = useConfirm();
@@ -37,19 +47,22 @@ const subscription = ref(null);
 const allPermissions = ref(null);
 const permissionsOptions = ref([], []);
 
-onMounted(() => {
-    fetchData();
-    subscribeToEcho();
-    initializeColumns();
-});
-
-function fetchData() {
+const onPage = (event) => {
     loading.startDataLoading();
+    lazyParams.value = extractLazyParams(event);
+    loadLazyData();
+};
+
+const loadLazyData = debounce(async () => {
+    lazyParams.value.page ? (lazyParams.value.page += 1) : resetPages();
     useRoleService
-        .getRoles()
+        .getRoles(lazyParams.value)
         .then((data) => {
             records.value = data.roles;
+            total.value = data.meta.total;
+            rows.value = data.meta.per_page;
             allPermissions.value = [data.permissions, []];
+            console.log(allPermissions.value);
         })
         .catch((error) => {
             console.error(error);
@@ -58,7 +71,42 @@ function fetchData() {
         .finally(() => {
             loading.stopDataLoading();
         });
-}
+}, 150);
+
+const resetPages = () => {
+    lazyParams.value.page = 0;
+};
+
+const onSort = (event) => {
+    loading.startDataLoading();
+    lazyParams.value = extractLazyParams(event);
+    resetPages();
+    recordDataTable.value.resetPage();
+    loadLazyData();
+};
+
+const filters = ref(getDefaultFilters());
+const onFilter = (event) => {
+    loading.startDataLoading();
+    lazyParams.value = extractLazyParams(event);
+    resetPages();
+    loadLazyData();
+};
+
+const clearFilter = () => {
+    loading.startDataLoading();
+    filters.value = getDefaultFilters();
+    lazyParams.value = {};
+    recordDataTable.value.resetPage();
+    loadLazyData();
+};
+
+const searchDone = () => {
+    loading.startDataLoading();
+    lazyParams.value.filters = filters.value;
+    resetPages();
+    loadLazyData();
+};
 
 function subscribeToEcho() {
     subscription.value = Echo.private('data-stream.role').listen('DataStream', (event) => {
@@ -107,12 +155,6 @@ function handleStore(event) {
 function initializeColumns() {
     selectedColumns.value = columnStore.getColumns('rolesColumns') || defaultColumns.value;
 }
-const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    guard_name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    permissions: { value: null, matchMode: FilterMatchMode.STARTS_WITH }
-});
 
 const columnChanged = (newColumns) => {
     selectedColumns.value = newColumns;
@@ -194,16 +236,21 @@ const openDialog = () => {
 
 function confirmDeleteRecord(event, rolesIds) {
     confirm.require({
+        modal: true,
         target: event.currentTarget,
         message: rolesIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.roles') }) : t('common.confirmations.delete.message', { entity: t('entity.role') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
-            label: t('common.actions.cancel'),
+            label: t('common.labels.cancel'),
             severity: 'secondary',
+            icon: 'pi pi-times',
+            tooltip: t('common.labels.cancel'),
             outlined: true
         },
+
         acceptProps: {
-            label: t('common.actions.delete'),
+            label: t('common.labels.delete'),
+            icon: 'pi pi-trash',
             severity: 'danger'
         },
         accept: () => {
@@ -230,6 +277,20 @@ function exportCSV() {
     recordDataTable.value.exportCSV();
 }
 
+function getDefaultFilters() {
+    return {
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        id: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        name: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        guard_name: { value: null, matchMode: FilterMatchMode.IN },
+        permissions: {
+            value: null,
+            matchMode: FilterMatchMode.IN,
+            relation: { name: 'permissions', column: 'name' }
+        }
+    };
+}
+
 onUnmounted(() => {
     if (subscription.value) {
         subscription.value.stopListening('DataStream');
@@ -242,22 +303,33 @@ onUnmounted(() => {
         <div class="card">
             <DataTable
                 ref="recordDataTable"
+                lazy
                 dataKey="id"
                 v-model:selection="selectedRecords"
                 :value="records"
-                :filters="filters"
-                removableSort
+                @filter="onFilter($event)"
+                v-model:filters="filters"
+                filterDisplay="menu"
+                :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+                paginator
+                @page="onPage($event)"
+                :rows="rows"
+                :totalRecords="total"
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.roles') })"
                 resizableColumns
                 columnResizeMode="fit"
-                :reorderableColumns="true"
-                :paginator="true"
-                :rows="5"
-                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                :rowsPerPageOptions="[5, 10, 25]"
-                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.roles') })"
+                reorderableColumns
                 :frozenValue="lockedRow"
+                sortField="id"
+                :sortOrder="-1"
+                @sort="onSort($event)"
+                removableSort
                 scrollable
                 stripedRows
+                rowHover
+                size="small"
                 :pt="{
                     table: { style: 'min-width: 50rem' },
                     bodyrow: ({ props }) => ({
@@ -276,7 +348,7 @@ onUnmounted(() => {
                                     <Button
                                         v-if="authStore.hasPermission('store_role')"
                                         v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })"
-                                        :label="t('common.actions.new')"
+                                        :label="t('common.labels.new')"
                                         icon="pi pi-plus"
                                         severity="primary"
                                         @click="addRecord"
@@ -285,7 +357,7 @@ onUnmounted(() => {
                                     <Button
                                         v-if="authStore.hasPermission('delete_role')"
                                         v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.roles') })"
-                                        :label="t('common.actions.delete_selected')"
+                                        :label="t('common.labels.delete_selected')"
                                         icon="pi pi-trash"
                                         severity="danger"
                                         @click="
@@ -297,6 +369,7 @@ onUnmounted(() => {
                                         outlined
                                         :disabled="!selectedRecords || !selectedRecords.length"
                                     />
+                                    <Button v-tooltip.top="t('common.tooltips.clear_all')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all')" outlined @click="clearFilter()" />
                                 </div>
                             </template>
                             <template #center>
@@ -312,14 +385,14 @@ onUnmounted(() => {
                                             <InputIcon>
                                                 <i class="pi pi-search" />
                                             </InputIcon>
-                                            <InputText id="global_search" v-model="filters['global'].value" />
+                                            <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" />
                                             <label for="global_search">{{ t('common.placeholders.search') }}</label>
                                         </IconField>
                                     </FloatLabel>
                                     <Button
                                         v-if="authStore.hasPermission('export_role')"
                                         v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.roles') })"
-                                        :label="t('common.actions.export')"
+                                        :label="t('common.labels.export')"
                                         icon="pi pi-upload"
                                         class="min-w-28 ml-2"
                                         outlined
@@ -331,14 +404,24 @@ onUnmounted(() => {
                         </Toolbar>
                     </div>
                 </template>
-
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
                 <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
                     <template #body="{ data }">
                         <DataCell>{{ data.id }}</DataCell>
                     </template>
                 </Column>
-                <Column columnKey="name" field="name" :frozen="frozenColumns.name" v-if="selectedColumns.some((column) => column.field === 'name')" sortable class="min-w-32">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="name"
+                    field="name"
+                    :frozen="frozenColumns.name"
+                    v-if="selectedColumns.some((column) => column.field === 'name')"
+                    sortable
+                    class="min-w-32"
+                >
                     <template #header>
                         <div class="flex justify-between w-full items-center">
                             <div :class="{ 'font-bold': frozenColumns.name }">{{ t('role.columns.name') }}</div>
@@ -356,8 +439,28 @@ onUnmounted(() => {
                             <div :class="{ 'font-bold': frozenColumns.name }">{{ data.name }}</div></DataCell
                         >
                     </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
                 </Column>
-                <Column columnKey="guard_name" field="guard_name" :frozen="frozenColumns.guard_name" v-if="selectedColumns.some((column) => column.field === 'guard_name')" sortable class="min-w-32">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="guard_name"
+                    field="guard_name"
+                    :frozen="frozenColumns.guard_name"
+                    v-if="selectedColumns.some((column) => column.field === 'guard_name')"
+                    sortable
+                    class="min-w-32"
+                >
                     <template #header>
                         <div class="flex justify-between w-full items-center">
                             <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ t('role.columns.guard_name') }}</div>
@@ -375,8 +478,33 @@ onUnmounted(() => {
                             <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ data.guard_name }}</div></DataCell
                         >
                     </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <MultiSelect size="small" v-model="filterModel.value" :options="['api', 'sanctum', 'web']" @input="applyFilter()">
+                                <template #option="slotProps">
+                                    <div class="flex items-center gap-2">
+                                        <span>{{ slotProps.option }}</span>
+                                    </div>
+                                </template>
+                            </MultiSelect>
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
                 </Column>
-                <Column columnKey="permissions" :frozen="frozenColumns.permissions" v-if="selectedColumns.some((column) => column.field === 'permissions')" field="permissions" sortable class="min-w-32">
+                <Column
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    columnKey="permissions"
+                    :frozen="frozenColumns.permissions"
+                    v-if="selectedColumns.some((column) => column.field === 'permissions')"
+                    field="permissions"
+                    class="min-w-32"
+                >
                     <template #header>
                         <div class="flex justify-between w-full items-center">
                             <div :class="{ 'font-bold': frozenColumns.permissions }">{{ t('role.columns.permissions') }}</div>
@@ -390,11 +518,26 @@ onUnmounted(() => {
                         </div>
                     </template>
                     <template #body="{ data }">
-                        <div v-for="permission in data.permissions" :key="permission.id">
-                            <DataCell>
+                        <DataCell class="grid grid-cols-4 w-full">
+                            <div v-for="permission in data.permissions" :key="permission.id" class="w-full">
                                 <Tag severity="info" :value="permission.name" :class="{ 'font-bold': frozenColumns.permissions }" />
-                            </DataCell>
-                        </div>
+                            </div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <MultiSelect size="small" v-model="filterModel.value" :options="allPermissions[0]" optionLabel="name" optionValue="name">
+                                <template #option="slotProps">
+                                    <div class="flex items-center gap-2">
+                                        <span>{{ slotProps.option.name }}</span>
+                                    </div>
+                                </template>
+                            </MultiSelect>
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
                     </template>
                 </Column>
                 <Column columnKey="actions" :exportable="false" style="min-width: 12rem" :header="t('common.columns.actions')">
