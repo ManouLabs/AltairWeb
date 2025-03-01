@@ -369,7 +369,7 @@ onUnmounted(() => {
                                         outlined
                                         :disabled="!selectedRecords || !selectedRecords.length"
                                     />
-                                    <Button v-tooltip.top="t('common.tooltips.clear_all')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all')" outlined @click="clearFilter()" />
+                                    <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                                 </div>
                             </template>
                             <template #center>

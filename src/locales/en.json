@@ -41,7 +41,8 @@
             "delete_selected": "Delete selected",
             "export": "Export",
             "apply": "Apply",
-            "clear": "Clear"
+            "clear": "Clear",
+            "clear_all_filters": "Clear all filters"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -54,7 +55,7 @@
             "unlock_row": "Unlock this row",
             "lock_column": "Lock this column",
             "unlock_column": "Unlock this column",
-            "clear_all": "Clear"
+            "clear_all_filters": "Clear all filters"
         },
         "columns": {
             "id": "ID",
