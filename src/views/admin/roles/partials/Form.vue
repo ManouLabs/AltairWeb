@@ -99,8 +99,8 @@ const closeDialog = () => {
             </div>
         </div>
         <div class="flex justify-end gap-2 mt-4">
-            <Button :label="$t('common.actions.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="$t('common.actions.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />
+            <Button :label="$t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
+            <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />
         </div>
     </form>
 </template>

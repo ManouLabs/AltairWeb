@@ -1,5 +1,5 @@
 <script setup>
-import { useRoleService } from '@/services/useRoleService';
+import { useUserService } from '@/services/useUserService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useColumnStore } from '@/stores/useColumnStore';
 import { useLoading } from '@/stores/useLoadingStore';
@@ -36,16 +36,16 @@ const record = ref(null);
 const selectedRecords = ref();
 
 const defaultColumns = ref([
-    { field: 'name', header: t('role.columns.name') },
-    { field: 'guard_name', header: t('role.columns.guard_name') },
-    { field: 'permissions', header: t('role.columns.permissions') }
+    { field: 'name', header: t('user.columns.name') },
+    { field: 'email', header: t('user.columns.email') },
+    { field: 'roles', header: t('user.columns.roles') }
 ]);
 
 const selectedColumns = ref([]);
 const subscription = ref(null);
 
-const allPermissions = ref(null);
-const permissionsOptions = ref([], []);
+const allRoles = ref(null);
+const rolesOptions = ref([], []);
 
 const onPage = (event) => {
     loading.startDataLoading();
@@ -55,17 +55,17 @@ const onPage = (event) => {
 
 const loadLazyData = debounce(async () => {
     lazyParams.value.page ? (lazyParams.value.page += 1) : resetPages();
-    useRoleService
-        .getRoles(lazyParams.value)
+    useUserService
+        .getUsers(lazyParams.value)
         .then((data) => {
-            records.value = data.roles;
+            records.value = data.users;
             total.value = data.meta.total;
             rows.value = data.meta.per_page;
-            allPermissions.value = [data.permissions, []];
+            allRoles.value = [data.roles, []];
         })
         .catch((error) => {
             console.error(error);
-            showToast('error', 'error', 'role', 'tc');
+            showToast('error', 'error', 'user', 'tc');
         })
         .finally(() => {
             loading.stopDataLoading();
@@ -108,7 +108,7 @@ const searchDone = () => {
 };
 
 function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.role').listen('DataStream', (event) => {
+    subscription.value = Echo.private('data-stream.user').listen('DataStream', (event) => {
         handleEchoEvent(event);
     });
 }
@@ -152,12 +152,12 @@ function handleStore(event) {
     }
 }
 function initializeColumns() {
-    selectedColumns.value = columnStore.getColumns('rolesColumns') || defaultColumns.value;
+    selectedColumns.value = columnStore.getColumns('usersColumns') || defaultColumns.value;
 }
 
 const columnChanged = (newColumns) => {
     selectedColumns.value = newColumns;
-    columnStore.setColumns('rolesColumns', newColumns);
+    columnStore.setColumns('usersColumns', newColumns);
 };
 const lockedRow = ref([]);
 
@@ -174,8 +174,8 @@ const toggleLock = (data, frozen, index) => {
 
 const frozenColumns = ref({
     name: false,
-    guard_name: false,
-    permissions: false
+    email: false,
+    roles: false
 });
 
 const toggleColumnFrozen = (column) => {
@@ -183,20 +183,20 @@ const toggleColumnFrozen = (column) => {
 };
 
 function addRecord() {
-    record.value = { name: null, guard_name: null, permissions: [] };
-    permissionsOptions.value = allPermissions.value;
+    record.value = { name: null, email: null, password: null, password_confirmation: null, roles: [] };
+    rolesOptions.value = allRoles.value;
     openDialog();
 }
 function editRecord(row) {
     record.value = row;
-    permissionsOptions.value[1] = row.permissions;
-    permissionsOptions.value[0] = allPermissions.value[0].filter((permission) => !permissionsOptions.value[1].some((sp) => sp.id === permission.id));
+    rolesOptions.value[1] = row.roles;
+    rolesOptions.value[0] = allRoles.value[0].filter((role) => !rolesOptions.value[1].some((sr) => sr.id === role.id));
     openDialog();
 }
 const openDialog = () => {
     dialog.open(formComponent, {
         props: {
-            header: t('common.titles.add', { entity: t('entity.role') }),
+            header: t('common.titles.add', { entity: t('entity.user') }),
             style: {
                 width: '30vw'
             },
@@ -209,7 +209,7 @@ const openDialog = () => {
         },
         data: {
             record: record.value,
-            permissionsOptions: permissionsOptions.value,
+            rolesOptions: rolesOptions.value,
             action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE
         },
         onClose: (result) => {
@@ -217,12 +217,12 @@ const openDialog = () => {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
                         records.value.unshift(result.data.record);
-                        showToast('success', ACTIONS.CREATE, 'role', 'tc');
+                        showToast('success', ACTIONS.CREATE, 'user', 'tc');
                         break;
                     case ACTIONS.EDIT: {
                         const index = findRecordIndex(records, result.data.record.id);
                         records.value[index] = result.data.record;
-                        showToast('success', ACTIONS.EDIT, 'role', 'tc');
+                        showToast('success', ACTIONS.EDIT, 'user', 'tc');
                         break;
                     }
                     default:
@@ -233,11 +233,11 @@ const openDialog = () => {
     });
 };
 
-function confirmDeleteRecord(event, rolesIds) {
+function confirmDeleteRecord(event, usersIds) {
     confirm.require({
         modal: true,
         target: event.currentTarget,
-        message: rolesIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.roles') }) : t('common.confirmations.delete.message', { entity: t('entity.role') }),
+        message: usersIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.users') }) : t('common.confirmations.delete.message', { entity: t('entity.user') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
             label: t('common.labels.cancel'),
@@ -253,20 +253,20 @@ function confirmDeleteRecord(event, rolesIds) {
             severity: 'danger'
         },
         accept: () => {
-            useRoleService
-                .deleteRoles(rolesIds)
+            useUserService
+                .deleteUsers(usersIds)
                 .then(() => {
-                    rolesIds.forEach((id) => {
+                    usersIds.forEach((id) => {
                         const index = findRecordIndex(records, id);
                         if (index !== -1) {
                             records.value.splice(index, 1);
                         }
                     });
-                    showToast('success', ACTIONS.DELETE, 'role', 'tc');
+                    showToast('success', ACTIONS.DELETE, 'user', 'tc');
                 })
                 .catch((error) => {
                     console.error(error);
-                    showToast('error', 'error', 'role', 'tc');
+                    showToast('error', 'error', 'user', 'tc');
                 });
         }
     });
@@ -281,11 +281,11 @@ function getDefaultFilters() {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
         id: { value: null, matchMode: FilterMatchMode.CONTAINS },
         name: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        guard_name: { value: null, matchMode: FilterMatchMode.IN },
-        permissions: {
+        email: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        roles: {
             value: null,
             matchMode: FilterMatchMode.IN,
-            relation: { name: 'permissions', column: 'name' }
+            relation: { name: 'roles', column: 'name' }
         }
     };
 }
@@ -339,14 +339,14 @@ onUnmounted(() => {
                 <template #header>
                     <div class="flex items-center">
                         <h2 class="text-xl font-bold min-w-40">
-                            {{ t('common.titles.manage', { entity: t('entity.roles') }) }}
+                            {{ t('common.titles.manage', { entity: t('entity.users') }) }}
                         </h2>
                         <Toolbar class="w-full">
                             <template #start>
                                 <div class="flex space-x-2">
                                     <Button
-                                        v-if="authStore.hasPermission('store_role')"
-                                        v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })"
+                                        v-if="authStore.hasPermission('store_user')"
+                                        v-tooltip.top="t('common.tooltips.add', { entity: t('entity.user') })"
                                         :label="t('common.labels.new')"
                                         icon="pi pi-plus"
                                         severity="primary"
@@ -354,8 +354,8 @@ onUnmounted(() => {
                                         outlined
                                     />
                                     <Button
-                                        v-if="authStore.hasPermission('delete_role')"
-                                        v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.roles') })"
+                                        v-if="authStore.hasPermission('delete_user')"
+                                        v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.users') })"
                                         :label="t('common.labels.delete_selected')"
                                         icon="pi pi-trash"
                                         severity="danger"
@@ -389,8 +389,8 @@ onUnmounted(() => {
                                         </IconField>
                                     </FloatLabel>
                                     <Button
-                                        v-if="authStore.hasPermission('export_role')"
-                                        v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.roles') })"
+                                        v-if="authStore.hasPermission('export_user')"
+                                        v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.users') })"
                                         :label="t('common.labels.export')"
                                         icon="pi pi-upload"
                                         class="min-w-28 ml-2"
@@ -423,7 +423,7 @@ onUnmounted(() => {
                 >
                     <template #header>
                         <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.name }">{{ t('role.columns.name') }}</div>
+                            <div :class="{ 'font-bold': frozenColumns.name }">{{ t('user.columns.name') }}</div>
                             <Button
                                 v-tooltip.top="frozenColumns.name ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
                                 :icon="frozenColumns.name ? 'pi pi-lock' : 'pi pi-lock-open'"
@@ -453,42 +453,36 @@ onUnmounted(() => {
                     :showApplyButton="false"
                     :showFilterMatchModes="false"
                     :showFilterOperator="false"
-                    columnKey="guard_name"
-                    field="guard_name"
-                    :frozen="frozenColumns.guard_name"
-                    v-if="selectedColumns.some((column) => column.field === 'guard_name')"
+                    columnKey="email"
+                    field="email"
+                    :frozen="frozenColumns.email"
+                    v-if="selectedColumns.some((column) => column.field === 'email')"
                     sortable
                     class="min-w-32"
                 >
                     <template #header>
                         <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ t('role.columns.guard_name') }}</div>
+                            <div :class="{ 'font-bold': frozenColumns.email }">{{ t('user.columns.email') }}</div>
                             <Button
-                                v-tooltip.top="frozenColumns.guard_name ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.guard_name ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                v-tooltip.top="frozenColumns.email ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
+                                :icon="frozenColumns.email ? 'pi pi-lock' : 'pi pi-lock-open'"
                                 text
-                                @click="toggleColumnFrozen('guard_name')"
+                                @click="toggleColumnFrozen('email')"
                                 severity="contrast"
                             />
                         </div>
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ data.guard_name }}</div></DataCell
+                            <div :class="{ 'font-bold': frozenColumns.email }">{{ data.email }}</div></DataCell
                         >
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>
-                            <MultiSelect size="small" v-model="filterModel.value" :options="['api', 'sanctum', 'web']" @input="applyFilter()">
-                                <template #option="slotProps">
-                                    <div class="flex items-center gap-2">
-                                        <span>{{ slotProps.option }}</span>
-                                    </div>
-                                </template>
-                            </MultiSelect>
+                            <InputText v-model="filterModel.value" size="small" />
                             <InputGroupAddon>
                                 <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
                     </template>
@@ -498,34 +492,34 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     :showClearButton="false"
                     :showApplyButton="false"
-                    columnKey="permissions"
-                    :frozen="frozenColumns.permissions"
-                    v-if="selectedColumns.some((column) => column.field === 'permissions')"
-                    field="permissions"
+                    columnKey="roles"
+                    :frozen="frozenColumns.roles"
+                    v-if="selectedColumns.some((column) => column.field === 'roles')"
+                    field="roles"
                     class="min-w-32"
                 >
                     <template #header>
                         <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.permissions }">{{ t('role.columns.permissions') }}</div>
+                            <div :class="{ 'font-bold': frozenColumns.roles }">{{ t('user.columns.roles') }}</div>
                             <Button
-                                v-tooltip.top="frozenColumns.permissions ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.permissions ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                v-tooltip.top="frozenColumns.roles ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
+                                :icon="frozenColumns.roles ? 'pi pi-lock' : 'pi pi-lock-open'"
                                 text
-                                @click="toggleColumnFrozen('permissions')"
+                                @click="toggleColumnFrozen('roles')"
                                 severity="contrast"
                             />
                         </div>
                     </template>
                     <template #body="{ data }">
                         <DataCell class="grid grid-cols-4 w-full">
-                            <div v-for="permission in data.permissions" :key="permission.id" class="w-full">
-                                <Tag severity="info" :value="permission.name" :class="{ 'font-bold': frozenColumns.permissions }" />
+                            <div v-for="role in data.roles" :key="role.id" class="w-full">
+                                <Tag severity="info" :value="role.name" :class="{ 'font-bold': frozenColumns.roles }" />
                             </div>
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>
-                            <MultiSelect size="small" v-model="filterModel.value" :options="allPermissions[0]" optionLabel="name" optionValue="name">
+                            <MultiSelect size="small" v-model="filterModel.value" :options="allRoles[0]" optionLabel="name" optionValue="name">
                                 <template #option="slotProps">
                                     <div class="flex items-center gap-2">
                                         <span>{{ slotProps.option.name }}</span>
@@ -544,11 +538,11 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex justify-between">
                                 <div class="flex space-x-2">
-                                    <Button v-if="authStore.hasPermission('view_role')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.role') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
-                                    <Button v-if="authStore.hasPermission('update_role')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.role') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
+                                    <Button v-if="authStore.hasPermission('view_user')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.user') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
+                                    <Button v-if="authStore.hasPermission('update_user')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.user') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
                                     <Button
-                                        v-if="authStore.hasPermission('delete_role')"
-                                        v-tooltip.top="$t('common.tooltips.delete', { entity: t('entity.role') })"
+                                        v-if="authStore.hasPermission('delete_user')"
+                                        v-tooltip.top="$t('common.tooltips.delete', { entity: t('entity.user') })"
                                         icon="pi pi-trash"
                                         outlined
                                         rounded

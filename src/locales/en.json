@@ -6,6 +6,14 @@
         "roles": "Roles"
     },
     "common": {
+        "contents": {
+            "password_requirements": {
+                "lowercase": "At least one lowercase",
+                "uppercase": "At least one uppercase",
+                "numeric": "At least one numeric",
+                "minimum_length": "Minimum {length} characters"
+            }
+        },
         "messages": {
             "no_records": "No records found",
             "no_selected_records": "No records selected",
@@ -150,6 +158,20 @@
             "name": "Name",
             "guard_name": "Guard name",
             "permissions": "Permissions"
+        }
+    },
+    "user": {
+        "placeholders": {
+            "select_role": "Select role",
+            "roles_available": "Roles available",
+            "roles_selected": "Roles selected"
+        },
+        "columns": {
+            "name": "Name",
+            "email": "Email",
+            "password": "Password",
+            "password_confirmation": "Password confirmation",
+            "roles": "Roles"
         }
     }
 }

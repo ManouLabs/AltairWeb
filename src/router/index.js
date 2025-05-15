@@ -12,7 +12,7 @@ const adminRoutes = [
     {
         path: 'users',
         name: 'users',
-        component: () => import('@/views/admin/Users.vue'),
+        component: () => import('@/views/admin/users/Users.vue'),
         meta: { requiresAuth: true, requiresPermission: 'view_users' }
     },
     {
