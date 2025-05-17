@@ -1,9 +1,10 @@
 <script setup>
+import dayjs from '@/plugins/dayjs';
 import { useUserService } from '@/services/useUserService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useColumnStore } from '@/stores/useColumnStore';
 import { useLoading } from '@/stores/useLoadingStore';
-import { extractLazyParams, findRecordIndex } from '@/utilities/helper';
+import { extractLazyParams, findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
 import debounce from 'lodash-es/debounce';
@@ -38,7 +39,10 @@ const selectedRecords = ref();
 const defaultColumns = ref([
     { field: 'name', header: t('user.columns.name') },
     { field: 'email', header: t('user.columns.email') },
-    { field: 'roles', header: t('user.columns.roles') }
+    { field: 'email_verified_at', header: t('user.columns.email_verified_at') },
+    { field: 'roles', header: t('user.columns.roles') },
+    { field: 'created_at', header: t('user.columns.created_at') },
+    { field: 'updated_at', header: t('user.columns.updated_at') }
 ]);
 
 const selectedColumns = ref([]);
@@ -272,24 +276,25 @@ function confirmDeleteRecord(event, usersIds) {
     });
 }
 
-function exportCSV() {
-    recordDataTable.value.exportCSV();
-}
-
 function getDefaultFilters() {
     return {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
         id: { value: null, matchMode: FilterMatchMode.CONTAINS },
         name: { value: null, matchMode: FilterMatchMode.CONTAINS },
         email: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        email_verified_at: { value: null, matchMode: FilterMatchMode.DATE_IS },
         roles: {
             value: null,
             matchMode: FilterMatchMode.IN,
             relation: { name: 'roles', column: 'name' }
-        }
+        },
+        created_at: { value: null, matchMode: FilterMatchMode.DATE_IS },
+        updated_at: { value: null, matchMode: FilterMatchMode.DATE_IS }
     };
 }
-
+function exportCSV() {
+    recordDataTable.value.exportCSV();
+}
 onUnmounted(() => {
     if (subscription.value) {
         subscription.value.stopListening('DataStream');
@@ -488,6 +493,74 @@ onUnmounted(() => {
                     </template>
                 </Column>
                 <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    dataType="date"
+                    columnKey="email_verified_at"
+                    field="email_verified_at"
+                    :frozen="frozenColumns.email_verified_at"
+                    v-if="selectedColumns.some((column) => column.field === 'email_verified_at')"
+                    sortable
+                    class="min-w-40"
+                >
+                    <template #header>
+                        <div class="flex justify-between w-full items-center">
+                            <div :class="{ 'font-bold': frozenColumns.email_verified_at }">{{ t('user.columns.email_verified_at') }}</div>
+                            <Button
+                                v-tooltip.top="frozenColumns.email_verified_at ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
+                                :icon="frozenColumns.email_verified_at ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                text
+                                @click="toggleColumnFrozen('email_verified_at')"
+                                severity="contrast"
+                            />
+                        </div>
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.email_verified_at }">{{ dayjs(data.email_verified_at).format('l') }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <div class="flex flex-col gap-2">
+                            <Dropdown
+                                v-model="filterModel.matchMode"
+                                :options="[
+                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
+                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
+                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
+                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
+                                ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                class="w-full"
+                                placeholder="Filter Mode"
+                            />
+
+                            <InputGroup>
+                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <InputGroupAddon>
+                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                    <Button
+                                        size="small"
+                                        icon="pi pi-times"
+                                        severity="danger"
+                                        outlined
+                                        :disabled="!filterModel.value"
+                                        @click="
+                                            (() => {
+                                                filterModel.value = null;
+                                                applyFilter();
+                                            })()
+                                        "
+                                    />
+                                </InputGroupAddon>
+                            </InputGroup>
+                        </div>
+                    </template>
+                </Column>
+                <Column
                     :showFilterMatchModes="false"
                     :showFilterOperator="false"
                     :showClearButton="false"
@@ -531,6 +604,144 @@ onUnmounted(() => {
                                 <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
+                    </template>
+                </Column>
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    dataType="date"
+                    columnKey="created_at"
+                    field="created_at"
+                    :frozen="frozenColumns.created_at"
+                    v-if="selectedColumns.some((column) => column.field === 'created_at')"
+                    sortable
+                    class="min-w-40"
+                >
+                    <template #header>
+                        <div class="flex justify-between w-full items-center">
+                            <div :class="{ 'font-bold': frozenColumns.created_at }">{{ t('user.columns.created_at') }}</div>
+                            <Button
+                                v-tooltip.top="frozenColumns.created_at ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
+                                :icon="frozenColumns.created_at ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                text
+                                @click="toggleColumnFrozen('created_at')"
+                                severity="contrast"
+                            />
+                        </div>
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.created_at }">{{ dayjs(data.created_at).format('l') }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <div class="flex flex-col gap-2">
+                            <!-- Match Mode Selector -->
+                            <Dropdown
+                                v-model="filterModel.matchMode"
+                                :options="[
+                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
+                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
+                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
+                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
+                                ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                class="w-full"
+                                placeholder="Filter Mode"
+                            />
+
+                            <!-- Date Input + Apply/Clear -->
+                            <InputGroup>
+                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <InputGroupAddon>
+                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                    <Button
+                                        size="small"
+                                        icon="pi pi-times"
+                                        severity="danger"
+                                        outlined
+                                        :disabled="!filterModel.value"
+                                        @click="
+                                            (() => {
+                                                filterModel.value = null;
+                                                applyFilter();
+                                            })()
+                                        "
+                                    />
+                                </InputGroupAddon>
+                            </InputGroup>
+                        </div>
+                    </template>
+                </Column>
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    dataType="date"
+                    columnKey="updated_at"
+                    field="updated_at"
+                    :frozen="frozenColumns.updated_at"
+                    v-if="selectedColumns.some((column) => column.field === 'updated_at')"
+                    sortable
+                    class="min-w-40"
+                >
+                    <template #header>
+                        <div class="flex justify-between w-full items-center">
+                            <div :class="{ 'font-bold': frozenColumns.updated_at }">{{ t('user.columns.updated_at') }}</div>
+                            <Button
+                                v-tooltip.top="frozenColumns.updated_at ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
+                                :icon="frozenColumns.updated_at ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                text
+                                @click="toggleColumnFrozen('updated_at')"
+                                severity="contrast"
+                            />
+                        </div>
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.updated_at }">{{ dayjs(data.updated_at).format('l') }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <div class="flex flex-col gap-2">
+                            <Dropdown
+                                v-model="filterModel.matchMode"
+                                :options="[
+                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
+                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
+                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
+                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
+                                ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                class="w-full"
+                                placeholder="Filter Mode"
+                            />
+
+                            <InputGroup>
+                                <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <InputGroupAddon>
+                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                    <Button
+                                        size="small"
+                                        icon="pi pi-times"
+                                        severity="danger"
+                                        outlined
+                                        :disabled="!filterModel.value"
+                                        @click="
+                                            (() => {
+                                                filterModel.value = null;
+                                                applyFilter();
+                                            })()
+                                        "
+                                    />
+                                </InputGroupAddon>
+                            </InputGroup>
+                        </div>
                     </template>
                 </Column>
                 <Column columnKey="actions" :exportable="false" style="min-width: 12rem" :header="t('common.columns.actions')">

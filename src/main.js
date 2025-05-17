@@ -1,40 +1,33 @@
-//main.js
-import '@/assets/styles.scss';
-import '@/assets/tailwind.css';
-import i18n from '@/plugins/i18n';
-import '@/services/EchoService';
-import Aura from '@primevue/themes/aura';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
-import PrimeVue from 'primevue/config';
-import ConfirmationService from 'primevue/confirmationservice';
-import DialogService from 'primevue/dialogservice';
-import ToastService from 'primevue/toastservice';
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 
-const pinia = createPinia();
-pinia.use(piniaPluginPersistedstate);
+import dayjs from '@/plugins/dayjs';
+import i18n from '@/plugins/i18n';
+import { setupPrimeVue } from '@/plugins/primevue';
+
+import '@/assets/styles.scss';
+import '@/assets/tailwind.css';
+import '@/services/EchoService';
 
 const app = createApp(App);
 
-app.use(router);
-app.use(PrimeVue, {
-    ripple: true,
-    theme: {
-        preset: Aura,
-        options: {
-            darkModeSelector: '.app-dark'
-        }
-    }
-});
-
+// 💾 Setup Pinia
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
 app.use(pinia);
+
+// 🌐 Setup i18n (must come before PrimeVue)
 app.use(i18n);
 
-app.use(ToastService);
-app.use(ConfirmationService);
-app.use(DialogService);
+// 🎨 Setup PrimeVue
+setupPrimeVue(app);
 
+// 🚦 Other plugins
+app.use(router);
+dayjs.locale(i18n.global.locale.value);
+
+// 🚀 Mount app
 app.mount('#app');

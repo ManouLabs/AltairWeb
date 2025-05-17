@@ -20,6 +20,12 @@ const adminRoutes = [
         name: 'roles',
         component: () => import('@/views/admin/roles/Roles.vue'),
         meta: { requiresAuth: true, requiresPermission: 'view_roles' }
+    },
+    {
+        path: 'myaccount',
+        name: 'myaccount',
+        component: () => import('@/views/admin/auth/MyAccount.vue'),
+        meta: { requiresAuth: true }
     }
 ];
 

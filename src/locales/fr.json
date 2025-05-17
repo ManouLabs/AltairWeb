@@ -6,11 +6,29 @@
         "roles": "Rôles"
     },
     "common": {
+        "contents": {
+            "password_requirements": {
+                "lowercase": "Au moins une lettre minuscule",
+                "uppercase": "Au moins une lettre majuscule",
+                "numeric": "Au moins un chiffre",
+                "minimum_length": "Au moins {length} caractères"
+            }
+        },
+        "messages": {
+            "no_records": "Aucun enregistrement trouvé",
+            "no_selected_records": "Aucun enregistrement sélectionné",
+            "no_search_results": "Aucun résultat trouvé",
+            "no_permissions": "Vous n’avez pas les autorisations nécessaires. Veuillez contacter les administrateurs.",
+            "error": "Une erreur s’est produite lors du traitement de votre demande",
+            "access_denied": "Accès refusé",
+            "not_found": "Introuvable",
+            "no_resources": "La ressource demandée n’est pas disponible."
+        },
         "titles": {
             "manage": "Gérer {entity}",
-            "add": "Ajouter un nouveau {entity}"
+            "add": "Ajouter un(e) nouveau(elle) {entity}"
         },
-        "actions": {
+        "labels": {
             "edit": "Modifier",
             "delete": "Supprimer",
             "view": "Voir",
@@ -23,26 +41,29 @@
             "submit": "Soumettre",
             "reset": "Réinitialiser",
             "search": "Rechercher",
-            "clear": "Effacer",
             "confirm": "Confirmer",
             "yes": "Oui",
             "no": "Non",
-            "ok": "Ok",
+            "ok": "OK",
             "new": "Nouveau",
             "delete_selected": "Supprimer la sélection",
-            "export": "Exporter"
+            "export": "Exporter",
+            "apply": "Appliquer",
+            "clear": "Effacer",
+            "clear_all_filters": "Effacer tous les filtres"
         },
         "tooltips": {
             "edit": "Modifier {entity}",
             "delete": "Supprimer {entity}",
             "add": "Ajouter {entity}",
             "view": "Voir {entity}",
-            "delete_selected": "Supprimer la sélection de {entity}",
-            "export_selection": "Exporter la sélection de {entity}",
+            "delete_selected": "Supprimer les {entity} sélectionnés",
+            "export_selection": "Exporter les {entity} sélectionnés",
             "lock_row": "Verrouiller cette ligne",
             "unlock_row": "Déverrouiller cette ligne",
             "lock_column": "Verrouiller cette colonne",
-            "unlock_column": "Déverrouiller cette colonne"
+            "unlock_column": "Déverrouiller cette colonne",
+            "clear_all_filters": "Effacer tous les filtres"
         },
         "columns": {
             "id": "ID",
@@ -53,7 +74,7 @@
         "placeholders": {
             "search": "Rechercher...",
             "select": "Sélectionner...",
-            "type": "Taper...",
+            "type": "Saisir...",
             "displayed_columns": "Colonnes affichées"
         },
         "paggination": {
@@ -62,37 +83,37 @@
         "confirmations": {
             "delete": {
                 "title": "Supprimer {entity}",
-                "message": "Êtes-vous sûr de vouloir supprimer ce {entity}?"
+                "message": "Êtes-vous sûr de vouloir supprimer ce(tte) {entity} ?"
             },
             "delete_selected": {
-                "title": "Supprimer la sélection de {entity}",
-                "message": "Êtes-vous sûr de vouloir supprimer la sélection de {entity}?"
+                "title": "Supprimer les {entity} sélectionnés",
+                "message": "Êtes-vous sûr de vouloir supprimer les {entity} sélectionnés ?"
             }
         },
         "toasts": {
-            "created": {
-                "summary": "{entity} créé",
-                "detail": "Le {entity} a été créé avec succès"
+            "create": {
+                "summary": "{entity} créé(e)",
+                "detail": "Le(la) {entity} a été créé(e) avec succès"
             },
-            "updated": {
-                "summary": "{entity} mis à jour",
-                "detail": "Le {entity} a été mis à jour avec succès"
+            "edit": {
+                "summary": "{entity} mis(e) à jour",
+                "detail": "Le(la) {entity} a été mis(e) à jour avec succès"
             },
-            "deleted": {
-                "summary": "{entity} supprimé",
-                "detail": "Le {entity} a été supprimé avec succès"
+            "delete": {
+                "summary": "{entity} supprimé(e)",
+                "detail": "Le(la) {entity} a été supprimé(e) avec succès"
             },
             "delete_selected": {
-                "summary": "Sélection de {entity} supprimée",
-                "detail": "La sélection de {entity} a été supprimée avec succès"
+                "summary": "{entity} sélectionné(e)(s) supprimé(e)(s)",
+                "detail": "Les {entity} sélectionné(e)(s) ont été supprimé(e)(s) avec succès"
             },
             "error": {
-                "summary": "Une erreur est survenue",
-                "detail": "Une erreur est survenue lors du traitement de votre demande"
+                "summary": "Une erreur s'est produite",
+                "detail": "Une erreur s’est produite lors du traitement de votre demande"
             },
             "new": {
-                "summary": "Nouveau {entity}",
-                "detail": "Un nouveau {entity} a été créé"
+                "summary": "Nouveau(elle) {entity}",
+                "detail": "Un(e) nouveau(elle) {entity} a été créé(e)"
             }
         }
     },
@@ -128,14 +149,148 @@
     },
     "role": {
         "placeholders": {
-            "select_guard_name": "Sélectionner le nom du gardien",
-            "permissions_available": "Permissions disponibles",
-            "permissions_selected": "Permissions sélectionnées"
+            "select_guard_name": "Sélectionner le nom de garde",
+            "permissions_available": "Autorisations disponibles",
+            "permissions_selected": "Autorisations sélectionnées"
         },
         "columns": {
             "name": "Nom",
-            "guard_name": "Nom du gardien",
-            "permissions": "Permissions"
+            "guard_name": "Nom de garde",
+            "permissions": "Autorisations"
         }
+    },
+    "user": {
+        "placeholders": {
+            "select_role": "Sélectionner un rôle",
+            "roles_available": "Rôles disponibles",
+            "roles_selected": "Rôles sélectionnés"
+        },
+        "columns": {
+            "name": "Nom",
+            "email": "Email",
+            "password": "Mot de passe",
+            "password_confirmation": "Confirmation du mot de passe",
+            "roles": "Rôles",
+            "email_verified_at": "Email vérifié le",
+            "created_at": "Créé le",
+            "updated_at": "Mis à jour le"
+        }
+    },
+    "primevue": {
+        "startsWith": "Commence par",
+        "contains": "Contient",
+        "notContains": "Ne contient pas",
+        "endsWith": "Se termine par",
+        "equals": "Égal à",
+        "notEquals": "Différent de",
+        "noFilter": "Aucun filtre",
+        "lt": "Inférieur à",
+        "lte": "Inférieur ou égal à",
+        "gt": "Supérieur à",
+        "gte": "Supérieur ou égal à",
+        "dateIs": "La date est",
+        "dateIsNot": "La date n'est pas",
+        "dateBefore": "La date est avant",
+        "dateAfter": "La date est après",
+        "clear": "Effacer",
+        "apply": "Appliquer",
+        "matchAll": "Correspond à tous",
+        "matchAny": "Correspond à n'importe lequel",
+        "addRule": "Ajouter une règle",
+        "removeRule": "Supprimer la règle",
+        "accept": "Oui",
+        "reject": "Non",
+        "choose": "Choisir",
+        "upload": "Téléverser",
+        "cancel": "Annuler",
+        "completed": "Terminé",
+        "pending": "En attente",
+        "fileSizeTypes": ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
+        "dayNames": ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
+        "dayNamesShort": ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."],
+        "dayNamesMin": ["D", "L", "M", "M", "J", "V", "S"],
+        "monthNames": ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+        "monthNamesShort": ["Janv.", "Févr.", "Mars", "Avr.", "Mai", "Juin", "Juil.", "Août", "Sept.", "Oct.", "Nov.", "Déc."],
+        "chooseYear": "Choisir l'année",
+        "chooseMonth": "Choisir le mois",
+        "chooseDate": "Choisir une date",
+        "prevDecade": "Décennie précédente",
+        "nextDecade": "Décennie suivante",
+        "prevYear": "Année précédente",
+        "nextYear": "Année suivante",
+        "prevMonth": "Mois précédent",
+        "nextMonth": "Mois suivant",
+        "prevHour": "Heure précédente",
+        "nextHour": "Heure suivante",
+        "prevMinute": "Minute précédente",
+        "nextMinute": "Minute suivante",
+        "prevSecond": "Seconde précédente",
+        "nextSecond": "Seconde suivante",
+        "am": "am",
+        "pm": "pm",
+        "today": "Aujourd'hui",
+        "weekHeader": "Wk",
+        "firstDayOfWeek": 0,
+        "showMonthAfterYear": false,
+        "dateFormat": "mm/dd/yy",
+        "weak": "Faible",
+        "medium": "Moyen",
+        "strong": "Fort",
+        "passwordPrompt": "Saisir un mot de passe",
+        "searchMessage": "{0} results are available",
+        "selectionMessage": "{0} items selected",
+        "emptySelectionMessage": "Aucun élément sélectionné",
+        "emptySearchMessage": "Aucun résultat trouvé",
+        "fileChosenMessage": "{0} files",
+        "noFileChosenMessage": "Aucun fichier choisi",
+        "emptyMessage": "Aucune option disponible",
+        "aria.trueLabel": true,
+        "aria.falseLabel": false,
+        "aria.nullLabel": "Not Selected",
+        "aria.star": "1 star",
+        "aria.stars": "{star} stars",
+        "aria.selectAll": "All items selected",
+        "aria.unselectAll": "All items unselected",
+        "aria.close": "Fermer",
+        "aria.previous": "Précédent",
+        "aria.next": "Suivant",
+        "aria.navigation": "Navigation",
+        "aria.scrollTop": "Haut de page",
+        "aria.moveTop": "Déplacer en haut",
+        "aria.moveUp": "Déplacer vers le haut",
+        "aria.moveDown": "Déplacer vers le bas",
+        "aria.moveBottom": "Déplacer en bas",
+        "aria.moveToTarget": "Déplacer vers la cible",
+        "aria.moveToSource": "Déplacer vers la source",
+        "aria.moveAllToTarget": "Tout déplacer vers la cible",
+        "aria.moveAllToSource": "Tout déplacer vers la source",
+        "aria.pageLabel": "Page {page}",
+        "aria.firstPageLabel": "Première page",
+        "aria.lastPageLabel": "Dernière page",
+        "aria.nextPageLabel": "Page suivante",
+        "aria.prevPageLabel": "Page précédente",
+        "aria.rowsPerPageLabel": "Lignes par page",
+        "aria.jumpToPageDropdownLabel": "Aller à la page (menu déroulant)",
+        "aria.jumpToPageInputLabel": "Aller à la page (saisie)",
+        "aria.selectRow": "Ligne sélectionnée",
+        "aria.unselectRow": "Ligne désélectionnée",
+        "aria.expandRow": "Ligne développée",
+        "aria.collapseRow": "Ligne réduite",
+        "aria.showFilterMenu": "Afficher le menu de filtre",
+        "aria.hideFilterMenu": "Masquer le menu de filtre",
+        "aria.filterOperator": "Opérateur de filtre",
+        "aria.filterConstraint": "Contrainte de filtre",
+        "aria.editRow": "Modifier la ligne",
+        "aria.saveEdit": "Enregistrer",
+        "aria.cancelEdit": "Annuler",
+        "aria.listView": "Vue en liste",
+        "aria.gridView": "Vue en grille",
+        "aria.slide": "Diapositive",
+        "aria.slideNumber": "{slideNumber}",
+        "aria.zoomImage": "Zoomer l’image",
+        "aria.zoomIn": "Agrandir",
+        "aria.zoomOut": "Réduire",
+        "aria.rotateRight": "Rotation droite",
+        "aria.rotateLeft": "Rotation gauche"
     }
 }

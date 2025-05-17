@@ -1,16 +1,34 @@
 {
     "entity": {
         "user": "مستخدم",
-        "users": "مستخدمون",
+        "users": "المستخدمون",
         "role": "دور",
-        "roles": "أدوار"
+        "roles": "الأدوار"
     },
     "common": {
+        "contents": {
+            "password_requirements": {
+                "lowercase": "Au moins une lettre minuscule",
+                "uppercase": "Au moins une lettre majuscule",
+                "numeric": "Au moins un chiffre",
+                "minimum_length": "Au moins {length} caractères"
+            }
+        },
+        "messages": {
+            "no_records": "لم يتم العثور على سجلات",
+            "no_selected_records": "لم يتم تحديد سجلات",
+            "no_search_results": "لم يتم العثور على نتائج",
+            "no_permissions": "ليست لديك الصلاحيات اللازمة. يرجى الاتصال بالإدارة.",
+            "error": "حدث خطأ أثناء معالجة طلبك",
+            "access_denied": "تم رفض الوصول",
+            "not_found": "غير موجود",
+            "no_resources": "المورد المطلوب غير متاح."
+        },
         "titles": {
             "manage": "إدارة {entity}",
             "add": "إضافة {entity} جديد"
         },
-        "actions": {
+        "labels": {
             "edit": "تعديل",
             "delete": "حذف",
             "view": "عرض",
@@ -23,83 +41,86 @@
             "submit": "إرسال",
             "reset": "إعادة تعيين",
             "search": "بحث",
-            "clear": "مسح",
             "confirm": "تأكيد",
             "yes": "نعم",
             "no": "لا",
-            "ok": "حسنًا",
+            "ok": "موافق",
             "new": "جديد",
             "delete_selected": "حذف المحدد",
-            "export": "تصدير"
+            "export": "تصدير",
+            "apply": "تطبيق",
+            "clear": "مسح",
+            "clear_all_filters": "مسح جميع الفلاتر"
         },
         "tooltips": {
-            "edit": "تعديل {entity}",
-            "delete": "حذف {entity}",
-            "add": "إضافة {entity}",
-            "view": "عرض {entity}",
-            "delete_selected": "حذف المحدد {entity}",
-            "export_selection": "تصدير المحدد {entity}",
-            "lock_row": "قفل هذا الصف",
-            "unlock_row": "فتح قفل هذا الصف",
-            "lock_column": "قفل هذا العمود",
-            "unlock_column": "فتح قفل هذا العمود"
+            "edit": "Modifier {entity}",
+            "delete": "Supprimer {entity}",
+            "add": "Ajouter {entity}",
+            "view": "Voir {entity}",
+            "delete_selected": "Supprimer les {entity} sélectionnés",
+            "export_selection": "Exporter les {entity} sélectionnés",
+            "lock_row": "Verrouiller cette ligne",
+            "unlock_row": "Déverrouiller cette ligne",
+            "lock_column": "Verrouiller cette colonne",
+            "unlock_column": "Déverrouiller cette colonne",
+            "clear_all_filters": "Effacer tous les filtres"
         },
         "columns": {
-            "id": "المعرف",
-            "created_at": "تاريخ الإنشاء",
-            "updated_at": "تاريخ التحديث",
-            "actions": "الإجراءات"
+            "id": "ID",
+            "created_at": "Créé le",
+            "updated_at": "Mis à jour le",
+            "actions": "Actions"
         },
         "placeholders": {
-            "search": "بحث...",
-            "select": "اختر...",
-            "type": "اكتب...",
-            "displayed_columns": "الأعمدة المعروضة"
+            "search": "Rechercher...",
+            "select": "Sélectionner...",
+            "type": "Saisir...",
+            "displayed_columns": "Colonnes affichées"
         },
         "paggination": {
-            "showing_to_of_entity": "عرض {first} إلى {last} من {totalRecords} {entity}"
+            "showing_to_of_entity": "Affichage de {first} à {last} sur {totalRecords} {entity}"
         },
         "confirmations": {
             "delete": {
-                "title": "حذف {entity}",
-                "message": "هل أنت متأكد أنك تريد حذف {entity} هذا؟"
+                "title": "Supprimer {entity}",
+                "message": "Êtes-vous sûr de vouloir supprimer ce(tte) {entity} ?"
             },
             "delete_selected": {
-                "title": "حذف المحدد {entity}",
-                "message": "هل أنت متأكد أنك تريد حذف {entity} المحدد؟"
+                "title": "Supprimer les {entity} sélectionnés",
+                "message": "Êtes-vous sûr de vouloir supprimer les {entity} sélectionnés ?"
             }
         },
         "toasts": {
-            "created": {
-                "summary": "{entity} تم الإنشاء",
-                "detail": "تم إنشاء {entity} بنجاح"
+            "create": {
+                "summary": "{entity} créé(e)",
+                "detail": "Le(la) {entity} a été créé(e) avec succès"
             },
-            "updated": {
-                "summary": "{entity} تم التحديث",
-                "detail": "تم تحديث {entity} بنجاح"
+            "edit": {
+                "summary": "{entity} mis(e) à jour",
+                "detail": "Le(la) {entity} a été mis(e) à jour avec succès"
             },
-            "deleted": {
-                "summary": "{entity} تم الحذف",
-                "detail": "تم حذف {entity} بنجاح"
+            "delete": {
+                "summary": "{entity} supprimé(e)",
+                "detail": "Le(la) {entity} a été supprimé(e) avec succès"
             },
             "delete_selected": {
-                "summary": "تم حذف {entity} المحدد",
-                "detail": "تم حذف {entity} المحدد بنجاح"
+                "summary": "{entity} sélectionné(e)(s) supprimé(e)(s)",
+                "detail": "Les {entity} sélectionné(e)(s) ont été supprimé(e)(s) avec succès"
             },
             "error": {
-                "summary": "حدث خطأ",
-                "detail": "حدث خطأ أثناء معالجة طلبك"
+                "summary": "Une erreur s'est produite",
+                "detail": "Une erreur s’est produite lors du traitement de votre demande"
             },
             "new": {
-                "summary": "{entity} جديد",
-                "detail": "تم إنشاء {entity} جديد"
+                "summary": "Nouveau(elle) {entity}",
+                "detail": "Un(e) nouveau(elle) {entity} a été créé(e)"
             }
         }
     },
     "login": {
-        "welcome": "مرحبًا",
+        "welcome": "مرحباً",
         "sign_in_message": "يرجى تسجيل الدخول",
-        "email": "عنوان البريد الإلكتروني",
+        "email": "البريد الإلكتروني",
         "password": "كلمة المرور",
         "sign_in": "تسجيل الدخول",
         "forgot_password": "نسيت كلمة المرور",
@@ -112,7 +133,7 @@
         "side_bar": {
             "home": "الرئيسية",
             "dashboard": "لوحة التحكم",
-            "user": "المستخدم",
+            "user": "مستخدم",
             "users": "المستخدمون",
             "roles": "الأدوار",
             "profile": "الملف الشخصي",
@@ -129,13 +150,147 @@
     "role": {
         "placeholders": {
             "select_guard_name": "اختر اسم الحارس",
-            "permissions_available": "الأذونات المتاحة",
-            "permissions_selected": "الأذونات المحددة"
+            "permissions_available": "الصلاحيات المتاحة",
+            "permissions_selected": "الصلاحيات المحددة"
         },
         "columns": {
             "name": "الاسم",
             "guard_name": "اسم الحارس",
-            "permissions": "الأذونات"
+            "permissions": "الصلاحيات"
         }
+    },
+    "user": {
+        "placeholders": {
+            "select_role": "اختر دوراً",
+            "roles_available": "الأدوار المتاحة",
+            "roles_selected": "الأدوار المحددة"
+        },
+        "columns": {
+            "name": "الاسم",
+            "email": "البريد الإلكتروني",
+            "password": "كلمة المرور",
+            "password_confirmation": "تأكيد كلمة المرور",
+            "roles": "الأدوار",
+            "email_verified_at": "تاريخ تحقق البريد",
+            "created_at": "تاريخ الإنشاء",
+            "updated_at": "تاريخ التحديث"
+        }
+    },
+    "primevue": {
+        "startsWith": "يبدأ بـ",
+        "contains": "يحتوي على",
+        "notContains": "لا يحتوي على",
+        "endsWith": "ينتهي بـ",
+        "equals": "يساوي",
+        "notEquals": "لا يساوي",
+        "noFilter": "بدون تصفية",
+        "lt": "أقل من",
+        "lte": "أقل من أو يساوي",
+        "gt": "أكبر من",
+        "gte": "أكبر من أو يساوي",
+        "dateIs": "التاريخ هو",
+        "dateIsNot": "التاريخ ليس",
+        "dateBefore": "التاريخ قبل",
+        "dateAfter": "التاريخ بعد",
+        "clear": "مسح",
+        "apply": "تطبيق",
+        "matchAll": "مطابقة الكل",
+        "matchAny": "مطابقة أي",
+        "addRule": "إضافة قاعدة",
+        "removeRule": "حذف القاعدة",
+        "accept": "نعم",
+        "reject": "لا",
+        "choose": "اختر",
+        "upload": "تحميل",
+        "cancel": "إلغاء",
+        "completed": "مكتمل",
+        "pending": "قيد الانتظار",
+        "fileSizeTypes": ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
+        "dayNames": ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
+        "dayNamesShort": ["أحد", "اثن", "ثلث", "أرب", "خمي", "جمع", "سبت"],
+        "dayNamesMin": ["ح", "ن", "ث", "ر", "خ", "ج", "س"],
+        "monthNames": ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"],
+        "monthNamesShort": ["ينا", "فبر", "مار", "أبر", "ماي", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس"],
+        "chooseYear": "اختر السنة",
+        "chooseMonth": "اختر الشهر",
+        "chooseDate": "اختر التاريخ",
+        "prevDecade": "العقد السابق",
+        "nextDecade": "العقد التالي",
+        "prevYear": "السنة السابقة",
+        "nextYear": "السنة التالية",
+        "prevMonth": "الشهر السابق",
+        "nextMonth": "الشهر التالي",
+        "prevHour": "الساعة السابقة",
+        "nextHour": "الساعة التالية",
+        "prevMinute": "الدقيقة السابقة",
+        "nextMinute": "الدقيقة التالية",
+        "prevSecond": "الثانية السابقة",
+        "nextSecond": "الثانية التالية",
+        "am": "ص",
+        "pm": "م",
+        "today": "اليوم",
+        "weekHeader": "أسبوع",
+        "firstDayOfWeek": 6,
+        "showMonthAfterYear": false,
+        "dateFormat": "dd/mm/yy",
+        "weak": "ضعيف",
+        "medium": "متوسط",
+        "strong": "قوي",
+        "passwordPrompt": "أدخل كلمة المرور",
+        "searchMessage": "تم العثور على {0} نتيجة",
+        "selectionMessage": "{0} عناصر محددة",
+        "emptySelectionMessage": "لا توجد عناصر محددة",
+        "emptySearchMessage": "لم يتم العثور على نتائج",
+        "fileChosenMessage": "{0} ملفات",
+        "noFileChosenMessage": "لم يتم اختيار أي ملف",
+        "emptyMessage": "لا توجد خيارات متاحة",
+        "aria.trueLabel": true,
+        "aria.falseLabel": false,
+        "aria.nullLabel": "غير محدد",
+        "aria.star": "نجمة واحدة",
+        "aria.stars": "{star} نجوم",
+        "aria.selectAll": "تحديد الكل",
+        "aria.unselectAll": "إلغاء تحديد الكل",
+        "aria.close": "إغلاق",
+        "aria.previous": "السابق",
+        "aria.next": "التالي",
+        "aria.navigation": "التنقل",
+        "aria.scrollTop": "التمرير لأعلى",
+        "aria.moveTop": "الانتقال إلى الأعلى",
+        "aria.moveUp": "الانتقال للأعلى",
+        "aria.moveDown": "الانتقال للأسفل",
+        "aria.moveBottom": "الانتقال إلى الأسفل",
+        "aria.moveToTarget": "نقل إلى الهدف",
+        "aria.moveToSource": "نقل إلى المصدر",
+        "aria.moveAllToTarget": "نقل الكل إلى الهدف",
+        "aria.moveAllToSource": "نقل الكل إلى المصدر",
+        "aria.pageLabel": "الصفحة {page}",
+        "aria.firstPageLabel": "الصفحة الأولى",
+        "aria.lastPageLabel": "الصفحة الأخيرة",
+        "aria.nextPageLabel": "الصفحة التالية",
+        "aria.prevPageLabel": "الصفحة السابقة",
+        "aria.rowsPerPageLabel": "عدد الصفوف لكل صفحة",
+        "aria.jumpToPageDropdownLabel": "انتقل إلى الصفحة (قائمة)",
+        "aria.jumpToPageInputLabel": "انتقل إلى الصفحة (إدخال)",
+        "aria.selectRow": "تم تحديد الصف",
+        "aria.unselectRow": "تم إلغاء تحديد الصف",
+        "aria.expandRow": "توسيع الصف",
+        "aria.collapseRow": "طي الصف",
+        "aria.showFilterMenu": "عرض قائمة التصفية",
+        "aria.hideFilterMenu": "إخفاء قائمة التصفية",
+        "aria.filterOperator": "عامل التصفية",
+        "aria.filterConstraint": "شرط التصفية",
+        "aria.editRow": "تحرير الصف",
+        "aria.saveEdit": "حفظ التعديل",
+        "aria.cancelEdit": "إلغاء التعديل",
+        "aria.listView": "عرض القائمة",
+        "aria.gridView": "عرض الشبكة",
+        "aria.slide": "شريحة",
+        "aria.slideNumber": "{slideNumber}",
+        "aria.zoomImage": "تكبير الصورة",
+        "aria.zoomIn": "تكبير",
+        "aria.zoomOut": "تصغير",
+        "aria.rotateRight": "تدوير لليمين",
+        "aria.rotateLeft": "تدوير لليسار"
     }
 }

@@ -29,8 +29,10 @@ function saveRecord() {
             dialogRef.value.close({ record: response.data, action: action.value });
         })
         .catch((error) => {
-            errors.value = error.response.data.errors;
-            showToast('error', 'error', 'user');
+            if (error.status != 422) {
+                errors.value = error.response.data.errors;
+                showToast('error', action.value, 'user', 'tr');
+            }
         })
         .finally(() => {
             loading.stopPageLoading();
@@ -59,7 +61,7 @@ const closeDialog = () => {
             </div>
             <div>
                 <FloatLabel variant="on">
-                    <Password v-model.trim="record.password" :disabled="loading.isPageLoading" :invalid="errors?.password ? true : false" required autofocus fluid toggleMask>
+                    <Password v-model.trim="record.password" :disabled="loading.isPageLoading" :invalid="errors?.password ? true : false" :required="action === ACTIONS.CREATE" autofocus fluid toggleMask>
                         <template #header>
                             <div class="font-semibold text-xm mb-4">{{ $t('user.columns.password') }}</div>
                         </template>
@@ -80,7 +82,7 @@ const closeDialog = () => {
 
             <div>
                 <FloatLabel variant="on">
-                    <Password v-model.trim="record.password_confirmation" :disabled="loading.isPageLoading" :invalid="errors?.password ? true : false" required autofocus fluid toggleMask name="password_confirmation" />
+                    <Password v-model.trim="record.password_confirmation" :disabled="loading.isPageLoading" :invalid="errors?.password ? true : false" :required="action === ACTIONS.CREATE" autofocus fluid toggleMask name="password_confirmation" />
                     <label for="password_confirmation">{{ $t('user.columns.password_confirmation') }}</label>
                 </FloatLabel>
                 <ErrorMessage field="password_confirmation" :errors="errors" />

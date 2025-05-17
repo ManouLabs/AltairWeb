@@ -41,6 +41,14 @@ export const useAuthStore = defineStore('auth', {
                 }
             }
         },
+        async myaccount() {
+            try {
+                router.push('/admin/myaccount');
+            } catch (error) {
+                this.processError(error, 'Logout failed');
+                throw error;
+            }
+        },
 
         async logout() {
             try {

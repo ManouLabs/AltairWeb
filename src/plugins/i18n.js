@@ -9,7 +9,9 @@ const i18n = createI18n({
     fallbackLocale: import.meta.env.VITE_FALLBACK_LOCALE || 'fr',
     legacy: false,
     globalInjection: true,
-    messages
+    messages,
+    missingWarn: false,
+    fallbackWarn: false
 });
 
 export default i18n;
