@@ -58,12 +58,11 @@ const router = createRouter({
 });
 
 const handleRouteGuard = async (to, next, authStore) => {
-    // Authentication and Guest checks
-    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    if (to.meta.requiresAuth && !authStore.user) {
         return next({ name: 'login' });
     }
 
-    if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    if (to.meta.requiresGuest && authStore.user) {
         return next({ name: 'dashboard' });
     }
 
@@ -81,7 +80,7 @@ router.beforeEach(async (to, from, next) => {
 
     try {
         if (to.meta.requiresAuth) {
-            if (!authStore.isAuthenticated || !authStore.user) {
+            if (!authStore.user) {
                 await authStore.fetchUser();
             }
         }

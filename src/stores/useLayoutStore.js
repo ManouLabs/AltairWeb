@@ -1,89 +1,97 @@
 // stores/useLayoutStore.js
 import i18n from '@/plugins/i18n';
 import { defineStore } from 'pinia';
-import { useLoading } from './useLoadingStore';
+import { useSettingStore } from './useSettingStore';
 
 export const useLayoutStore = defineStore('layout', {
-    state: () => {
-        const storage = JSON.parse(localStorage.getItem('layout')) || {};
-        const isDarkMode = storage?.isDarkMode ?? false;
+    state: () => ({
+        preset: 'Lara',
+        primary: 'emerald',
+        surface: null,
+        isDarkMode: false,
+        menuMode: 'static',
 
-        document.documentElement.classList.toggle('app-dark', isDarkMode);
-        document.documentElement.dir = storage.locale === 'ar' ? 'rtl' : 'ltr';
+        staticMenuDesktopInactive: false,
+        overlayMenuActive: false,
+        profileSidebarVisible: false,
+        configSidebarVisible: false,
+        staticMenuMobileActive: false,
+        menuHoverActive: false,
+        activeMenuItem: null,
 
-        return {
-            preset: storage.preset || 'Lara',
-            primary: storage.primary || 'emerald',
-            surface: storage.surface || null,
-            isDarkMode,
-            menuMode: storage.menuMode || 'static',
-
-            staticMenuDesktopInactive: storage.staticMenuDesktopInactive === true,
-            overlayMenuActive: storage.overlayMenuActive === true,
-            profileSidebarVisible: storage.profileSidebarVisible === true,
-            configSidebarVisible: storage.configSidebarVisible === true,
-            staticMenuMobileActive: storage.staticMenuMobileActive === true,
-            menuHoverActive: storage.menuHoverActive === true,
-            activeMenuItem: storage.activeMenuItem || null,
-
-            locale: storage.locale || import.meta.env.VITE_DEFAULT_LOCALE || 'fr' // Default locale
-        };
-    },
+        locale: import.meta.env.VITE_DEFAULT_LOCALE || 'fr'
+    }),
 
     actions: {
-        setPrimary(value) {
-            this.primary = value;
+        applyFromSettings() {
+            const settings = useSettingStore().settings;
+
+            this.preset = settings.preset || 'Lara';
+            this.primary = settings.primary || 'emerald';
+            this.surface = settings.surface || null;
+            this.isDarkMode = settings.isDarkMode || false;
+            this.menuMode = settings.menuMode || 'static';
+            this.staticMenuDesktopInactive = settings.staticMenuDesktopInactive || false;
+            this.overlayMenuActive = settings.overlayMenuActive || false;
+            this.profileSidebarVisible = settings.profileSidebarVisible || false;
+            this.configSidebarVisible = settings.configSidebarVisible || false;
+            this.staticMenuMobileActive = settings.staticMenuMobileActive || false;
+            this.menuHoverActive = settings.menuHoverActive || false;
+            this.activeMenuItem = settings.activeMenuItem || null;
+            this.locale = settings.locale || import.meta.env.VITE_DEFAULT_LOCALE || 'fr';
+
+            document.documentElement.classList.toggle('app-dark', this.isDarkMode);
+            document.documentElement.dir = this.locale === 'ar' ? 'rtl' : 'ltr';
+            i18n.global.locale.value = this.locale;
         },
-        setSurface(value) {
-            this.surface = value;
-        },
-        setPreset(value) {
-            this.preset = value;
-        },
+
         toggleDarkMode() {
             this.isDarkMode = !this.isDarkMode;
             document.documentElement.classList.toggle('app-dark', this.isDarkMode);
+            useSettingStore().updateSetting('isDarkMode', this.isDarkMode);
         },
+
+        setLocale(value) {
+            this.locale = value;
+            i18n.global.locale.value = value;
+            document.documentElement.dir = value === 'ar' ? 'rtl' : 'ltr';
+            useSettingStore().updateSetting('locale', value);
+        },
+
         setActiveMenuItem(item) {
             this.activeMenuItem = item?.value || item;
+            useSettingStore().updateSetting('activeMenuItem', this.activeMenuItem);
         },
+
         setMenuMode(mode) {
             this.menuMode = mode;
+            useSettingStore().updateSetting('menuMode', mode);
         },
+
         onMenuToggle() {
             if (this.menuMode === 'overlay') {
                 this.overlayMenuActive = !this.overlayMenuActive;
+                useSettingStore().updateSetting('overlayMenuActive', this.overlayMenuActive);
             } else if (window.innerWidth > 991) {
                 this.staticMenuDesktopInactive = !this.staticMenuDesktopInactive;
+                useSettingStore().updateSetting('staticMenuDesktopInactive', this.staticMenuDesktopInactive);
             } else {
                 this.staticMenuMobileActive = !this.staticMenuMobileActive;
+                useSettingStore().updateSetting('staticMenuMobileActive', this.staticMenuMobileActive);
             }
         },
+
         resetMenu() {
             this.overlayMenuActive = false;
             this.staticMenuMobileActive = false;
             this.menuHoverActive = false;
-        },
-        async setLocale(value) {
-            const loading = useLoading();
-            loading.startPageLoading();
-            try {
-                this.locale = value;
-                i18n.global.locale.value = value;
-                document.documentElement.dir = value === 'ar' ? 'rtl' : 'ltr';
-            } finally {
-                loading.stopPageLoading();
-            }
         }
     },
+
     getters: {
         isSidebarActive: (state) => state.overlayMenuActive || state.staticMenuMobileActive,
         isDarkTheme: (state) => state.isDarkMode,
         getPrimary: (state) => state.primary,
         getSurface: (state) => state.surface
-    },
-    persist: {
-        key: 'layout',
-        storage: localStorage
     }
 });

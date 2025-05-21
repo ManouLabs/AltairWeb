@@ -40,7 +40,6 @@ apiClient.interceptors.response.use(
         if (error.status === 401) {
             const authStore = useAuthStore();
             authStore.user = null;
-            authStore.isAuthenticated = false;
             router.push({ name: 'login' });
         }
         return Promise.reject(error);

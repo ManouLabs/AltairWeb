@@ -26,7 +26,8 @@
         },
         "titles": {
             "manage": "Manage {entity}",
-            "add": "Add new {entity}"
+            "add": "Add new {entity}",
+            "dashboard": "Dashboard"
         },
         "labels": {
             "edit": "Edit",

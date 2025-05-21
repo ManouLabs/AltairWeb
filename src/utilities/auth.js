@@ -1,33 +1,26 @@
 // utilities/auth.js
 import router from '@/router';
+import { useAuthStore } from '@/stores/useAuthStore';
 
-function redirectUser(isAdmin, permissions) {
-    let redirectTo = 'accessDenied';
+function redirectUser(permissions) {
+    const authStore = useAuthStore();
 
-    switch (true) {
-        case isAdmin:
-            redirectTo = 'dashboard';
-            break;
-
-        case permissions.includes('view_dashboard'):
-            redirectTo = 'dashboard';
-            break;
-
-        case permissions.includes('view_users'):
-            redirectTo = 'users';
-            break;
-
-        case permissions.includes('view_roles'):
-            redirectTo = 'roles';
-            break;
-
-        default:
-            redirectTo = 'accessDenied';
-            break;
+    // If the user can view dashboard, prioritize that
+    if (authStore.hasPermission('view_dashboard')) {
+        return router.push({ name: 'dashboard' });
     }
 
+    if (authStore.hasPermission('view_users')) {
+        return router.push({ name: 'users' });
+    }
+
+    if (authStore.hasPermission('view_roles')) {
+        return router.push({ name: 'roles' });
+    }
+
+    // Default fallback
     try {
-        router.push({ name: redirectTo });
+        router.push({ name: 'accessDenied' });
     } catch (error) {
         console.error('Error redirecting:', error);
     }

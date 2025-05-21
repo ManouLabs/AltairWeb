@@ -7,27 +7,34 @@ import AppMenuItem from './AppMenuItem.vue';
 const { t } = useI18n();
 const authStore = useAuthStore();
 
+const can = (permission) => authStore.hasPermission(permission);
+
 const model = computed(() => [
     {
         label: t('navigation.side_bar.home'),
         items: [
-            { label: t('navigation.side_bar.dashboard'), icon: 'pi pi-fw pi-home', to: '/admin/dashboard', visible: authStore.hasPermission('view_dashboard') },
+            {
+                label: t('navigation.side_bar.dashboard'),
+                icon: 'pi pi-fw pi-home',
+                to: '/admin/dashboard',
+                visible: can('view_dashboard')
+            },
             {
                 label: t('navigation.side_bar.user'),
                 icon: 'pi pi-fw pi-user',
-                visible: authStore.hasPermission('view_users') || authStore.hasPermission('view_roles'),
+                visible: can('view_users') || can('view_roles'),
                 items: [
                     {
                         label: t('navigation.side_bar.users'),
                         icon: 'pi pi-fw pi-users',
                         to: '/admin/users',
-                        visible: authStore.hasPermission('view_users')
+                        visible: can('view_users')
                     },
                     {
                         label: t('navigation.side_bar.roles'),
                         icon: 'pi pi-fw pi-wrench',
                         to: '/admin/roles',
-                        visible: authStore.hasPermission('view_roles')
+                        visible: can('view_roles')
                     }
                 ]
             }

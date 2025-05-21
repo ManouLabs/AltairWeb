@@ -26,7 +26,8 @@
         },
         "titles": {
             "manage": "Gérer {entity}",
-            "add": "Ajouter un(e) nouveau(elle) {entity}"
+            "add": "Ajouter un(e) nouveau(elle) {entity}",
+            "dashboard": "Panneau"
         },
         "labels": {
             "edit": "Modifier",

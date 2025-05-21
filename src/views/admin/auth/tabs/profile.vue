@@ -32,7 +32,7 @@ function onAvatarSelect(event) {
 
 function uploadAvatar({ files }) {
     // upload logic here
-    console.log('Uploading:', files[0]);
+
     // simulate preview
     const reader = new FileReader();
     reader.onload = () => (avatarUrl.value = reader.result);
@@ -41,7 +41,6 @@ function uploadAvatar({ files }) {
 
 function saveProfile() {
     // API call here
-    console.log('Saving profile:', form.value);
 }
 
 function resetForm() {

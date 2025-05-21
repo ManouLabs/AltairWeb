@@ -3,22 +3,24 @@ import router from '@/router';
 import apiClient from '@/services/axios';
 import { redirectUser } from '@/utilities/auth';
 import { defineStore } from 'pinia';
+import { useSettingStore } from './useSettingStore';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null,
-        isAuthenticated: false,
         errors: {},
-        isAdmin: false,
         permissions: []
     }),
-
+    persist: {
+        paths: ['user', 'permissions']
+    },
     actions: {
         async login(email, password) {
             try {
                 await apiClient.get('/sanctum/csrf-cookie');
                 await apiClient.post('/login', { email, password });
                 await this.fetchUser();
+                await useSettingStore().fetchSettings();
             } catch (error) {
                 this.processError(error, 'Login failed');
                 throw error;
@@ -28,17 +30,12 @@ export const useAuthStore = defineStore('auth', {
         async fetchUser() {
             try {
                 const response = await apiClient.get('/api/user');
-                this.isAuthenticated = true;
                 this.user = response.data.user;
-                this.isAdmin = response.data.isAdmin;
-                this.permissions = response.data.permissions;
+                this.permissions = response.data.permissions || [];
             } catch (error) {
-                if (error.response?.status === 401) {
-                    router.push('/auth/login');
-                } else {
-                    this.processError(error, 'Fetch User Error');
-                    throw error;
-                }
+                this.user = null;
+                this.permissions = [];
+                throw error;
             }
         },
         async myaccount() {
@@ -64,7 +61,10 @@ export const useAuthStore = defineStore('auth', {
         },
 
         hasPermission(permission) {
-            return this.permissions.includes(permission) || this.isAdmin;
+            if (this.user?.roles?.includes('Super Admin')) {
+                return true;
+            }
+            return this.permissions.includes(permission);
         },
 
         listenToSessionEvents() {
@@ -82,7 +82,7 @@ export const useAuthStore = defineStore('auth', {
         },
 
         redirectUser() {
-            redirectUser(this.isAdmin, this.permissions);
+            redirectUser(this.permissions);
         },
 
         processError(error, defaultMessage) {
