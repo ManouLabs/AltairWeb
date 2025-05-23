@@ -3,7 +3,6 @@ import { useLoading } from '@/stores/useLoadingStore';
 import ProgressBar from 'primevue/progressbar';
 import Toast from 'primevue/toast';
 
-// Access the loading store using Pinia
 const loading = useLoading();
 </script>
 <template>

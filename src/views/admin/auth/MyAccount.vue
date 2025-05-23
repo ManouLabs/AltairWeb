@@ -40,7 +40,6 @@ function handleEchoEvent(event) {
             handleStore(event);
             break;
         default:
-            console.error(`Unhandled action: ${event.action}`);
     }
 }
 const items = ref([

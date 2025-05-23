@@ -1,3 +1,4 @@
+// src/stores/useSettingStore.js
 import apiClient from '@/services/axios';
 import { defineStore } from 'pinia';
 
@@ -11,17 +12,13 @@ export const useSettingStore = defineStore('settings', {
             try {
                 const response = await apiClient.get('/api/settings');
                 this.settings = response.data;
-            } catch (error) {
-                console.error('Error fetching settings:', error);
-            }
+            } catch (error) {}
         },
 
         async saveSettings() {
             try {
                 await apiClient.post('/api/settings', { settings: this.settings });
-            } catch (error) {
-                console.error('Error saving settings:', error);
-            }
+            } catch (error) {}
         },
 
         async updateSetting(key, value) {
@@ -29,9 +26,7 @@ export const useSettingStore = defineStore('settings', {
 
             try {
                 await apiClient.post('/api/settings/update-key', { key, value });
-            } catch (error) {
-                console.error('Error updating setting:', error);
-            }
+            } catch (error) {}
         }
     },
 

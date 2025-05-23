@@ -1,4 +1,4 @@
-// services/useRoleService.js
+// src/services/useRoleService.js
 import apiClient from '@/services/axios';
 
 export const useRoleService = {
@@ -7,7 +7,6 @@ export const useRoleService = {
             const response = await apiClient.post('/api/admin/roles/filter', { params });
             return response.data;
         } catch (error) {
-            console.error('Fetch roles:', error);
             throw error;
         }
     },
@@ -18,7 +17,6 @@ export const useRoleService = {
             const response = await apiClient.post('/api/admin/roles', roleData);
             return response.data;
         } catch (error) {
-            console.error('Store roles:', error.response.data);
             throw error;
         }
     },
@@ -29,7 +27,6 @@ export const useRoleService = {
             const response = await apiClient.put(`/api/admin/roles/${roleId}`, updatedData);
             return response.data;
         } catch (error) {
-            console.error('Update roles:', error.response.data);
             throw error;
         }
     },
@@ -40,7 +37,6 @@ export const useRoleService = {
             const response = await apiClient.delete('/api/admin/roles', { data: { roles: rolesIds } });
             return response.data;
         } catch (error) {
-            console.error('Delete roles:', error.response.data);
             throw error;
         }
     }

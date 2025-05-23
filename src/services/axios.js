@@ -1,9 +1,9 @@
+// src/services/axios.js
 import router from '@/router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import axios from 'axios';
 
-// Create an axios instance
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
     headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
@@ -11,11 +11,9 @@ const apiClient = axios.create({
     withXSRFToken: true
 });
 
-// Reusable loading functions
 const startPageLoading = () => useLoading().startPageLoading();
 const stopPageLoading = () => useLoading().stopPageLoading();
 
-// Axios request interceptor
 apiClient.interceptors.request.use(
     async (config) => {
         startPageLoading();
@@ -27,7 +25,6 @@ apiClient.interceptors.request.use(
     }
 );
 
-// Axios response interceptor
 apiClient.interceptors.response.use(
     (response) => {
         stopPageLoading();
@@ -35,9 +32,7 @@ apiClient.interceptors.response.use(
     },
     async (error) => {
         stopPageLoading();
-
-        // Handle 401 error by updating auth state
-        if (error.status === 401) {
+        if ([401, 419].includes(error.status)) {
             const authStore = useAuthStore();
             authStore.user = null;
             router.push({ name: 'login' });

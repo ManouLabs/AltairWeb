@@ -1,4 +1,4 @@
-// utilities/toast.js
+// src/utilities/toast.js
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 
@@ -25,9 +25,7 @@ function useShowToast() {
                 life: TOAST_LIFE,
                 group: group
             });
-        } catch (error) {
-            console.error('Error displaying toast:', error);
-        }
+        } catch (error) {}
     }
 
     return { showToast };

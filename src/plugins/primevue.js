@@ -1,3 +1,4 @@
+// src/plugins/primevue.js
 import Aura from '@primevue/themes/aura';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';

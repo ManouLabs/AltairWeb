@@ -1,3 +1,4 @@
+// src/router/index.js
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { createRouter, createWebHistory } from 'vue-router';
@@ -84,10 +85,9 @@ router.beforeEach(async (to, from, next) => {
                 await authStore.fetchUser();
             }
         }
-
         await handleRouteGuard(to, next, authStore);
     } catch (error) {
-        next({ name: 'error' });
+        next({ name: 'login' });
     } finally {
         loading.stopPageLoading();
     }

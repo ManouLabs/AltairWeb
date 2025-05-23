@@ -14,7 +14,6 @@ const loginUser = async () => {
         await authStore.login(email.value, password.value);
         authStore.redirectUser();
     } catch (error) {
-        console.error(error);
         showToast('error', 'error', 'login', 'tc');
     }
 };

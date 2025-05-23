@@ -1,4 +1,4 @@
-// stores/useLayoutStore.js
+// src/stores/useLayoutStore.js
 import i18n from '@/plugins/i18n';
 import { defineStore } from 'pinia';
 import { useSettingStore } from './useSettingStore';
@@ -10,7 +10,6 @@ export const useLayoutStore = defineStore('layout', {
         surface: null,
         isDarkMode: false,
         menuMode: 'static',
-
         staticMenuDesktopInactive: false,
         overlayMenuActive: false,
         profileSidebarVisible: false,
@@ -18,14 +17,12 @@ export const useLayoutStore = defineStore('layout', {
         staticMenuMobileActive: false,
         menuHoverActive: false,
         activeMenuItem: null,
-
         locale: import.meta.env.VITE_DEFAULT_LOCALE || 'fr'
     }),
 
     actions: {
         applyFromSettings() {
             const settings = useSettingStore().settings;
-
             this.preset = settings.preset || 'Lara';
             this.primary = settings.primary || 'emerald';
             this.surface = settings.surface || null;
@@ -39,7 +36,6 @@ export const useLayoutStore = defineStore('layout', {
             this.menuHoverActive = settings.menuHoverActive || false;
             this.activeMenuItem = settings.activeMenuItem || null;
             this.locale = settings.locale || import.meta.env.VITE_DEFAULT_LOCALE || 'fr';
-
             document.documentElement.classList.toggle('app-dark', this.isDarkMode);
             document.documentElement.dir = this.locale === 'ar' ? 'rtl' : 'ltr';
             i18n.global.locale.value = this.locale;

@@ -1,4 +1,4 @@
-// stores/useAuthStore.js
+// src/stores/useAuthStore.js
 import router from '@/router';
 import apiClient from '@/services/axios';
 import { redirectUser } from '@/utilities/auth';
@@ -26,15 +26,14 @@ export const useAuthStore = defineStore('auth', {
                 throw error;
             }
         },
-
         async fetchUser() {
             try {
                 const response = await apiClient.get('/api/user');
                 this.user = response.data.user;
                 this.permissions = response.data.permissions || [];
             } catch (error) {
-                this.user = null;
-                this.permissions = [];
+                this.$reset();
+                router.push('/auth/login');
                 throw error;
             }
         },
@@ -46,27 +45,27 @@ export const useAuthStore = defineStore('auth', {
                 throw error;
             }
         },
-
         async logout() {
             try {
                 await apiClient.get('/sanctum/csrf-cookie');
                 await apiClient.post('/logout');
-                this.stopListening();
+            } catch (error) {
+                // Don't rethrow on session loss
+                if (![401, 419].includes(error.response?.status)) {
+                    throw error;
+                }
+            } finally {
+                this.stopListening?.();
                 this.$reset();
                 router.push('/auth/login');
-            } catch (error) {
-                this.processError(error, 'Logout failed');
-                throw error;
             }
         },
-
         hasPermission(permission) {
             if (this.user?.roles?.includes('Super Admin')) {
                 return true;
             }
             return this.permissions.includes(permission);
         },
-
         listenToSessionEvents() {
             if (this.user?.id) {
                 Echo.private(`App.Models.User.${this.user.id}`).listen('SessionExpired', () => {
@@ -74,17 +73,14 @@ export const useAuthStore = defineStore('auth', {
                 });
             }
         },
-
         stopListening() {
             if (this.user?.id) {
                 Echo.leave(`App.Models.User.${this.user.id}`);
             }
         },
-
         redirectUser() {
             redirectUser(this.permissions);
         },
-
         processError(error, defaultMessage) {
             this.errors = error.response?.data?.errors || {
                 general: defaultMessage || 'An unexpected error occurred'

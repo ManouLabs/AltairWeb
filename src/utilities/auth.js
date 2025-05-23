@@ -1,4 +1,4 @@
-// utilities/auth.js
+// src/utilities/auth.js
 import router from '@/router';
 import { useAuthStore } from '@/stores/useAuthStore';
 
@@ -21,9 +21,7 @@ function redirectUser(permissions) {
     // Default fallback
     try {
         router.push({ name: 'accessDenied' });
-    } catch (error) {
-        console.error('Error redirecting:', error);
-    }
+    } catch (error) {}
 }
 
 export { redirectUser };

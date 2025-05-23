@@ -1,14 +1,13 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
-import { useSettingStore } from '@/stores/useSettingStore';
+
 import { useShowToast } from '@/utilities/toast';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const layoutStore = useLayoutStore();
 const authStore = useAuthStore();
-const settingStore = useSettingStore();
 const showToast = useShowToast();
 const { t } = useI18n();
 

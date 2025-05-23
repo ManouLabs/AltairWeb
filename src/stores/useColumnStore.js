@@ -1,4 +1,4 @@
-// stores/useColumnStore.js
+// src/stores/useColumnStore.js
 import { defineStore } from 'pinia';
 import { useSettingStore } from './useSettingStore';
 
@@ -7,12 +7,12 @@ export const useColumnStore = defineStore('column', {
 
     actions: {
         setColumns(pageId, columns) {
-            const settingKey = `${pageId}Columns`;
+            const settingKey = `${pageId}`;
             useSettingStore().updateSetting(settingKey, columns);
         },
 
         getColumns(pageId) {
-            const settingKey = `${pageId}Columns`;
+            const settingKey = `${pageId}`;
             return useSettingStore().settings[settingKey] || null;
         }
     }

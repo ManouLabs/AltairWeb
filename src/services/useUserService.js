@@ -1,4 +1,4 @@
-// services/useUserService.js
+// src/services/useUserService.js
 import apiClient from '@/services/axios';
 
 export const useUserService = {
@@ -7,7 +7,6 @@ export const useUserService = {
             const response = await apiClient.post('/api/admin/users/filter', { params });
             return response.data;
         } catch (error) {
-            console.error('Fetch users:', error);
             throw error;
         }
     },
@@ -18,7 +17,6 @@ export const useUserService = {
             const response = await apiClient.post('/api/admin/users', userData);
             return response.data;
         } catch (error) {
-            console.error('Store user:', error.response.data);
             throw error;
         }
     },
@@ -29,7 +27,6 @@ export const useUserService = {
             const response = await apiClient.put(`/api/admin/users/${userId}`, updatedData);
             return response.data;
         } catch (error) {
-            console.error('Update roles:', error.response.data);
             throw error;
         }
     },
@@ -40,7 +37,6 @@ export const useUserService = {
             const response = await apiClient.delete('/api/admin/users', { data: { users: usersIds } });
             return response.data;
         } catch (error) {
-            console.error('Delete users:', error.response.data);
             throw error;
         }
     }

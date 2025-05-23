@@ -1,8 +1,7 @@
-// plusgins/i18n.js
+// src/plugins/i18n.js
 import messages from '@intlify/unplugin-vue-i18n/messages';
 import { createI18n } from 'vue-i18n';
 
-// Use only static fallback for boot
 const defaultLocale = import.meta.env.VITE_DEFAULT_LOCALE || 'fr';
 
 const i18n = createI18n({

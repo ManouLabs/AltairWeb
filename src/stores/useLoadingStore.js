@@ -1,4 +1,4 @@
-// stores/useLoadingStore.js
+// src/stores/useLoadingStore.js
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
