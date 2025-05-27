@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 const TOAST_LIFE = import.meta.env.VITE_TOAST_LIFE || 8000;
 const ACTIONS = {
     DELETE: 'delete',
+    LOGIN: 'login',
+    LOGOUT: 'logout',
     UPDATE: 'update',
     STORE: 'store',
     EDIT: 'edit',

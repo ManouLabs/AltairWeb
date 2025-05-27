@@ -9,6 +9,7 @@
     },
     "dependencies": {
         "@intlify/unplugin-vue-i18n": "^5.2.0",
+        "@primevue/forms": "^4.3.4",
         "@primevue/themes": "^4.0.0",
         "axios": "^1.7.7",
         "chart.js": "3.3.2",
@@ -21,7 +22,8 @@
         "superjson": "^2.2.1",
         "vue": "^3.4.34",
         "vue-i18n": "^10.0.0",
-        "vue-router": "^4.4.0"
+        "vue-router": "^4.4.0",
+        "zod": "^3.25.28"
     },
     "devDependencies": {
         "@primevue/auto-import-resolver": "^4.0.1",

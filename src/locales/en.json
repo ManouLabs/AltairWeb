@@ -27,7 +27,8 @@
         "titles": {
             "manage": "Manage {entity}",
             "add": "Add new {entity}",
-            "dashboard": "Dashboard"
+            "dashboard": "Dashboard",
+            "my_informations": "My informations"
         },
         "labels": {
             "edit": "Edit",
@@ -116,6 +117,14 @@
             "new": {
                 "summary": "New {entity}",
                 "detail": "New {entity} has been created"
+            },
+            "logout": {
+                "summary": "Session Expired",
+                "detail": "Your session has expired. Please log in again."
+            },
+            "login": {
+                "summary": "Login Successful",
+                "detail": "Welcome back!"
             }
         }
     },
@@ -174,6 +183,8 @@
             "password_confirmation": "Password confirmation",
             "roles": "Roles",
             "email_verified_at": "Email Verified At",
+            "phone": "Phone",
+            "address": "Address",
             "created_at": "Created At",
             "updated_at": "Updated At"
         }

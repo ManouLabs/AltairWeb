@@ -71,6 +71,8 @@ const handleRouteGuard = async (to, next, authStore) => {
         return next({ name: 'accessDenied' });
     }
 
+    authStore.resetSessionTimerFromAction();
+
     next();
 };
 
@@ -80,11 +82,6 @@ router.beforeEach(async (to, from, next) => {
     loading.startPageLoading();
 
     try {
-        if (to.meta.requiresAuth) {
-            if (!authStore.user) {
-                await authStore.fetchUser();
-            }
-        }
         await handleRouteGuard(to, next, authStore);
     } catch (error) {
         next({ name: 'login' });

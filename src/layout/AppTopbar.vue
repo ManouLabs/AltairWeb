@@ -97,7 +97,7 @@ const menuItems = computed(() => [
             </div>
 
             <!-- User menu -->
-            <div class="layout-topbar-menu hidden lg:block">
+            <div class="layout-topbar-menu block">
                 <div class="layout-topbar-menu-content">
                     <Button icon="pi pi-user" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
                     <Menu ref="userMenu" id="overlay_menu" :model="menuItems" :popup="true" />

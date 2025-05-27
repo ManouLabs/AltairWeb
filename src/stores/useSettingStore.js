@@ -23,7 +23,6 @@ export const useSettingStore = defineStore('settings', {
 
         async updateSetting(key, value) {
             this.settings[key] = value;
-
             try {
                 await apiClient.post('/api/settings/update-key', { key, value });
             } catch (error) {}

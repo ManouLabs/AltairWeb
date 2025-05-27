@@ -1,98 +1,114 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useLoading } from '@/stores/useLoadingStore';
-import { ACTIONS, useShowToast } from '@/utilities/toast';
-import { useConfirm } from 'primevue/useconfirm';
-import { useDialog } from 'primevue/usedialog';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-onMounted(() => {
-    subscribeToEcho();
-});
-
-const loading = useLoading();
-
-const authStore = useAuthStore();
-const confirm = useConfirm();
-const dialog = useDialog();
-
-const { showToast } = useShowToast();
+import myInformations from './tabs/myInformations.vue';
 const { t } = useI18n();
 
-const subscription = ref(null);
+const profileImage = ref('/default-profile.jpg');
+const authStore = useAuthStore();
+const user = ref(authStore.user);
 
-function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.auth').listen('DataStream', (event) => {
-        handleEchoEvent(event);
-    });
-}
-
-function handleEchoEvent(event) {
-    switch (event.action) {
-        case ACTIONS.DELETE:
-            handleDelete(event);
-            break;
-        case ACTIONS.UPDATE:
-            handleUpdate(event);
-            break;
-        case ACTIONS.STORE:
-            handleStore(event);
-            break;
-        default:
+const onImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            profileImage.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
-}
-const items = ref([
-    { route: '/dashboard', label: 'Dashboard', icon: 'pi pi-home' },
-    { route: '/transactions', label: 'Transactions', icon: 'pi pi-chart-line' },
-    { route: '/products', label: 'Products', icon: 'pi pi-list' },
-    { route: '/messages', label: 'Messages', icon: 'pi pi-inbox' }
-]);
-
-onUnmounted(() => {
-    if (subscription.value) {
-        subscription.value.stopListening('DataStream');
-    }
-});
+};
 </script>
-
 <template>
-    <div>
-        <div class="card">
-            <Tabs value="0">
-                <TabList>
-                    <Tab value="0">{{ t('myaccount.tabs.profile') }}</Tab>
-                    <Tab value="1">{{ t('myaccount.tabs.company') }}</Tab>
-                    <Tab value="2">{{ t('myaccount.tabs.security') }}</Tab>
-                    <Tab value="3">{{ t('myaccount.tabs.team') }}</Tab>
-                    <Tab value="4">{{ t('myaccount.tabs.preferences') }}</Tab>
-                    <Tab value="5">{{ t('myaccount.tabs.integrations') }}</Tab>
-                    <Tab value="6">{{ t('myaccount.tabs.subscription') }}</Tab>
-                    <Tab value="7">{{ t('myaccount.tabs.usage') }}</Tab>
-                    <Tab value="8">{{ t('myaccount.tabs.danger') }}</Tab>
-                </TabList>
-                <TabPanels>
-                    <TabPanel value="0">
-                        <p class="m-0">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                            consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
-                            laborum.
-                        </p>
-                    </TabPanel>
-                    <TabPanel value="1">
-                        <p class="m-0">
-                            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo
-                            enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Consectetur, adipisci velit, sed quia non numquam eius modi.
-                        </p>
-                    </TabPanel>
-                    <TabPanel value="2">
-                        <p class="m-0">
-                            At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in
-                            culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.
-                        </p>
-                    </TabPanel>
-                </TabPanels>
-            </Tabs>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Profile Panel -->
+        <Card>
+            <template #content>
+                <div class="flex flex-col items-center">
+                    <div class="relative w-28 h-28">
+                        <img :src="profileImage" class="rounded-full border-4 border-white shadow object-cover w-full h-full" />
+                        <label class="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer">
+                            <i class="pi pi-camera text-black text-sm"></i>
+                            <input type="file" accept="image/*" class="hidden" @change="onImageChange" />
+                        </label>
+                    </div>
+                    <h2 class="text-xl font-semibold mt-4">{{ user.name }}</h2>
+                    <p class="text-gray-500">{{ user.role }}</p>
+
+                    <div class="mt-4 w-full text-sm space-y-1">
+                        <p><b>Name:</b> {{ user.name }}</p>
+                        <p><b>Email:</b> {{ user.email }}</p>
+                        <p><b>Role:</b> {{ user.roles[0] }}</p>
+                    </div>
+                </div>
+            </template>
+        </Card>
+
+        <!-- Right Panel: Tabs & Info -->
+        <div class="lg:col-span-2 space-y-6">
+            <Card>
+                <template #content>
+                    <Tabs value="0" lazy>
+                        <TabList>
+                            <Tab value="0"> <i class="pi pi-user mr-2"></i>{{ t('common.titles.my_informations') }} </Tab>
+                            <Tab value="1"> <i class="pi pi-shield mr-2"></i>{{ t('myaccount.tabs.security') }} </Tab>
+                            <Tab value="2"> <i class="pi pi-cog mr-2"></i>{{ t('myaccount.tabs.preferences') }} </Tab>
+                            <Tab value="3"> <i class="pi pi-exclamation-triangle mr-2"></i>{{ t('myaccount.tabs.danger') }} </Tab>
+                            <Tab value="4"> <i class="pi pi-history mr-2"></i>{{ t('myaccount.tabs.activity') }} </Tab>
+                        </TabList>
+                        <TabPanels>
+                            <TabPanel value="0">
+                                <myInformations :user="user" />
+                            </TabPanel>
+                            <TabPanel value="1">
+                                <p class="m-0">
+                                    Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt
+                                    explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Consectetur, adipisci velit, sed quia non
+                                    numquam eius modi.
+                                </p>
+                            </TabPanel>
+                            <TabPanel value="2">
+                                <p class="m-0">
+                                    At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique
+                                    sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil
+                                    impedit quo minus.
+                                </p>
+                            </TabPanel>
+                            <TabPanel value="3">
+                                <p class="m-0">
+                                    At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique
+                                    sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil
+                                    impedit quo minus.
+                                </p>
+                            </TabPanel>
+                            <TabPanel value="4">
+                                <p class="m-0">
+                                    At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique
+                                    sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil
+                                    impedit quo minus.
+                                </p>
+                            </TabPanel>
+                            <TabPanel value="4">
+                                <div class="space-y-4">
+                                    <div class="border p-4 rounded shadow">
+                                        <h3 class="font-semibold mb-1">Login from new device</h3>
+                                        <p class="text-sm text-gray-600">2025-05-20 14:32 — Chrome on Windows</p>
+                                    </div>
+                                    <div class="border p-4 rounded shadow">
+                                        <h3 class="font-semibold mb-1">Password changed</h3>
+                                        <p class="text-sm text-gray-600">2025-05-18 09:15</p>
+                                    </div>
+                                    <div class="border p-4 rounded shadow">
+                                        <h3 class="font-semibold mb-1">Profile updated</h3>
+                                        <p class="text-sm text-gray-600">2025-05-15 17:03</p>
+                                    </div>
+                                </div>
+                            </TabPanel>
+                        </TabPanels>
+                    </Tabs>
+                </template>
+            </Card>
         </div>
     </div>
 </template>

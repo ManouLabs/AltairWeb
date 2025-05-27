@@ -2,6 +2,7 @@
 import router from '@/router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { useShowToast } from '@/utilities/toast';
 import axios from 'axios';
 
 const apiClient = axios.create({
@@ -32,11 +33,23 @@ apiClient.interceptors.response.use(
     },
     async (error) => {
         stopPageLoading();
-        if ([401, 419].includes(error.status)) {
+
+        const status = error.status;
+
+        if ([401, 419].includes(status)) {
             const authStore = useAuthStore();
-            authStore.user = null;
-            router.push({ name: 'login' });
+
+            if (authStore.user) {
+                const { showToast } = useShowToast();
+                authStore.clearSessionTimer();
+                authStore.$reset();
+
+                showToast('warn', 'logout', 'user');
+
+                router.push({ name: 'login' });
+            }
         }
+
         return Promise.reject(error);
     }
 );
