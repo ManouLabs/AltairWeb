@@ -1,8 +1,6 @@
 // src/services/axios.js
-import router from '@/router';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
-import { useShowToast } from '@/utilities/toast';
 import axios from 'axios';
 
 const apiClient = axios.create({
@@ -33,21 +31,11 @@ apiClient.interceptors.response.use(
     },
     async (error) => {
         stopPageLoading();
-
         const status = error.status;
-
         if ([401, 419].includes(status)) {
             const authStore = useAuthStore();
 
-            if (authStore.user) {
-                const { showToast } = useShowToast();
-                authStore.clearSessionTimer();
-                authStore.$reset();
-
-                showToast('warn', 'logout', 'user');
-
-                router.push({ name: 'login' });
-            }
+            authStore.handleSessionExpired();
         }
 
         return Promise.reject(error);

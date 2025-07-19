@@ -25,7 +25,7 @@ const adminRoutes = [
     {
         path: 'myaccount',
         name: 'myaccount',
-        component: () => import('@/views/admin/auth/MyAccount.vue'),
+        component: () => import('@/views/admin/account/MyAccount.vue'),
         meta: { requiresAuth: true }
     }
 ];
@@ -60,7 +60,16 @@ const router = createRouter({
 
 const handleRouteGuard = async (to, next, authStore) => {
     if (to.meta.requiresAuth && !authStore.user) {
-        return next({ name: 'login' });
+        try {
+            await authStore.fetchUser();
+        } catch (e) {
+            // Ignore fetch errors
+        }
+        if (authStore.user) {
+            return next();
+        } else {
+            return next({ name: 'login' });
+        }
     }
 
     if (to.meta.requiresGuest && authStore.user) {
@@ -72,7 +81,6 @@ const handleRouteGuard = async (to, next, authStore) => {
     }
 
     authStore.resetSessionTimerFromAction();
-
     next();
 };
 

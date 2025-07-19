@@ -22,7 +22,14 @@
             "error": "An error occurred while processing your request",
             "access_denied": "Access denied",
             "not_found": "Not found",
-            "no_resources": "Requested resource is not available."
+            "no_resources": "Requested resource is not available.",
+            "is_required": "This field is required",
+            "invalid_email": "Invalid email address",
+            "password_mismatch": "Passwords do not match",
+            "password_strength": "Password must contain at least one uppercase letter, one lowercase letter, one number, and be at least {length} characters long",
+            "invalid_phone": "Invalid phone number",
+            "alpha_only": "Must contain only letters and spaces",
+            "max_length": "Maximum length is 255 characters"
         },
         "titles": {
             "manage": "Manage {entity}",
@@ -31,6 +38,7 @@
             "my_informations": "My informations"
         },
         "labels": {
+            "password": "Password",
             "edit": "Edit",
             "delete": "Delete",
             "view": "View",
@@ -200,6 +208,21 @@
             "subscription": "Subscription",
             "usage": "Usage & Limits",
             "danger": "Danger Zone"
+        },
+        "labels": {
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone",
+            "address": "Address",
+            "current_password": "Current Password",
+            "new_password": "New Password",
+            "confirm_password": "Confirm Password",
+            "change_password": "Change Password",
+            "update_profile": "Update Profile",
+            "delete_account": "Delete Account"
+        },
+        "messages": {
+            "profile_updated": "Profile updated successfully"
         }
     },
     "primevue": {

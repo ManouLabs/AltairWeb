@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', {
                 this.user = response.data.user;
                 this.permissions = response.data.permissions || [];
             } catch (error) {
-                this.forceLogout(); // handles full reset and redirect
+                this.handleSessionExpired();
                 throw error;
             }
         },
@@ -53,7 +53,7 @@ export const useAuthStore = defineStore('auth', {
                     throw error;
                 }
             } finally {
-                this.forceLogout();
+                this.handleSessionExpired();
             }
         },
 
@@ -63,20 +63,6 @@ export const useAuthStore = defineStore('auth', {
 
         hasPermission(permission) {
             return this.user?.roles?.includes('Super Admin') || this.permissions.includes(permission);
-        },
-
-        listenToSessionEvents() {
-            if (this.user?.id) {
-                Echo.private(`App.Models.User.${this.user.id}`).listen('SessionExpired', () => {
-                    this.logout();
-                });
-            }
-        },
-
-        stopListening() {
-            if (this.user?.id) {
-                Echo.leave(`App.Models.User.${this.user.id}`);
-            }
         },
 
         redirectUser() {
@@ -89,7 +75,6 @@ export const useAuthStore = defineStore('auth', {
             };
         },
 
-        // 🔐 Session timer logic
         startSessionTimer() {
             this.clearSessionTimer();
             sessionTimeout = setTimeout(
@@ -114,13 +99,6 @@ export const useAuthStore = defineStore('auth', {
         },
 
         handleSessionExpired() {
-            this.clearSessionTimer();
-            this.$reset();
-            router.push({ name: 'login' });
-        },
-
-        forceLogout() {
-            this.stopListening();
             this.clearSessionTimer();
             this.$reset();
             router.push({ name: 'login' });

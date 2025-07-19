@@ -68,7 +68,10 @@ const loadLazyData = debounce(async () => {
             allRoles.value = [data.roles, []];
         })
         .catch((error) => {
-            console.error(error);
+            if (error?.response?.status === 419 || error?.response?.status === 401) {
+                showToast('error', 'session_expired', 'user', 'tc');
+            }
+
             showToast('error', 'error', 'user', 'tc');
         })
         .finally(() => {
@@ -262,7 +265,9 @@ function confirmDeleteRecord(event, usersIds) {
                     showToast('success', ACTIONS.DELETE, 'user', 'tc');
                 })
                 .catch((error) => {
-                    console.error(error);
+                    if (error?.response?.status === 419 || error?.response?.status === 401) {
+                        showToast('error', 'session_expired', 'user', 'tc');
+                    }
                     showToast('error', 'error', 'user', 'tc');
                 });
         }

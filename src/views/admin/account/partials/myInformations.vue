@@ -10,7 +10,7 @@
                     </IconField>
                     <label for="name">{{ t('user.columns.name') }}</label>
                 </FloatLabel>
-                <Message v-if="$field.invalid" severity="error" size="small">{{ $field.error?.message }}</Message>
+                <Message v-if="$field.invalid" severity="error" size="small">{{ t($field.error?.message) }}</Message>
             </FormField>
 
             <!-- Email -->
@@ -22,7 +22,7 @@
                     </IconField>
                     <label for="email">{{ t('user.columns.email') }}</label>
                 </FloatLabel>
-                <Message v-if="$field.invalid" severity="error" size="small">{{ $field.error?.message }}</Message>
+                <Message v-if="$field.invalid" severity="error" size="small">{{ t($field.error?.message) }}</Message>
             </FormField>
 
             <!-- Phone -->
@@ -30,11 +30,11 @@
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon><i class="pi pi-phone" /></InputIcon>
-                        <InputText id="phone" v-bind="$field" class="w-full" />
+                        <InputMask id="phone" v-bind="$field" class="w-full" mask="+213(0) 999-99-99-99" placeholder="+213(0) 999-99-99-99" />
                     </IconField>
                     <label for="phone">{{ t('user.columns.phone') }}</label>
                 </FloatLabel>
-                <Message v-if="$field.invalid" severity="error" size="small">{{ $field.error?.message }}</Message>
+                <Message v-if="$field.invalid" severity="error" size="small">{{ t($field.error?.message) }}</Message>
             </FormField>
 
             <!-- Address -->
@@ -46,7 +46,7 @@
                     </IconField>
                     <label for="address">{{ t('user.columns.address') }}</label>
                 </FloatLabel>
-                <Message v-if="$field.invalid" severity="error" size="small">{{ $field.error?.message }}</Message>
+                <Message v-if="$field.invalid" severity="error" size="small">{{ t($field.error?.message) }}</Message>
             </FormField>
 
             <!-- Submit button (left aligned) -->
@@ -61,7 +61,7 @@
 import { useLoading } from '@/stores/useLoadingStore';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
 import { useToast } from 'primevue/usetoast';
-import { defineProps, reactive } from 'vue';
+import { reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { z } from 'zod';
 
@@ -81,10 +81,14 @@ const initialValues = reactive({
 
 const resolver = zodResolver(
     z.object({
-        name: z.string().min(1, { message: t('user.columns.name') + ' est requis.' }),
-        email: z.string().email({ message: t('user.columns.email') + ' est invalide.' }),
-        phone: z.string().min(1, { message: t('user.columns.phone') + ' est requis.' }),
-        address: z.string().min(1, { message: t('user.columns.address') + ' est requise.' })
+        name: z
+            .string()
+            .max(255, { message: 'common.messages.max_length' })
+            .min(1, { message: 'common.messages.is_required' })
+            .regex(/^[A-Za-zÀ-ÿ\s'-]+$/, { message: 'common.messages.alpha_only' }),
+        email: z.string().max(255, { message: 'common.messages.max_length' }).min(5, { message: 'common.messages.is_required' }).trim().email({ message: 'common.messages.invalid_email' }),
+        phone: z.string().min(20, { message: 'common.messages.is_required' }),
+        address: z.string().max(255, { message: 'common.messages.max_length' }).min(1, { message: 'common.messages.is_required' })
     })
 );
 

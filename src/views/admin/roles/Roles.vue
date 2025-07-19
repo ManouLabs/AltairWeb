@@ -86,7 +86,9 @@ const loadLazyData = debounce(async () => {
             allPermissions.value = [data.permissions, []];
         })
         .catch((error) => {
-            console.error(error);
+            if (error?.response?.status === 419 || error?.response?.status === 401) {
+                showToast('error', 'session_expired', 'user', 'tc');
+            }
             showToast('error', 'error', 'role', 'tc');
         })
         .finally(() => {
@@ -280,7 +282,9 @@ function confirmDeleteRecord(event, rolesIds) {
                     showToast('success', ACTIONS.DELETE, 'role', 'tc');
                 })
                 .catch((error) => {
-                    console.error(error);
+                    if (error?.response?.status === 419 || error?.response?.status === 401) {
+                        showToast('error', 'session_expired', 'user', 'tc');
+                    }
                     showToast('error', 'error', 'role', 'tc');
                 });
         }

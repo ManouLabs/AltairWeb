@@ -2,7 +2,7 @@
 import { useAuthStore } from '@/stores/useAuthStore';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import myInformations from './tabs/myInformations.vue';
+import myInformations from './partials/myInformations.vue';
 const { t } = useI18n();
 
 const profileImage = ref('/default-profile.jpg');
@@ -27,19 +27,22 @@ const onImageChange = (event) => {
             <template #content>
                 <div class="flex flex-col items-center">
                     <div class="relative w-28 h-28">
-                        <img :src="profileImage" class="rounded-full border-4 border-white shadow object-cover w-full h-full" />
+                        <i class="pi pi-user rounded-full border-4 border-white shadow bg-gray-200 flex items-center justify-center h-full text-5xl text-gray-400"></i>
                         <label class="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer">
                             <i class="pi pi-camera text-black text-sm"></i>
                             <input type="file" accept="image/*" class="hidden" @change="onImageChange" />
                         </label>
                     </div>
                     <h2 class="text-xl font-semibold mt-4">{{ user.name }}</h2>
-                    <p class="text-gray-500">{{ user.role }}</p>
+                    <p class="text-gray-500">{{ user.roles }}</p>
 
                     <div class="mt-4 w-full text-sm space-y-1">
-                        <p><b>Name:</b> {{ user.name }}</p>
-                        <p><b>Email:</b> {{ user.email }}</p>
-                        <p><b>Role:</b> {{ user.roles[0] }}</p>
+                        <p>
+                            <b>{{ t('myaccount.labels.name') }}:</b> {{ user.name }}
+                        </p>
+                        <p>
+                            <b>{{ t('myaccount.labels.email') }}:</b> {{ user.email }}
+                        </p>
                     </div>
                 </div>
             </template>
