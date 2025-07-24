@@ -72,8 +72,17 @@ const handleRouteGuard = async (to, next, authStore) => {
         }
     }
 
-    if (to.meta.requiresGuest && authStore.user) {
-        return next({ name: 'dashboard' });
+    if (to.meta.requiresGuest) {
+        if (authStore.user) {
+            try {
+                await authStore.fetchUser();
+            } catch (e) {
+                // Ignore fetch errors
+            }
+            if (authStore.user) {
+                return next({ name: 'dashboard' });
+            }
+        }
     }
 
     if (to.meta.requiresPermission && !authStore.hasPermission(to.meta.requiresPermission)) {

@@ -53,7 +53,12 @@ export const useAuthStore = defineStore('auth', {
                     throw error;
                 }
             } finally {
-                this.handleSessionExpired();
+                this.clearSessionTimer();
+                this.user = null;
+                this.permissions = [];
+                this.errors = {};
+                this.$reset();
+                router.push({ name: 'login' });
             }
         },
 
@@ -79,7 +84,7 @@ export const useAuthStore = defineStore('auth', {
             this.clearSessionTimer();
             sessionTimeout = setTimeout(
                 () => {
-                    this.handleSessionExpired();
+                    this.logout();
                 },
                 this.sessionLifetime * 60 * 1000
             );
@@ -96,12 +101,6 @@ export const useAuthStore = defineStore('auth', {
             if (this.user) {
                 this.startSessionTimer();
             }
-        },
-
-        handleSessionExpired() {
-            this.clearSessionTimer();
-            this.$reset();
-            router.push({ name: 'login' });
         }
     }
 });
