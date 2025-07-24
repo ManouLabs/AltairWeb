@@ -1,10 +1,10 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { useShowToast } from '@/utilities/toast';
 import { ref } from 'vue';
-
 const { showToast } = useShowToast();
-
+const loading = useLoading();
 const email = ref('');
 const password = ref('');
 const authStore = useAuthStore();
@@ -45,26 +45,29 @@ const loginUser = async () => {
                         <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">{{ $t('login.welcome') }}</div>
                         <span class="text-muted-color font-medium">{{ $t('login.sign_in_message') }}</span>
                     </div>
-                    <form @submit.prevent="loginUser">
-                        <div>
-                            <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">{{ $t('login.email') }}</label>
-
-                            <InputText id="email1" type="email" :placeholder="$t('login.email')" class="w-full md:w-[30rem] mb-2" v-model="email" :invalid="authStore.errors.email ? true : false" required />
-
+                    <form @submit.prevent="loginUser" class="flex flex-col gap-5">
+                        <FloatLabel variant="on">
+                            <IconField>
+                                <InputIcon class="pi pi-at" />
+                                <InputText id="email" type="email" class="w-full md:w-[30rem]" v-model="email" :invalid="authStore.errors.email ? true : false" required />
+                            </IconField>
+                            <label for="email">{{ $t('login.email') }}</label>
                             <Message v-if="authStore.errors.email" severity="error" size="small" variant="simple">{{ authStore.errors.email[0] }}</Message>
-                        </div>
-                        <div>
-                            <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">{{ $t('login.password') }}</label>
-                            <Password id="password1" v-model="password" :placeholder="$t('login.password')" :toggleMask="true" class="mb-4" fluid :feedback="false" :invalid="authStore.errors.password ? true : false" required />
-
+                        </FloatLabel>
+                        <FloatLabel variant="on">
+                            <IconField>
+                                <InputIcon class="pi pi-key" />
+                                <Password id="password" v-model="password" :toggleMask="true" class="mb-4" fluid :feedback="false" :invalid="authStore.errors.password ? true : false" required />
+                            </IconField>
+                            <label for="password">{{ $t('login.password') }}</label>
                             <Message v-if="authStore.errors.password" severity="error" size="small" variant="simple">{{ authStore.errors.password[0] }}</Message>
-                        </div>
-                        <div class="flex items-center justify-between mt-2 mb-8 gap-8">
-                            <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">{{ $t('login.forgot_password') }}</span>
+                        </FloatLabel>
+                        <div class="-mt-4">
+                            <span class="font-medium no-underline text-right cursor-pointer text-primary">{{ $t('login.forgot_password') }}</span>
                         </div>
 
                         <!-- Trigger loginUser method on form submission -->
-                        <Button type="submit" :label="$t('login.sign_in')" class="w-full" />
+                        <Button type="submit" :label="$t('login.sign_in')" class="w-full" :loading="loading.isPageLoading" />
                     </form>
                 </div>
             </div>
