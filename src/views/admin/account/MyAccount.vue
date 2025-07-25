@@ -1,12 +1,13 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import myInformations from './partials/myInformations.vue';
 const { t } = useI18n();
 
 const profileImage = ref('/default-profile.jpg');
 const authStore = useAuthStore();
+
 const user = ref(authStore.user);
 
 const onImageChange = (event) => {
@@ -19,6 +20,10 @@ const onImageChange = (event) => {
         reader.readAsDataURL(file);
     }
 };
+
+onMounted(() => {
+    authStore.fetchUser();
+});
 </script>
 <template>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

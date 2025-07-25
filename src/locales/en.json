@@ -3,7 +3,9 @@
         "user": "User",
         "users": "Users",
         "role": "Role",
-        "roles": "Roles"
+        "roles": "Roles",
+        "my_account": "Account",
+        "my_informations": "Account Information"
     },
     "common": {
         "contents": {
@@ -154,15 +156,13 @@
             "dashboard": "Dashboard",
             "user": "User",
             "users": "Users",
-            "roles": "Roles",
-            "profile": "Profile",
-            "logout": "Logout"
+            "roles": "Roles"
         },
         "top_bar": {
             "search": "Search...",
             "notifications": "Notifications",
             "settings": "Settings",
-            "profile": "Profile",
+            "myaccount": "My Account",
             "logout": "Logout"
         }
     },

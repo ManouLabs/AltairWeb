@@ -48,7 +48,7 @@ const menuItems = computed(() => [
         label: user.name,
         items: [
             {
-                label: t('navigation.top_bar.profile'),
+                label: t('navigation.top_bar.myaccount'),
                 icon: 'pi pi-user',
                 command: () => authStore.myaccount()
             },
