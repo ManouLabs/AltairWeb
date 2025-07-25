@@ -67,7 +67,7 @@ const loginUser = async () => {
                         </div>
 
                         <!-- Trigger loginUser method on form submission -->
-                        <Button type="submit" :label="$t('login.sign_in')" class="w-full" :loading="loading.isPageLoading" />
+                        <Button type="submit" :label="$t('login.sign_in')" class="w-full" :loading="loading.isPageLoading" icon="pi pi-lock" />
                     </form>
                 </div>
             </div>

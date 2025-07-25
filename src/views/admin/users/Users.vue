@@ -69,10 +69,9 @@ const loadLazyData = debounce(async () => {
         })
         .catch((error) => {
             if (error?.response?.status === 419 || error?.response?.status === 401) {
-                showToast('error', 'session_expired', 'user', 'tc');
+                console.error('Session expired, redirecting to login');
             }
-
-            showToast('error', 'error', 'user', 'tc');
+            console.error('Error fetching roles');
         })
         .finally(() => {
             loading.stopDataLoading();
@@ -266,9 +265,9 @@ function confirmDeleteRecord(event, usersIds) {
                 })
                 .catch((error) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
-                        showToast('error', 'session_expired', 'user', 'tc');
+                        console.error('Session expired, redirecting to login');
                     }
-                    showToast('error', 'error', 'user', 'tc');
+                    console.error('Error fetching roles');
                 });
         }
     });
