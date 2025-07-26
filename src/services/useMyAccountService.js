@@ -11,17 +11,17 @@ export const useMyAccountService = {
         }
     },
 
-    async storeRole(roleData) {
+    async updatePassword(updatedData) {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.post('/api/admin/roles', roleData);
+            const response = await apiClient.put(`/api/admin/myaccount/password`, updatedData);
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    async updateMyInformation(user, updatedData) {
+    async updateMyInformation(updatedData) {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
             const response = await apiClient.put(`/api/admin/myaccount/myinformation`, updatedData);
