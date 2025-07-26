@@ -31,7 +31,12 @@
             "password_strength": "Password must contain at least one uppercase letter, one lowercase letter, one number, and be at least {length} characters long",
             "invalid_phone": "Invalid phone number",
             "alpha_only": "Must contain only letters and spaces",
-            "max_length": "Maximum length is 255 characters"
+            "max_length": "Maximum length is {length} characters",
+            "minimum_length": "Minimum length is {length} characters",
+            "require_numeric": "Must contain at least one numeric character",
+            "require_uppercase": "Must contain at least one uppercase letter",
+            "passwords_do_not_match": "Passwords do not match",
+            "current_and_new_password_same": "Current password and new password cannot be the same"
         },
         "titles": {
             "manage": "Manage {entity}",
@@ -189,6 +194,9 @@
             "email": "Email",
             "password": "Password",
             "password_confirmation": "Password confirmation",
+            "current_password": "Current Password",
+            "new_password": "New Password",
+            "confirm_new_password": "Confirm New Password",
             "roles": "Roles",
             "email_verified_at": "Email Verified At",
             "phone": "Phone",

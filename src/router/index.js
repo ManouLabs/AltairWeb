@@ -96,6 +96,7 @@ const handleRouteGuard = async (to, next, authStore) => {
 router.beforeEach(async (to, from, next) => {
     const loading = useLoading();
     const authStore = useAuthStore();
+    authStore.clearErrors();
     loading.startPageLoading();
 
     try {

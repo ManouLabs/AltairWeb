@@ -44,7 +44,7 @@ const onFormSubmit = ({ valid, values }) => {
                 showToast('success', ACTIONS.EDIT, 'my_informations', 'br');
             })
             .catch((error) => {
-                showToast('error', ACTIONS.EDIT, 'my_informations', 'tc');
+                authStore.processError(error, t('common.messages.error_occurred'));
             })
             .finally(() => {
                 loading.stopDataLoading();
@@ -60,11 +60,13 @@ const onFormSubmit = ({ valid, values }) => {
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon><i class="pi pi-user" /></InputIcon>
-                        <InputText id="name" v-bind="$field" class="w-full" />
+                        <InputText id="name" name="name" @input="() => authStore.clearErrors([$field.name])" v-bind="$field" class="w-full" />
                     </IconField>
                     <label for="name">{{ t('user.columns.name') }}</label>
                 </FloatLabel>
-                <Message v-if="$field.invalid" severity="error" size="small">{{ t($field.error?.message) }}</Message>
+                <Message v-if="$field.invalid || authStore.errors.name" severity="error" size="small">
+                    {{ $field.error?.message ? t($field.error.message) : authStore.errors?.name?.[0] }}
+                </Message>
             </FormField>
 
             <!-- Email -->
@@ -72,16 +74,18 @@ const onFormSubmit = ({ valid, values }) => {
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon><i class="pi pi-envelope" /></InputIcon>
-                        <InputText id="email" type="email" v-bind="$field" class="w-full" />
+                        <InputText id="email" name="email" type="email" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" class="w-full" :autocomplete="false" />
                     </IconField>
                     <label for="email">{{ t('user.columns.email') }}</label>
                 </FloatLabel>
-                <Message v-if="$field.invalid" severity="error" size="small">{{ t($field.error?.message) }}</Message>
+                <Message v-if="$field.invalid || authStore.errors.email" severity="error" size="small">
+                    {{ $field.error?.message ? t($field.error.message) : authStore.errors?.email?.[0] }}
+                </Message>
             </FormField>
 
             <!-- Submit button (left aligned) -->
             <div class="col-span-1 md:col-span-2 flex justify-start pt-2">
-                <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />
+                <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isDataLoading" />
             </div>
         </Form>
     </div>

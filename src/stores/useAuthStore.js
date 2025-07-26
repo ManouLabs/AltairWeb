@@ -60,6 +60,16 @@ export const useAuthStore = defineStore('auth', {
             router.push('/admin/myaccount');
         },
 
+        clearErrors(fields = []) {
+            if (fields.length === 0) {
+                this.errors = {};
+            } else {
+                for (const field of fields) {
+                    this.errors[field] = null;
+                }
+            }
+        },
+
         hasPermission(permission) {
             return this.user?.roles?.includes('Super Admin') || this.permissions.includes(permission);
         },
@@ -101,7 +111,7 @@ export const useAuthStore = defineStore('auth', {
             this.clearSessionTimer();
             this.user = null;
             this.permissions = [];
-            this.errors = {};
+            this.clearErrors();
             router.push({ name: 'login' });
         }
     }
