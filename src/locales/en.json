@@ -227,7 +227,11 @@
             "confirm_password": "Confirm Password",
             "change_password": "Change Password",
             "update_profile": "Update Profile",
-            "delete_account": "Delete Account"
+            "delete_account": "Delete Account",
+            "theme_mode": "Theme mode",
+            "theme_mode_description": "Select your preferred theme mode",
+            "language": "Language",
+            "language_description": "Select your preferred language"
         },
         "messages": {
             "profile_updated": "Profile updated successfully"

@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MyInformations from './partials/MyInformations.vue';
+import Preferences from './partials/Preferences.vue';
 import Security from './partials/Security.vue';
 const { t } = useI18n();
 
@@ -63,22 +64,18 @@ onMounted(() => {
                             <Tab value="0"> <i class="pi pi-user mr-2"></i>{{ t('common.titles.my_informations') }} </Tab>
                             <Tab value="1"> <i class="pi pi-shield mr-2"></i>{{ t('myaccount.tabs.security') }} </Tab>
                             <Tab value="2"> <i class="pi pi-cog mr-2"></i>{{ t('myaccount.tabs.preferences') }} </Tab>
-                            <Tab value="3"> <i class="pi pi-exclamation-triangle mr-2"></i>{{ t('myaccount.tabs.danger') }} </Tab>
-                            <Tab value="4"> <i class="pi pi-history mr-2"></i>{{ t('myaccount.tabs.activity') }} </Tab>
+                            <Tab value="3"> <i class="pi pi-history mr-2"></i>{{ t('myaccount.tabs.activity') }} </Tab>
+                            <Tab value="4"> <i class="pi pi-exclamation-triangle mr-2"></i>{{ t('myaccount.tabs.danger') }} </Tab>
                         </TabList>
                         <TabPanels>
                             <TabPanel value="0">
-                                <MyInformations :user="user" />
+                                <MyInformations />
                             </TabPanel>
                             <TabPanel value="1">
                                 <Security />
                             </TabPanel>
                             <TabPanel value="2">
-                                <p class="m-0">
-                                    At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique
-                                    sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil
-                                    impedit quo minus.
-                                </p>
+                                <Preferences />
                             </TabPanel>
                             <TabPanel value="3">
                                 <p class="m-0">
