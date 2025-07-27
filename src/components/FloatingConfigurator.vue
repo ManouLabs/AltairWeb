@@ -7,7 +7,7 @@ const layoutStore = useLayoutStore();
 
 <template>
     <div class="fixed flex gap-4 top-8 right-8">
-        <Button type="button" @click="layoutStore.toggleDarkMode" rounded :icon="layoutStore.isDarkMode ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" />
+        <Button type="button" @click="layoutStore.toggleDarkMode" rounded :icon="layoutStore.theme === 'dark' ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" />
         <div class="relative">
             <Button
                 icon="pi pi-palette"

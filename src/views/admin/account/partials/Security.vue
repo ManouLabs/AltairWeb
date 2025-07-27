@@ -4,15 +4,11 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { z } from 'zod';
 
-const props = defineProps({
-    user: Object
-});
 const authStore = useAuthStore();
-const formRef = ref();
 
 const { t } = useI18n();
 const { showToast } = useShowToast();
@@ -80,7 +76,7 @@ const onFormSubmit = ({ valid, values }) => {
 </script>
 <template>
     <div class="px-0 py-10">
-        <Form ref="formRef" :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit" class="flex flex-col gap-2">
+        <Form :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit" class="flex flex-col gap-2">
             <h2 class="text-xl font-bold mb-4">{{ t('myaccount.labels.change_password') }}</h2>
             <FormField v-slot="$field" name="current_password" class="w-full">
                 <FloatLabel variant="on" class="w-full">

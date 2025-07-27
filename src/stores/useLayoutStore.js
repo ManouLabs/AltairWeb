@@ -8,7 +8,7 @@ export const useLayoutStore = defineStore('layout', {
         preset: 'Lara',
         primary: 'emerald',
         surface: null,
-        isDarkMode: false,
+        theme: 'light',
         menuMode: 'static',
         staticMenuDesktopInactive: false,
         overlayMenuActive: false,
@@ -26,7 +26,7 @@ export const useLayoutStore = defineStore('layout', {
             this.preset = settings.preset || 'Lara';
             this.primary = settings.primary || 'emerald';
             this.surface = settings.surface || null;
-            this.isDarkMode = settings.isDarkMode || false;
+            this.theme = settings.theme || 'light';
             this.menuMode = settings.menuMode || 'static';
             this.staticMenuDesktopInactive = settings.staticMenuDesktopInactive || false;
             this.overlayMenuActive = settings.overlayMenuActive || false;
@@ -36,15 +36,31 @@ export const useLayoutStore = defineStore('layout', {
             this.menuHoverActive = settings.menuHoverActive || false;
             this.activeMenuItem = settings.activeMenuItem || null;
             this.locale = settings.locale || import.meta.env.VITE_DEFAULT_LOCALE || 'fr';
-            document.documentElement.classList.toggle('app-dark', this.isDarkMode);
+            if (this.theme === 'system') {
+                const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.classList.toggle('app-dark', isSystemDark);
+            } else {
+                document.documentElement.classList.toggle('app-dark', this.theme === 'dark');
+            }
             document.documentElement.dir = this.locale === 'ar' ? 'rtl' : 'ltr';
             i18n.global.locale.value = this.locale;
         },
 
         toggleDarkMode() {
-            this.isDarkMode = !this.isDarkMode;
-            document.documentElement.classList.toggle('app-dark', this.isDarkMode);
-            useSettingStore().updateSetting('isDarkMode', this.isDarkMode);
+            this.theme = this.theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.classList.toggle('app-dark', this.theme === 'dark');
+            useSettingStore().updateSetting('theme', this.theme);
+        },
+
+        setTheme(value) {
+            this.theme = value;
+            if (value === 'system') {
+                const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.classList.toggle('app-dark', isSystemDark);
+            } else {
+                document.documentElement.classList.toggle('app-dark', value === 'dark');
+            }
+            useSettingStore().updateSetting('theme', value);
         },
 
         setLocale(value) {
@@ -86,7 +102,11 @@ export const useLayoutStore = defineStore('layout', {
 
     getters: {
         isSidebarActive: (state) => state.overlayMenuActive || state.staticMenuMobileActive,
-        isDarkTheme: (state) => state.isDarkMode,
+        isDarkTheme: (state) => {
+            if (state.theme === 'dark') return true;
+            if (state.theme === 'light') return false;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        },
         getPrimary: (state) => state.primary,
         getSurface: (state) => state.surface
     }
