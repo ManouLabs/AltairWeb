@@ -45,6 +45,9 @@
             "my_informations": "My informations"
         },
         "labels": {
+            "updated": "Updated",
+            "created": "Created",
+            "deleted": "Deleted",
             "password": "Password",
             "edit": "Edit",
             "delete": "Delete",
@@ -67,7 +70,14 @@
             "export": "Export",
             "apply": "Apply",
             "clear": "Clear",
-            "clear_all_filters": "Clear all filters"
+            "clear_all_filters": "Clear all filters",
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "yesterday": "Yesterday",
+            "days_ago": "{count} Days ago",
+            "weeks_ago": "{count} weeks ago",
+            "months_ago": "{count} months ago",
+            "warning": "Warning"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -207,9 +217,11 @@
     },
     "myaccount": {
         "tabs": {
+            "my_informations": "My Informations",
             "profile": "Profile",
             "company": "Company Info",
             "security": "Security",
+            "activity": "Activity",
             "team": "Team Members",
             "preferences": "Preferences",
             "integrations": "Integrations",
@@ -226,15 +238,27 @@
             "new_password": "New Password",
             "confirm_password": "Confirm Password",
             "change_password": "Change Password",
+            "change_password_description": "Change your password",
             "update_profile": "Update Profile",
-            "delete_account": "Delete Account",
+            "delete_account": "Delete my account",
             "theme_mode": "Theme mode",
             "theme_mode_description": "Select your preferred theme mode",
             "language": "Language",
-            "language_description": "Select your preferred language"
+            "language_description": "Select your preferred language",
+            "change_informations": "Change Information",
+            "change_informations_description": "Update your account information",
+            "activity": "Activity",
+            "activity_description": "View your recent activities",
+            "danger_zone": "Danger Zone",
+            "danger_zone_description": "Manage your account's critical settings",
+            "delete_account_warning": "Deleting your account is irreversible. All your data will be permanently removed.",
+            "are_you_sure": "Are you sure you want to proceed?",
+            "extremely_important": "This action is extremely important and cannot be undone.",
+            "confirmation_phrase_description": "To verify, type 'delete my account' exactly as it appears"
         },
         "messages": {
-            "profile_updated": "Profile updated successfully"
+            "profile_updated": "Profile updated successfully",
+            "confirmation_phrase_incorrect": "The confirmation phrase is incorrect. Please try again."
         }
     },
     "primevue": {

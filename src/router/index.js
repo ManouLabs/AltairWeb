@@ -68,7 +68,8 @@ const handleRouteGuard = async (to, next, authStore) => {
         if (authStore.user) {
             return next();
         } else {
-            return next({ name: 'login' });
+            console.warn('User not authenticated, redirecting to login');
+            return next({ name: 'login', query: { redirect: to.fullPath } });
         }
     }
 
@@ -76,9 +77,7 @@ const handleRouteGuard = async (to, next, authStore) => {
         if (authStore.user) {
             try {
                 await authStore.fetchUser();
-            } catch (e) {
-                // Ignore fetch errors
-            }
+            } catch (e) {}
             if (authStore.user) {
                 return next({ name: 'dashboard' });
             }

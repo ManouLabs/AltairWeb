@@ -4,7 +4,11 @@ import { useAuthStore } from '@/stores/useAuthStore';
 
 function redirectUser(permissions) {
     const authStore = useAuthStore();
+    const redirectPath = router.currentRoute.value.query.redirect;
 
+    if (redirectPath) {
+        return router.push(redirectPath);
+    }
     // If the user can view dashboard, prioritize that
     if (authStore.hasPermission('view_dashboard')) {
         return router.push({ name: 'dashboard' });

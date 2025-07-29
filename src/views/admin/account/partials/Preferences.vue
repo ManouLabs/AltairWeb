@@ -70,10 +70,10 @@ const onFormSubmit = ({ valid, values }) => {
 </script>
 <template>
     <div class="px-0 py-10">
-        <Form :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit" class="flex flex-col gap-2">
-            <h2 class="text-xl font-bold text-center md:text-left">{{ t('myaccount.labels.theme_mode') }}</h2>
-            <span class="text-gray-400 block text-center md:text-left">{{ t('myaccount.labels.theme_mode_description') }}</span>
-            <FormField v-slot="$field" name="theme" class="w-full mt-4">
+        <h2 class="text-xl font-bold text-center md:text-left">{{ t('myaccount.labels.theme_mode') }}</h2>
+        <span class="text-gray-400 block text-center md:text-left">{{ t('myaccount.labels.theme_mode_description') }}</span>
+        <Form :validateOnBlur="true" :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit" class="flex flex-col gap-2">
+            <FormField v-slot="$field" name="theme" class="w-full mt-6">
                 <SelectButton
                     name="theme"
                     v-bind="$field"
@@ -114,8 +114,11 @@ const onFormSubmit = ({ valid, values }) => {
                 </Message>
             </FormField>
             <Divider />
-            <h2 class="text-xl font-bold text-center md:text-left">{{ t('myaccount.labels.language') }}</h2>
-            <span class="text-gray-400 block text-center md:text-left">{{ t('myaccount.labels.language_description') }}</span>
+            <div>
+                <h2 class="text-xl font-bold text-center md:text-left">{{ t('myaccount.labels.language') }}</h2>
+                <span class="text-gray-400 block text-center md:text-left">{{ t('myaccount.labels.language_description') }}</span>
+            </div>
+
             <FormField v-slot="$field" name="language" class="w-full mt-4 flex items-center justify-center md:justify-start">
                 <SelectButton v-model="layoutStore.locale" :options="supportedLocales" :allowEmpty="false" @change="setLocale(layoutStore.locale)">
                     <template #option="slotProps">

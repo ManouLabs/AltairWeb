@@ -39,7 +39,12 @@ export const useAuthStore = defineStore('auth', {
                 this.user = response.data.user;
                 this.permissions = response.data.permissions || [];
             } catch (error) {
-                this.logout();
+                if (error.response?.status === 401 || error.response?.status === 419) {
+                    this.handleSessionExpired();
+                } else {
+                    this.processError(error, 'Failed to fetch user data');
+                }
+                throw error;
             }
         },
 

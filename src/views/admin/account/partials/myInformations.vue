@@ -13,7 +13,7 @@ const props = defineProps({
 });
 
 const authStore = useAuthStore();
-const user = props.user;
+
 const { t } = useI18n();
 const { showToast } = useShowToast();
 const loading = useLoading();
@@ -35,9 +35,10 @@ const resolver = zodResolver(
 
 const onFormSubmit = ({ valid, values }) => {
     if (valid) {
+        console.log('Form submitted with values:', values);
         loading.startDataLoading();
         useMyAccountService
-            .updateMyInformation(user, values)
+            .updateMyInformation(values)
             .then((response) => {
                 authStore.user.name = response.user.name;
                 authStore.user.email = response.user.email;
@@ -53,9 +54,10 @@ const onFormSubmit = ({ valid, values }) => {
 };
 </script>
 <template>
-    <div class="px-0 py-10">
-        <Form :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Name -->
+    <div class="px-0 py-5">
+        <h2 class="text-xl font-bold">{{ t('myaccount.labels.change_informations') }}</h2>
+        <span class="text-gray-400 block">{{ t('myaccount.labels.change_informations_description') }}</span>
+        <Form :validateOnBlur="true" :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <FormField v-slot="$field" name="name" class="w-full">
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
@@ -68,8 +70,6 @@ const onFormSubmit = ({ valid, values }) => {
                     {{ $field.error?.message ? t($field.error.message) : authStore.errors?.name?.[0] }}
                 </Message>
             </FormField>
-
-            <!-- Email -->
             <FormField v-slot="$field" name="email" class="w-full">
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">

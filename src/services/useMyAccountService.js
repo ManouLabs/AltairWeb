@@ -2,9 +2,9 @@
 import apiClient from '@/services/axios';
 
 export const useMyAccountService = {
-    async getUser() {
+    async getActivities() {
         try {
-            const response = await apiClient.post('/api/admin/roles/filter', { params });
+            const response = await apiClient.get('/api/admin/myaccount/activities');
             return response.data;
         } catch (error) {
             throw error;
@@ -31,10 +31,10 @@ export const useMyAccountService = {
         }
     },
 
-    async deleteRoles(rolesIds) {
+    async deleteMyAccount() {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.delete('/api/admin/roles', { data: { roles: rolesIds } });
+            const response = await apiClient.delete(`/api/admin/myaccount`);
             return response.data;
         } catch (error) {
             throw error;

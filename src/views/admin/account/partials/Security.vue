@@ -75,10 +75,11 @@ const onFormSubmit = ({ valid, values }) => {
 };
 </script>
 <template>
-    <div class="px-0 py-10">
-        <Form :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit" class="flex flex-col gap-2">
-            <h2 class="text-xl font-bold mb-4">{{ t('myaccount.labels.change_password') }}</h2>
-            <FormField v-slot="$field" name="current_password" class="w-full">
+    <div class="px-0 py-5">
+        <h2 class="text-xl font-bold">{{ t('myaccount.labels.change_password') }}</h2>
+        <span class="text-gray-400">{{ t('myaccount.labels.change_password_description') }}</span>
+        <Form :validateOnBlur="true" :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit" class="flex flex-col gap-2">
+            <FormField v-slot="$field" name="current_password" class="w-full mt-6">
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon class="pi pi-key" />
