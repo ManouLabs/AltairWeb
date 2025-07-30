@@ -31,10 +31,12 @@ export const useMyAccountService = {
         }
     },
 
-    async deleteMyAccount() {
+    async deleteMyAccount(values) {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.delete(`/api/admin/myaccount`);
+            const response = await apiClient.delete(`/api/admin/myaccount/deletemyaccount`, {
+                data: values
+            });
             return response.data;
         } catch (error) {
             throw error;

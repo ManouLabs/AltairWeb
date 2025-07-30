@@ -1,4 +1,5 @@
 <script setup>
+import { useMyAccountService } from '@/services/useMyAccountService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
@@ -28,7 +29,19 @@ const resolver = zodResolver(
 );
 const onFormSubmit = ({ valid, values }) => {
     if (valid) {
-        alert('Account deletion confirmed. Proceeding with deletion...');
+        loading.startDataLoading();
+        useMyAccountService
+            .deleteMyAccount(values)
+            .then(() => {
+                authStore.handleSessionExpired();
+                showToast('success', 'delete', 'my_account', 'br');
+            })
+            .catch((error) => {
+                authStore.processError(error, t('common.messages.error_occurred'));
+            })
+            .finally(() => {
+                loading.stopDataLoading();
+            });
     }
 };
 </script>
