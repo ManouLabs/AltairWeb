@@ -19,7 +19,7 @@ const setLocale = (locale) => {
     layoutStore.setLocale(locale);
 };
 
-const user = authStore.user;
+const user = computed(() => authStore.user);
 
 const logoutUser = async () => {
     try {
@@ -99,7 +99,14 @@ const menuItems = computed(() => [
             <!-- User menu -->
             <div class="layout-topbar-menu block">
                 <div class="layout-topbar-menu-content">
-                    <Button icon="pi pi-user" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
+                    <template v-if="user.profile_image">
+                        <OverlayBadge severity="success">
+                            <Avatar class="p-overlay-badge cursor-pointer hover:shadow" :image="user.profile_image" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
+                        </OverlayBadge>
+                    </template>
+                    <template v-else>
+                        <Button icon="pi pi-user" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
+                    </template>
                     <Menu ref="userMenu" id="overlay_menu" :model="menuItems" :popup="true" />
                 </div>
             </div>

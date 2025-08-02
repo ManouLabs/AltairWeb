@@ -1,27 +1,64 @@
 <script setup>
+import { useFileableService } from '@/services/useFileableService';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { onMounted, ref } from 'vue';
+import { useLoading } from '@/stores/useLoadingStore';
+import { ACTIONS, useShowToast } from '@/utilities/toast';
+
+import { zodResolver } from '@primevue/forms/resolvers/zod';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { z } from 'zod';
 import Activity from './partials/Activity.vue';
 import DangerZone from './partials/DangerZone.vue';
 import MyInformations from './partials/MyInformations.vue';
 import Preferences from './partials/Preferences.vue';
 import Security from './partials/Security.vue';
+
 const { t } = useI18n();
 
-const profileImage = ref('/default-profile.jpg');
+const formRef = ref(null);
 const authStore = useAuthStore();
 
-const user = ref(authStore.user);
+const loading = useLoading();
+const user = computed(() => authStore.user);
+const { showToast } = useShowToast();
+const initialValues = reactive({
+    file: null
+});
 
-const onImageChange = (event) => {
-    const file = event.target.files[0];
+function onFileChange(event) {
+    const file = event.target.files?.[0];
     if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            profileImage.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        formRef.value.setFieldValue('file', file);
+        formRef.value.submit();
+    }
+}
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const resolver = zodResolver(
+    z.object({
+        file: z
+            .any()
+            .refine((file) => file instanceof File && file.size <= MAX_FILE_SIZE, { message: 'common.messages.max_image_size', path: ['file'] })
+            .refine((file) => file instanceof File && ACCEPTED_IMAGE_TYPES.includes(file.type), { message: 'common.messages.image_type', path: ['file'] })
+    })
+);
+const onFormSubmit = ({ valid, values }) => {
+    if (valid) {
+        loading.startDataLoading();
+        useFileableService
+            .uploadProfilePicture(values.file)
+            .then((response) => {
+                authStore.user.profile_image = response.profile_image;
+
+                showToast('success', ACTIONS.EDIT, 'profile_image', 'br');
+            })
+            .catch((error) => {
+                authStore.processError(error, t('common.messages.error_occurred'));
+            })
+            .finally(() => {
+                loading.stopDataLoading();
+            });
     }
 };
 
@@ -36,22 +73,30 @@ onMounted(() => {
             <Card class="h-auto max-h-none">
                 <template #content>
                     <div class="flex flex-col items-center">
-                        <div class="relative w-28 h-28">
-                            <i class="pi pi-user rounded-full border-4 border-white shadow bg-gray-200 flex items-center justify-center h-full text-5xl text-gray-400"></i>
-                            <label class="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer">
-                                <i class="pi pi-camera text-black text-sm"></i>
-                                <input type="file" accept="image/*" class="hidden" @change="onImageChange" />
-                            </label>
-                        </div>
+                        <Form ref="formRef" :validateOnBlur="true" :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit">
+                            <FormField v-slot="$field" name="file" class="relative w-28 h-28 rounded-s-full">
+                                <img v-if="user.profile_image" :src="user.profile_image" alt="Profile" class="w-full h-full object-cover rounded-full border-4 border-white shadow" />
+                                <i v-else class="pi pi-user rounded-full border-4 border-white shadow bg-gray-200 flex items-center justify-center h-full text-gray-400"></i>
+                                <label class="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer">
+                                    <i class="pi pi-camera text-black text-sm"></i>
+                                    <input type="file" accept="image/*" class="hidden" @change="onFileChange" />
+                                </label>
+                                <Message v-if="$field.invalid || authStore.errors.file" severity="error" size="small">
+                                    {{ $field.error?.message ? t($field.error.message) : authStore.errors?.file?.[0] }}
+                                </Message>
+                            </FormField>
+                        </Form>
                         <h2 class="text-xl font-semibold mt-4">{{ user.name }}</h2>
-                        <p class="text-gray-500">{{ user.roles }}</p>
+                        <p class="flex flex-wrap gap-2 mt-2">
+                            <Tag v-for="role in user.roles" :key="role" :value="role" rounded></Tag>
+                        </p>
 
                         <div class="mt-4 w-full text-sm space-y-1">
                             <p>
-                                <b>{{ t('myaccount.labels.name') }}:</b> {{ user.name }}
+                                <strong>{{ t('myaccount.labels.name') }}:</strong> {{ user.name }}
                             </p>
                             <p>
-                                <b>{{ t('myaccount.labels.email') }}:</b> {{ user.email }}
+                                <strong>{{ t('myaccount.labels.email') }}:</strong> {{ user.email }}
                             </p>
                         </div>
                     </div>

@@ -106,6 +106,9 @@ onMounted(async () => {
                 </div>
             </template>
         </Timeline>
+        <div v-if="!loading.isDataLoading && activities.length === 0" class="text-center text-gray-400 mt-8">
+            {{ t('myaccount.labels.no_activities') }}
+        </div>
     </div>
 </template>
 <style lang="scss">

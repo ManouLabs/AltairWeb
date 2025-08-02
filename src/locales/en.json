@@ -36,7 +36,9 @@
             "require_numeric": "Must contain at least one numeric character",
             "require_uppercase": "Must contain at least one uppercase letter",
             "passwords_do_not_match": "Passwords do not match",
-            "current_and_new_password_same": "Current password and new password cannot be the same"
+            "current_and_new_password_same": "Current password and new password cannot be the same",
+            "image_type": "Image must be in .jpg, .jpeg, .png or .webp format",
+            "max_image_size": "Max image size is {size}."
         },
         "titles": {
             "manage": "Manage {entity}",
@@ -254,7 +256,8 @@
             "delete_account_warning": "Deleting your account is irreversible. All your data will be permanently removed.",
             "are_you_sure": "Are you sure you want to proceed?",
             "extremely_important": "This action is extremely important and cannot be undone.",
-            "confirmation_phrase_description": "To verify, type 'delete my account' exactly as it appears"
+            "confirmation_phrase_description": "To verify, type 'delete my account' exactly as it appears",
+            "no_activities": "No activities found"
         },
         "messages": {
             "profile_updated": "Profile updated successfully",
