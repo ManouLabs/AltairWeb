@@ -35,7 +35,6 @@ const resolver = zodResolver(
 
 const onFormSubmit = ({ valid, values }) => {
     if (valid) {
-        console.log('Form submitted with values:', values);
         loading.startDataLoading();
         useMyAccountService
             .updateMyInformation(values)

@@ -1,6 +1,7 @@
 <script setup>
 import { useMyAccountService } from '@/services/useMyAccountService';
 import { useLoading } from '@/stores/useLoadingStore';
+import { humanizeDate } from '@/utilities/helper';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -17,28 +18,6 @@ const getActivityIconAndColor = (activity) => {
             return { icon: 'pi pi-info-circle', color: '#9E9E9E' };
     }
 };
-const humanizeDate = (dateString, locale = 'en-US') => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    const formatTime = (d) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
-
-    if (diffDays === 0) {
-        return `${t('common.labels.today')}, ${formatTime(date)}`;
-    } else if (diffDays === 1) {
-        return `${t('common.labels.yesterday')}, ${formatTime(date)}`;
-    } else if (diffDays < 7) {
-        return `${t('common.labels.days_ago', { count: diffDays })}, ${formatTime(date)}`;
-    } else if (diffDays < 30) {
-        const weeks = Math.floor(diffDays / 7);
-        return `${t('common.labels.weeks_ago', { count: weeks })}, ${formatTime(date)}`;
-    } else {
-        const months = Math.floor(diffDays / 30);
-        return `${t('common.labels.months_ago', { count: months })}, ${formatTime(date)}`;
-    }
-};
 
 onMounted(async () => {
     loading.startDataLoading();
@@ -48,7 +27,7 @@ onMounted(async () => {
         activities.value = activities.value.map((activity) => ({
             ...activity,
             ...getActivityIconAndColor(activity),
-            created_at: humanizeDate(activity.created_at)
+            created_at: humanizeDate(activity.created_at, t)
         }));
     } catch (error) {
         console.error('Error fetching activities:', error);

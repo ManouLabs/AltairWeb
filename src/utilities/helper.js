@@ -31,4 +31,34 @@ function formatDate(e, filterModel) {
     }
 }
 
-export { extractLazyParams, findRecordIndex, formatDate };
+/**
+ * Humanize a date string into a more readable format.
+ *
+ * @param {*} dateString - The date string to humanize.
+ * @param {*} locale - The locale to use for formatting.
+ * @returns A humanized date string.
+ */
+
+const humanizeDate = (dateString, t, locale = 'en-US') => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    const formatTime = (d) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
+
+    if (diffDays === 0) {
+        return `${t('common.labels.today')}, ${formatTime(date)}`;
+    } else if (diffDays === 1) {
+        return `${t('common.labels.yesterday')}, ${formatTime(date)}`;
+    } else if (diffDays < 7) {
+        return `${t('common.labels.days_ago', { count: diffDays })}, ${formatTime(date)}`;
+    } else if (diffDays < 30) {
+        const weeks = Math.floor(diffDays / 7);
+        return `${t('common.labels.weeks_ago', { count: weeks })}, ${formatTime(date)}`;
+    } else {
+        const months = Math.floor(diffDays / 30);
+        return `${t('common.labels.months_ago', { count: months })}, ${formatTime(date)}`;
+    }
+};
+export { extractLazyParams, findRecordIndex, formatDate, humanizeDate };

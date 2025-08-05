@@ -96,7 +96,19 @@ const onFormSubmit = ({ valid, values }) => {
                     <FloatLabel variant="on" class="w-full">
                         <IconField class="w-full">
                             <InputIcon class="pi pi-key" />
-                            <Password id="password" name="password" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" :toggleMask="true" class="mb-4" fluid :feedback="true" autofocus toggleMask>
+                            <Password
+                                id="password"
+                                name="password"
+                                :pt="{ input: { autocomplete: 'new-password' } }"
+                                v-bind="$field"
+                                @input="() => authStore.clearErrors([$field.name])"
+                                :toggleMask="true"
+                                class="mb-4"
+                                fluid
+                                :feedback="true"
+                                autofocus
+                                toggleMask
+                            >
                                 <template #header>
                                     <div class="font-semibold text-xm mb-4">{{ $t('user.columns.new_password') }}</div>
                                 </template>
