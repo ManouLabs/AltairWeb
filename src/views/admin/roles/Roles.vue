@@ -1,135 +1,69 @@
 <script setup>
+import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
+import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
+import { useLock } from '@/composables/useLock';
+import { useRowEffects } from '@/composables/useRowEffects';
 import { useRoleService } from '@/services/useRoleService';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useColumnStore } from '@/stores/useColumnStore';
-import { useLoading } from '@/stores/useLoadingStore';
-import { extractLazyParams, findRecordIndex } from '@/utilities/helper';
+import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
-import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 onMounted(() => {
-    loadLazyData();
+    initialize();
+    if (filters.value?.permissions) {
+        filters.value.permissions.relation = { name: 'permissions', column: 'name' };
+    }
     subscribeToEcho();
 });
 
-const loading = useLoading();
-const lazyParams = ref({});
-const total = ref();
-const rows = ref();
-const columnStore = useColumnStore();
+const defaultFiltersConfig = {
+    id: FilterMatchMode.CONTAINS,
+    name: FilterMatchMode.CONTAINS,
+    guard_name: FilterMatchMode.IN,
+    permissions: FilterMatchMode.IN
+};
+
+const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
+    (params) =>
+        useRoleService.getRoles(params).then((data) => {
+            allPermissions.value = [data.permissions, []];
+            return {
+                data: data.roles,
+                meta: data.meta
+            };
+        }),
+    defaultFiltersConfig
+);
+
 const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
-const recordDataTable = ref();
-const records = ref();
+
+const { highlights, markHighlight, getRowClass } = useRowEffects();
+const defaultFields = ['name', 'guard_name', 'permissions'];
+const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref(null);
-const selectedRecords = ref();
-
-const defaultFields = ['name', 'guard_name', 'permissions'];
 const defaultColumns = computed(() =>
     defaultFields.map((field) => ({
         field,
         header: t(`role.columns.${field}`)
     }))
 );
-const { selectedColumns, columnChanged, savedFields } = useDynamicColumns('rolesColumns', defaultFields, 'role.columns');
-// const defaultFields = ['name', 'guard_name', 'permissions'];
-// const defaultColumns = computed(() =>
-//     defaultFields.map((field) => ({
-//         field,
-//         header: t(`role.columns.${field}`)
-//     }))
-// );
-// const savedFields = ref(columnStore.getColumns('rolesColumns') || defaultFields);
-// if (!columnStore.getColumns('rolesColumns')) {
-//     columnStore.setColumns('rolesColumns', defaultFields);
-// }
-// const selectedColumns = computed(() =>
-//     savedFields.value.map((field) => ({
-//         field,
-//         header: t(`role.columns.${field}`)
-//     }))
-// );
-// const columnChanged = (newColumns) => {
-//     savedFields.value = newColumns.map((col) => col.field);
-//     columnStore.setColumns('rolesColumns', savedFields.value);
-// };
+const { selectedColumns, columnChanged } = useDynamicColumns('rolesColumns', defaultFields, 'role.columns');
 const subscription = ref(null);
 
 const allPermissions = ref(null);
 const permissionsOptions = ref([], []);
-
-const onPage = (event) => {
-    loading.startDataLoading();
-    lazyParams.value = extractLazyParams(event);
-    loadLazyData();
-};
-
-const loadLazyData = debounce(async () => {
-    lazyParams.value.page ? (lazyParams.value.page += 1) : resetPages();
-    useRoleService
-        .getRoles(lazyParams.value)
-        .then((data) => {
-            records.value = data.roles;
-            total.value = data.meta.total;
-            rows.value = data.meta.per_page;
-            allPermissions.value = [data.permissions, []];
-        })
-        .catch((error) => {
-            if (error?.response?.status === 419 || error?.response?.status === 401) {
-                console.error('Session expired, redirecting to login');
-            }
-            console.error('Error fetching roles');
-        })
-        .finally(() => {
-            loading.stopDataLoading();
-        });
-}, 150);
-
-const resetPages = () => {
-    lazyParams.value.page = 0;
-};
-
-const onSort = (event) => {
-    loading.startDataLoading();
-    lazyParams.value = extractLazyParams(event);
-    resetPages();
-    recordDataTable.value.resetPage();
-    loadLazyData();
-};
-
-const filters = ref(getDefaultFilters());
-const onFilter = (event) => {
-    loading.startDataLoading();
-    lazyParams.value = extractLazyParams(event);
-    resetPages();
-    loadLazyData();
-};
-
-const clearFilter = () => {
-    loading.startDataLoading();
-    filters.value = getDefaultFilters();
-    lazyParams.value = {};
-    recordDataTable.value.resetPage();
-    loadLazyData();
-};
-
-const searchDone = () => {
-    loading.startDataLoading();
-    lazyParams.value.filters = filters.value;
-    resetPages();
-    loadLazyData();
-};
 
 function subscribeToEcho() {
     subscription.value = Echo.private('data-stream.role').listen('DataStream', (event) => {
@@ -153,19 +87,20 @@ function handleEchoEvent(event) {
     }
 }
 
-function handleDelete(event) {
-    event.data.forEach((id) => {
+async function handleDelete(event) {
+    for (const id of event.data) {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
         }
-    });
+    }
 }
 
 function handleUpdate(event) {
     const index = findRecordIndex(records, event.data.id);
     if (index !== -1) {
         records.value[index] = event.data;
+        markHighlight(event.data.id, 'updated');
     }
 }
 
@@ -173,41 +108,20 @@ function handleStore(event) {
     const exists = records.value.some((record) => record.id === event.data.id);
     if (!exists) {
         records.value.unshift(event.data);
+        markHighlight(event.data.id, 'new');
     }
 }
-
-const lockedRow = ref([]);
-
-const toggleLock = (data, frozen, index) => {
-    if (frozen) {
-        lockedRow.value = lockedRow.value.filter((c, i) => i !== index);
-        records.value = [...records.value, data];
-    } else {
-        records.value = records.value.filter((c, i) => i !== index);
-        lockedRow.value = [...lockedRow.value, data];
-    }
-    records.value.sort((val1, val2) => (val1.id < val2.id ? -1 : 1));
-};
-
-const frozenColumns = ref({
-    name: false,
-    guard_name: false,
-    permissions: false
-});
-
-const toggleColumnFrozen = (column) => {
-    frozenColumns.value = { ...frozenColumns.value, [column]: !frozenColumns.value[column] };
-};
 
 function addRecord() {
     record.value = { name: null, guard_name: null, permissions: [] };
     permissionsOptions.value = allPermissions.value;
+    authStore.errors = {};
     openDialog();
 }
 function editRecord(row) {
     record.value = row;
     permissionsOptions.value[1] = row.permissions;
-    permissionsOptions.value[0] = allPermissions.value[0].filter((permission) => !permissionsOptions.value[1].some((sp) => sp.id === permission.id));
+    permissionsOptions.value[0] = allPermissions.value?.[0]?.filter((permission) => !permissionsOptions.value[1]?.some((sp) => sp.id === permission.id)) || [];
     openDialog();
 }
 const openDialog = () => {
@@ -234,11 +148,13 @@ const openDialog = () => {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
                         records.value.unshift(result.data.record);
+                        markHighlight(result.data.record.id, 'new');
                         showToast('success', ACTIONS.CREATE, 'role', 'tc');
                         break;
                     case ACTIONS.EDIT: {
                         const index = findRecordIndex(records, result.data.record.id);
                         records.value[index] = result.data.record;
+                        markHighlight(result.data.record.id, 'updated');
                         showToast('success', ACTIONS.EDIT, 'role', 'tc');
                         break;
                     }
@@ -273,40 +189,24 @@ function confirmDeleteRecord(event, rolesIds) {
             useRoleService
                 .deleteRoles(rolesIds)
                 .then(() => {
-                    rolesIds.forEach((id) => {
-                        const index = findRecordIndex(records, id);
-                        if (index !== -1) {
-                            records.value.splice(index, 1);
+                    (async () => {
+                        for (const id of rolesIds) {
+                            const index = findRecordIndex(records, id);
+                            if (index !== -1) {
+                                records.value.splice(index, 1);
+                            }
                         }
-                    });
+                    })();
                     showToast('success', ACTIONS.DELETE, 'role', 'tc');
                 })
                 .catch((error) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
                         console.error('Session expired, redirecting to login');
                     }
-                    console.error('Error fetching roles');
+                    console.error('Error deleting roles');
                 });
         }
     });
-}
-
-function exportCSV() {
-    recordDataTable.value.exportCSV();
-}
-
-function getDefaultFilters() {
-    return {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        id: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        name: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        guard_name: { value: null, matchMode: FilterMatchMode.IN },
-        permissions: {
-            value: null,
-            matchMode: FilterMatchMode.IN,
-            relation: { name: 'permissions', column: 'name' }
-        }
-    };
 }
 
 onUnmounted(() => {
@@ -325,6 +225,7 @@ onUnmounted(() => {
                 dataKey="id"
                 v-model:selection="selectedRecords"
                 :value="records"
+                :rowClass="getRowClass"
                 @filter="onFilter($event)"
                 v-model:filters="filters"
                 filterDisplay="menu"
@@ -454,8 +355,11 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.name }">{{ data.name }}</div></DataCell
-                        >
+                            <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
+                                <span>{{ data.name }}</span>
+                                <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
+                            </div>
+                        </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>
@@ -544,7 +448,7 @@ onUnmounted(() => {
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>
-                            <MultiSelect size="small" v-model="filterModel.value" :options="allPermissions[0]" optionLabel="name" optionValue="name">
+                            <MultiSelect size="small" v-model="filterModel.value" :options="allPermissions?.[0] || []" optionLabel="name" optionValue="name">
                                 <template #option="slotProps">
                                     <div class="flex items-center gap-2">
                                         <span>{{ slotProps.option.name }}</span>

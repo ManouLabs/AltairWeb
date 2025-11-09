@@ -1,42 +1,64 @@
 <script setup>
+import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
+import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
+import { useLock } from '@/composables/useLock';
+import { useRowEffects } from '@/composables/useRowEffects';
 import dayjs from '@/plugins/dayjs';
 import { useUserService } from '@/services/useUserService';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useColumnStore } from '@/stores/useColumnStore';
-import { useLoading } from '@/stores/useLoadingStore';
-import { extractLazyParams, findRecordIndex, formatDate } from '@/utilities/helper';
+import { findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
-import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 onMounted(() => {
-    loadLazyData();
+    initialize();
+    if (filters.value?.roles) {
+        filters.value.roles.relation = { name: 'roles', column: 'name' };
+    }
     subscribeToEcho();
 });
 
-const loading = useLoading();
-const lazyParams = ref({});
-const total = ref();
-const rows = ref();
-const columnStore = useColumnStore();
+const defaultFiltersConfig = {
+    id: FilterMatchMode.CONTAINS,
+    name: FilterMatchMode.CONTAINS,
+    email: FilterMatchMode.CONTAINS,
+    email_verified_at: FilterMatchMode.DATE_IS,
+    roles: FilterMatchMode.IN,
+    created_at: FilterMatchMode.DATE_IS,
+    updated_at: FilterMatchMode.DATE_IS
+};
+
+const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
+    (params) =>
+        useUserService.getUsers(params).then((data) => {
+            allRoles.value = [data.roles, []];
+            return {
+                data: data.users,
+                meta: data.meta
+            };
+        }),
+    defaultFiltersConfig
+);
+
 const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
-const recordDataTable = ref();
-const records = ref();
 
-const record = ref(null);
-const selectedRecords = ref();
+const { highlights, markHighlight, getRowClass } = useRowEffects();
 
 const defaultFields = ['name', 'email', 'email_verified_at', 'roles', 'created_at', 'updated_at'];
+const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
+
+const record = ref(null);
+
 const defaultColumns = computed(() =>
     defaultFields.map((field) => ({
         field,
@@ -44,74 +66,12 @@ const defaultColumns = computed(() =>
     }))
 );
 
-const { selectedColumns, columnChanged, savedFields } = useDynamicColumns('usersColumns', defaultFields, 'user.columns');
+const { selectedColumns, columnChanged } = useDynamicColumns('usersColumns', defaultFields, 'user.columns');
 
 const subscription = ref(null);
 
 const allRoles = ref(null);
 const rolesOptions = ref([], []);
-
-const onPage = (event) => {
-    loading.startDataLoading();
-    lazyParams.value = extractLazyParams(event);
-    loadLazyData();
-};
-
-const loadLazyData = debounce(async () => {
-    lazyParams.value.page ? (lazyParams.value.page += 1) : resetPages();
-    useUserService
-        .getUsers(lazyParams.value)
-        .then((data) => {
-            records.value = data.users;
-            total.value = data.meta.total;
-            rows.value = data.meta.per_page;
-            allRoles.value = [data.roles, []];
-        })
-        .catch((error) => {
-            if (error?.response?.status === 419 || error?.response?.status === 401) {
-                console.error('Session expired, redirecting to login');
-            }
-            console.error('Error fetching roles');
-        })
-        .finally(() => {
-            loading.stopDataLoading();
-        });
-}, 150);
-
-const resetPages = () => {
-    lazyParams.value.page = 0;
-};
-
-const onSort = (event) => {
-    loading.startDataLoading();
-    lazyParams.value = extractLazyParams(event);
-    resetPages();
-    recordDataTable.value.resetPage();
-    loadLazyData();
-};
-
-const filters = ref(getDefaultFilters());
-const onFilter = (event) => {
-    loading.startDataLoading();
-    lazyParams.value = extractLazyParams(event);
-    resetPages();
-    loadLazyData();
-};
-
-const clearFilter = () => {
-    loading.startDataLoading();
-    filters.value = getDefaultFilters();
-    lazyParams.value = {};
-    recordDataTable.value.resetPage();
-    loadLazyData();
-};
-
-const searchDone = () => {
-    loading.startDataLoading();
-    lazyParams.value.filters = filters.value;
-    resetPages();
-    loadLazyData();
-};
 
 function subscribeToEcho() {
     subscription.value = Echo.private('data-stream.user').listen('DataStream', (event) => {
@@ -135,19 +95,20 @@ function handleEchoEvent(event) {
     }
 }
 
-function handleDelete(event) {
-    event.data.forEach((id) => {
+async function handleDelete(event) {
+    for (const id of event.data) {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
         }
-    });
+    }
 }
 
 function handleUpdate(event) {
     const index = findRecordIndex(records, event.data.id);
     if (index !== -1) {
         records.value[index] = event.data;
+        markHighlight(event.data.id, 'updated');
     }
 }
 
@@ -155,41 +116,20 @@ function handleStore(event) {
     const exists = records.value.some((record) => record.id === event.data.id);
     if (!exists) {
         records.value.unshift(event.data);
+        markHighlight(event.data.id, 'new');
     }
 }
-
-const lockedRow = ref([]);
-
-const toggleLock = (data, frozen, index) => {
-    if (frozen) {
-        lockedRow.value = lockedRow.value.filter((c, i) => i !== index);
-        records.value = [...records.value, data];
-    } else {
-        records.value = records.value.filter((c, i) => i !== index);
-        lockedRow.value = [...lockedRow.value, data];
-    }
-    records.value.sort((val1, val2) => (val1.id < val2.id ? -1 : 1));
-};
-
-const frozenColumns = ref({
-    name: false,
-    email: false,
-    roles: false
-});
-
-const toggleColumnFrozen = (column) => {
-    frozenColumns.value = { ...frozenColumns.value, [column]: !frozenColumns.value[column] };
-};
 
 function addRecord() {
     record.value = { name: null, email: null, password: null, password_confirmation: null, roles: [] };
     rolesOptions.value = allRoles.value;
+    authStore.errors = {};
     openDialog();
 }
 function editRecord(row) {
     record.value = row;
     rolesOptions.value[1] = row.roles;
-    rolesOptions.value[0] = allRoles.value[0].filter((role) => !rolesOptions.value[1].some((sr) => sr.id === role.id));
+    rolesOptions.value[0] = allRoles.value?.[0]?.filter((role) => !rolesOptions.value[1]?.some((sr) => sr.id === role.id)) || [];
     openDialog();
 }
 const openDialog = () => {
@@ -216,11 +156,13 @@ const openDialog = () => {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
                         records.value.unshift(result.data.record);
+                        markHighlight(result.data.record.id, 'new');
                         showToast('success', ACTIONS.CREATE, 'user', 'tc');
                         break;
                     case ACTIONS.EDIT: {
                         const index = findRecordIndex(records, result.data.record.id);
                         records.value[index] = result.data.record;
+                        markHighlight(result.data.record.id, 'updated');
                         showToast('success', ACTIONS.EDIT, 'user', 'tc');
                         break;
                     }
@@ -255,43 +197,26 @@ function confirmDeleteRecord(event, usersIds) {
             useUserService
                 .deleteUsers(usersIds)
                 .then(() => {
-                    usersIds.forEach((id) => {
-                        const index = findRecordIndex(records, id);
-                        if (index !== -1) {
-                            records.value.splice(index, 1);
+                    (async () => {
+                        for (const id of usersIds) {
+                            const index = findRecordIndex(records, id);
+                            if (index !== -1) {
+                                records.value.splice(index, 1);
+                            }
                         }
-                    });
+                    })();
                     showToast('success', ACTIONS.DELETE, 'user', 'tc');
                 })
                 .catch((error) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
                         console.error('Session expired, redirecting to login');
                     }
-                    console.error('Error fetching roles');
+                    console.error('Error deleting users');
                 });
         }
     });
 }
 
-function getDefaultFilters() {
-    return {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        id: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        name: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        email: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        email_verified_at: { value: null, matchMode: FilterMatchMode.DATE_IS },
-        roles: {
-            value: null,
-            matchMode: FilterMatchMode.IN,
-            relation: { name: 'roles', column: 'name' }
-        },
-        created_at: { value: null, matchMode: FilterMatchMode.DATE_IS },
-        updated_at: { value: null, matchMode: FilterMatchMode.DATE_IS }
-    };
-}
-function exportCSV() {
-    recordDataTable.value.exportCSV();
-}
 onUnmounted(() => {
     if (subscription.value) {
         subscription.value.stopListening('DataStream');
@@ -308,6 +233,7 @@ onUnmounted(() => {
                 dataKey="id"
                 v-model:selection="selectedRecords"
                 :value="records"
+                :rowClass="getRowClass"
                 @filter="onFilter($event)"
                 v-model:filters="filters"
                 filterDisplay="menu"
@@ -318,7 +244,7 @@ onUnmounted(() => {
                 :totalRecords="total"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.roles') })"
+                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.users') })"
                 resizableColumns
                 columnResizeMode="fit"
                 reorderableColumns
@@ -375,7 +301,7 @@ onUnmounted(() => {
                             </template>
                             <template #center>
                                 <FloatLabel class="w-full" variant="on">
-                                    <MultiSelect id="selected_columns" :modelValue="selectedColumns" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
+                                    <MultiSelect id="selected_columns" :modelValue="selectedColumns" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" display="chip" :maxSelectedLabels="4" />
                                     <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
                                 </FloatLabel>
                             </template>
@@ -437,8 +363,11 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.name }">{{ data.name }}</div></DataCell
-                        >
+                            <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
+                                <span>{{ data.name }}</span>
+                                <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
+                            </div>
+                        </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>
@@ -476,8 +405,8 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.email }">{{ data.email }}</div></DataCell
-                        >
+                            <div :class="{ 'font-bold': frozenColumns.email }">{{ data.email }}</div>
+                        </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>

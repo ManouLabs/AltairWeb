@@ -9,7 +9,7 @@ function redirectUser(permissions) {
     if (redirectPath) {
         return router.push(redirectPath);
     }
-    // If the user can view dashboard, prioritize that
+
     if (authStore.hasPermission('view_dashboard')) {
         return router.push({ name: 'dashboard' });
     }
@@ -22,7 +22,6 @@ function redirectUser(permissions) {
         return router.push({ name: 'roles' });
     }
 
-    // Default fallback
     try {
         router.push({ name: 'accessDenied' });
     } catch (error) {}

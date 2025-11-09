@@ -16,6 +16,25 @@ const stopPageLoading = () => useLoading().stopPageLoading();
 apiClient.interceptors.request.use(
     async (config) => {
         startPageLoading();
+
+        try {
+            const method = (config.method || '').toLowerCase();
+            const isMutating = method && method !== 'get';
+            const socketId = typeof window !== 'undefined' ? window?.Echo?.socketId?.() : undefined;
+
+            if (isMutating && socketId) {
+                if (!config.headers) config.headers = {};
+                const hasHeader = (typeof config.headers.get === 'function' && config.headers.get('X-Socket-Id')) || config.headers['X-Socket-Id'];
+                if (!hasHeader) {
+                    if (typeof config.headers.set === 'function') {
+                        config.headers.set('X-Socket-Id', socketId);
+                    } else {
+                        config.headers['X-Socket-Id'] = socketId;
+                    }
+                }
+            }
+        } catch (_) {}
+
         return config;
     },
     (error) => {

@@ -19,25 +19,11 @@ function extractLazyParams(event) {
     };
 }
 
-/**
- * Normalize a date selection to YYYY-MM-DD format (used for Calendar filters)
- *
- * @param {Date} e - The selected date event from PrimeVue Calendar
- * @param {Object} filterModel - The filter model object containing a `value` key
- */
 function formatDate(e, filterModel) {
     if (e && filterModel) {
         filterModel.value = dayjs(e).format('YYYY-MM-DD');
     }
 }
-
-/**
- * Humanize a date string into a more readable format.
- *
- * @param {*} dateString - The date string to humanize.
- * @param {*} locale - The locale to use for formatting.
- * @returns A humanized date string.
- */
 
 const humanizeDate = (dateString, t, locale = 'en-US') => {
     const date = new Date(dateString);

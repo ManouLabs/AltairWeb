@@ -1,13 +1,18 @@
 <script setup>
 import { useUserService } from '@/services/useUserService';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
-import { ACTIONS, useShowToast } from '@/utilities/toast';
+import { ACTIONS } from '@/utilities/toast';
+import { userSchema } from '@/validations/user';
+import { validate, validateField } from '@/validations/validate';
 import { inject, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-const { showToast } = useShowToast();
-const errors = ref();
+const { t } = useI18n();
+const authStore = useAuthStore();
 const loading = useLoading();
 const dialogRef = inject('dialogRef');
+
 const record = ref({});
 const action = ref();
 const rolesOptions = ref([]);
@@ -18,21 +23,49 @@ onMounted(() => {
     action.value = dialogRef.value.data.action;
 });
 
-function saveRecord() {
-    record.value.roles = rolesOptions.value[1].map((permission) => permission.id);
+// Schema helpers
+const schema = userSchema;
+const syncRoles = () => {
+    try {
+        record.value.roles = Array.isArray(rolesOptions.value?.[1]) ? rolesOptions.value[1].map((r) => r.id) : [];
+    } catch {
+        record.value.roles = [];
+    }
+};
+const validateForm = () => {
+    syncRoles();
+    const { ok, errors } = validate(schema, record.value);
+    authStore.errors = ok ? {} : errors;
+    return ok;
+};
+const onBlurField = (path) => {
+    const { ok, errors } = validateField(schema, record.value, path);
+    if (ok) {
+        authStore.clearErrors([path]);
+    } else {
+        authStore.errors = { ...authStore.errors, ...errors };
+    }
+};
+
+async function saveRecord() {
+    if (!validateForm()) return;
+
     loading.startPageLoading();
+    const payload = { ...record.value };
+    // On update, if password empty, remove it to avoid overriding
+    if (action.value !== ACTIONS.CREATE && !payload.password) {
+        delete payload.password;
+        delete payload.password_confirmation;
+    }
 
     const serviceAction = action.value === ACTIONS.CREATE ? useUserService.storeUser : (userData) => useUserService.updateUser(record.value.id, userData);
 
-    serviceAction(record.value)
+    serviceAction(payload)
         .then((response) => {
             dialogRef.value.close({ record: response.data, action: action.value });
         })
         .catch((error) => {
-            if (error.status != 422) {
-                errors.value = error.response.data.errors;
-                showToast('error', action.value, 'user', 'tr');
-            }
+            authStore.processError(error, t('common.messages.error_occurred'));
         })
         .finally(() => {
             loading.stopPageLoading();
@@ -48,20 +81,44 @@ const closeDialog = () => {
             <div>
                 <FloatLabel variant="on">
                     <label for="name" class="block font-bold mb-3">{{ $t('user.columns.name') }}</label>
-                    <InputText :disabled="loading.isPageLoading" id="name" v-model.trim="record.name" autofocus fluid :invalid="errors?.name ? true : false" required />
+                    <InputText :disabled="loading.isPageLoading" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
                 </FloatLabel>
-                <ErrorMessage field="name" :errors="errors" />
+                <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
+                    {{ $t(authStore.errors?.['name']?.[0]) }}
+                </Message>
             </div>
             <div>
                 <FloatLabel variant="on">
                     <label for="email" class="block font-bold mb-3">{{ $t('user.columns.email') }}</label>
-                    <InputText type="email" :disabled="loading.isPageLoading" id="email" v-model.trim="record.email" autofocus fluid :invalid="errors?.email ? true : false" required />
+                    <InputText
+                        type="email"
+                        :disabled="loading.isPageLoading"
+                        id="email"
+                        v-model.trim="record.email"
+                        autofocus
+                        fluid
+                        :invalid="authStore.errors?.email ? true : false"
+                        @input="() => authStore.clearErrors([`email`])"
+                        @blur="onBlurField('email')"
+                    />
                 </FloatLabel>
-                <ErrorMessage field="email" :errors="errors" />
+                <Message v-if="authStore.errors?.['email']?.[0]" severity="error" size="small">
+                    {{ $t(authStore.errors?.['email']?.[0]) }}
+                </Message>
             </div>
             <div>
                 <FloatLabel variant="on">
-                    <Password v-model.trim="record.password" :disabled="loading.isPageLoading" :invalid="errors?.password ? true : false" :required="action === ACTIONS.CREATE" autofocus fluid toggleMask>
+                    <Password
+                        v-model.trim="record.password"
+                        :disabled="loading.isPageLoading"
+                        :invalid="authStore.errors?.password ? true : false"
+                        :required="action === ACTIONS.CREATE"
+                        autofocus
+                        fluid
+                        toggleMask
+                        @input="() => authStore.clearErrors([`password`])"
+                        @blur="onBlurField('password')"
+                    >
                         <template #header>
                             <div class="font-semibold text-xm mb-4">{{ $t('user.columns.password') }}</div>
                         </template>
@@ -77,19 +134,33 @@ const closeDialog = () => {
                     </Password>
                     <label for="password">{{ $t('user.columns.password') }}</label>
                 </FloatLabel>
-                <ErrorMessage field="password" :errors="errors" />
+                <Message v-if="authStore.errors?.['password']?.[0]" severity="error" size="small">
+                    {{ $t(authStore.errors?.['password']?.[0]) }}
+                </Message>
             </div>
 
             <div>
                 <FloatLabel variant="on">
-                    <Password v-model.trim="record.password_confirmation" :disabled="loading.isPageLoading" :invalid="errors?.password ? true : false" :required="action === ACTIONS.CREATE" autofocus fluid toggleMask name="password_confirmation" />
+                    <Password
+                        v-model.trim="record.password_confirmation"
+                        :disabled="loading.isPageLoading"
+                        :invalid="authStore.errors?.password_confirmation ? true : false"
+                        :required="action === ACTIONS.CREATE"
+                        autofocus
+                        fluid
+                        toggleMask
+                        name="password_confirmation"
+                        @input="() => authStore.clearErrors([`password_confirmation`])"
+                        @blur="onBlurField('password_confirmation')"
+                    />
                     <label for="password_confirmation">{{ $t('user.columns.password_confirmation') }}</label>
                 </FloatLabel>
-                <ErrorMessage field="password_confirmation" :errors="errors" />
+                <Message v-if="authStore.errors?.['password_confirmation']?.[0]" severity="error" size="small">
+                    {{ $t(authStore.errors?.['password_confirmation']?.[0]) }}
+                </Message>
             </div>
 
             <div>
-                <ErrorMessage field="roles" :errors="errors" />
                 <PickList
                     required
                     :disabled="loading.isPageLoading"
@@ -99,12 +170,14 @@ const closeDialog = () => {
                     :showSourceControls="false"
                     :showTargetControls="false"
                     striped
-                    :invalid="errors?.roles ? true : false"
+                    :invalid="authStore.errors?.roles ? true : false"
                     pt:header:class="bg-blue-500"
                     :pt="{
-                        sourceListContainer: { class: errors?.roles ? 'rounded-md border border-red-500' : '' },
-                        targetListContainer: { class: errors?.roles ? 'rounded-md border border-red-500' : '' }
+                        sourceListContainer: { class: authStore.errors?.roles ? 'rounded-md border border-red-500' : '' },
+                        targetListContainer: { class: authStore.errors?.roles ? 'rounded-md border border-red-500' : '' }
                     }"
+                    @selection-change="() => authStore.clearErrors([`roles`])"
+                    @change="onBlurField('roles')"
                 >
                     <template #sourceheader>
                         {{ $t('user.placeholders.roles_available') }}
@@ -116,6 +189,9 @@ const closeDialog = () => {
                         {{ option.name }}
                     </template>
                 </PickList>
+                <Message v-if="authStore.errors?.['roles']?.[0]" severity="error" size="small">
+                    {{ $t(authStore.errors?.['roles']?.[0]) }}
+                </Message>
             </div>
         </div>
         <div class="flex justify-end gap-2 mt-4">
