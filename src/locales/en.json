@@ -4,7 +4,9 @@
         "users": "Users",
         "role": "Role",
         "roles": "Roles",
-        "my_account": "Account",
+        "account": "Account",
+        "accounts": "Accounts",
+        "my_account": "My Account",
         "my_informations": "Account Information"
     },
     "common": {
@@ -38,7 +40,11 @@
             "passwords_do_not_match": "Passwords do not match",
             "current_and_new_password_same": "Current password and new password cannot be the same",
             "image_type": "Image must be in .jpg, .jpeg, .png or .webp format",
-            "max_image_size": "Max image size is {size}."
+            "max_image_size": "Max image size is {size}.",
+            "invalid_contact_method": "Invalid contact method",
+            "invalid_url": "Enter a valid URL (e.g., https://www.example.com)",
+            "invalid_mobile": "Enter a valid mobile number (e.g., 0553338529)",
+            "invalid_landline": "Enter a valid landline number (e.g., 0212345678)"
         },
         "titles": {
             "manage": "Manage {entity}",
@@ -47,6 +53,8 @@
             "my_informations": "My informations"
         },
         "labels": {
+            "free": "Free",
+            "paid": "Paid",
             "updated": "Updated",
             "created": "Created",
             "deleted": "Deleted",
@@ -79,7 +87,9 @@
             "days_ago": "{count} Days ago",
             "weeks_ago": "{count} weeks ago",
             "months_ago": "{count} months ago",
-            "warning": "Warning"
+            "warning": "Warning",
+            "active": "Active",
+            "inactive": "Inactive"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -171,6 +181,7 @@
         "side_bar": {
             "home": "Home",
             "dashboard": "Dashboard",
+            "accounts": "Accounts",
             "user": "User",
             "users": "Users",
             "roles": "Roles"
@@ -215,6 +226,65 @@
             "address": "Address",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        }
+    },
+    "account": {
+        "columns": {
+            "legal_name": "Legal Name",
+            "trade_name": "Trade Name",
+            "rc_number": "RC Number",
+            "nif": "NIF",
+            "nis": "NIS",
+            "rib": "RIB",
+            "plan": "Plan",
+            "active": "Active"
+        }
+    },
+    "contact": {
+        "labels": {
+            "civility": "Civility",
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "contact": "Contact",
+            "contacts": "Contacts",
+            "contact_methods": "Contact Methods",
+            "type": "Type"
+        },
+        "civility": {
+            "mr": "Mr",
+            "mrs": "Mrs",
+            "ms": "Ms",
+            "dr": "Dr"
+        },
+        "types": {
+            "email": "Email",
+            "landline": "Landline",
+            "mobile": "Mobile",
+            "url": "Website/URL"
+        },
+        "placeholders": {
+            "email": "Enter email address",
+            "landline": "Enter landline number (e.g., 020135478)",
+            "mobile": "Enter mobile number (e.g., 0553338529)",
+            "url": "Enter website URL"
+        },
+        "buttons": {
+            "add_contact": "Add Contact",
+            "add_contact_method": "Add Contact Method",
+            "remove": "Remove",
+            "remove_contact": "Remove Contact"
+        },
+        "messages": {
+            "no_contact_methods": "No contact methods added yet. Click 'Add Contact Method' to get started."
+        },
+        "validation": {
+            "first_name_required": "First name is required",
+            "last_name_required": "Last name is required",
+            "invalid_email": "Please enter a valid email address",
+            "invalid_landline": "Please enter a valid Algerian landline number (e.g., 020135478)",
+            "invalid_mobile": "Please enter a valid Algerian mobile number (e.g., 0553338529)",
+            "invalid_url": "Please enter a valid URL",
+            "required": "This field is required"
         }
     },
     "myaccount": {
