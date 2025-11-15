@@ -89,7 +89,9 @@
             "months_ago": "{count} months ago",
             "warning": "Warning",
             "active": "Active",
-            "inactive": "Inactive"
+            "inactive": "Inactive",
+            "select_plans": "Select Plans",
+            "select_status": "Select Status"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -102,7 +104,8 @@
             "unlock_row": "Unlock this row",
             "lock_column": "Lock this column",
             "unlock_column": "Unlock this column",
-            "clear_all_filters": "Clear all filters"
+            "clear_all_filters": "Clear all filters",
+            "reorder_columns": "Reorder columns"
         },
         "columns": {
             "id": "ID",
@@ -140,8 +143,9 @@
                 "detail": "The {entity} has been updated successfully"
             },
             "delete": {
-                "summary": "{entity} deleted",
-                "detail": "The {entity} has been deleted successfully"
+                "unlock_column": "Unlock this column",
+                "clear_all_filters": "Clear all filters",
+                "reorder_columns": "Drag to reorder columns"
             },
             "delete_selected": {
                 "summary": "Selected {entity} deleted",
@@ -237,7 +241,9 @@
             "nis": "NIS",
             "rib": "RIB",
             "plan": "Plan",
-            "active": "Active"
+            "active": "Active",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
         }
     },
     "contact": {

@@ -31,6 +31,16 @@ export const useAccountService = {
         }
     },
 
+    async toggleActiveAccount(accountId) {
+        try {
+            await apiClient.get('/sanctum/csrf-cookie');
+            const response = await apiClient.patch(`/api/admin/accounts/${accountId}/toggle`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async deleteAccounts(accountsIds) {
         try {
             await apiClient.get('/sanctum/csrf-cookie');

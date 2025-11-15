@@ -64,7 +64,8 @@
             "unlock_row": "Déverrouiller cette ligne",
             "lock_column": "Verrouiller cette colonne",
             "unlock_column": "Déverrouiller cette colonne",
-            "clear_all_filters": "Effacer tous les filtres"
+            "clear_all_filters": "Effacer tous les filtres",
+            "reorder_columns": "Déplacer"
         },
         "columns": {
             "id": "ID",

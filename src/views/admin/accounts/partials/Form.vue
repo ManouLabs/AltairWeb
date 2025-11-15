@@ -166,7 +166,7 @@ onMounted(() => {
             <!-- Plan -->
             <div class="col-span-2">
                 <FloatLabel variant="on" class="w-full">
-                    <Dropdown
+                    <Select
                         id="plan"
                         v-model="record.plan"
                         :options="[

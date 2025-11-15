@@ -342,16 +342,14 @@ onUnmounted(() => {
                     class="min-w-32"
                 >
                     <template #header>
-                        <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.name }">{{ t('role.columns.name') }}</div>
-                            <Button
-                                v-tooltip.top="frozenColumns.name ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.name ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleColumnFrozen('name')"
-                                severity="contrast"
-                            />
-                        </div>
+                        <HeaderCell
+                            :text="t('role.columns.name')"
+                            :frozen="frozenColumns.name"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('name')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -384,16 +382,14 @@ onUnmounted(() => {
                     class="min-w-32"
                 >
                     <template #header>
-                        <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ t('role.columns.guard_name') }}</div>
-                            <Button
-                                v-tooltip.top="frozenColumns.guard_name ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.guard_name ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleColumnFrozen('guard_name')"
-                                severity="contrast"
-                            />
-                        </div>
+                        <HeaderCell
+                            :text="t('role.columns.guard_name')"
+                            :frozen="frozenColumns.guard_name"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('guard_name')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -428,16 +424,14 @@ onUnmounted(() => {
                     class="min-w-32"
                 >
                     <template #header>
-                        <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.permissions }">{{ t('role.columns.permissions') }}</div>
-                            <Button
-                                v-tooltip.top="frozenColumns.permissions ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.permissions ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleColumnFrozen('permissions')"
-                                severity="contrast"
-                            />
-                        </div>
+                        <HeaderCell
+                            :text="t('role.columns.permissions')"
+                            :frozen="frozenColumns.permissions"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('permissions')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell class="grid grid-cols-4 w-full">

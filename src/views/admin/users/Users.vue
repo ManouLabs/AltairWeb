@@ -350,16 +350,14 @@ onUnmounted(() => {
                     class="min-w-32"
                 >
                     <template #header>
-                        <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.name }">{{ t('user.columns.name') }}</div>
-                            <Button
-                                v-tooltip.top="frozenColumns.name ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.name ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleColumnFrozen('name')"
-                                severity="contrast"
+                            <HeaderCell
+                                :text="t('user.columns.name')"
+                                :frozen="frozenColumns.name"
+                                :reorderTooltip="t('common.tooltips.reorder_columns')"
+                                :lockTooltip="t('common.tooltips.lock_column')"
+                                :unlockTooltip="t('common.tooltips.unlock_column')"
+                                @toggle="toggleColumnFrozen('name')"
                             />
-                        </div>
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -392,16 +390,14 @@ onUnmounted(() => {
                     class="min-w-32"
                 >
                     <template #header>
-                        <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.email }">{{ t('user.columns.email') }}</div>
-                            <Button
-                                v-tooltip.top="frozenColumns.email ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.email ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleColumnFrozen('email')"
-                                severity="contrast"
+                            <HeaderCell
+                                :text="t('user.columns.email')"
+                                :frozen="frozenColumns.email"
+                                :reorderTooltip="t('common.tooltips.reorder_columns')"
+                                :lockTooltip="t('common.tooltips.lock_column')"
+                                :unlockTooltip="t('common.tooltips.unlock_column')"
+                                @toggle="toggleColumnFrozen('email')"
                             />
-                        </div>
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -432,16 +428,14 @@ onUnmounted(() => {
                     class="min-w-40"
                 >
                     <template #header>
-                        <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.email_verified_at }">{{ t('user.columns.email_verified_at') }}</div>
-                            <Button
-                                v-tooltip.top="frozenColumns.email_verified_at ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.email_verified_at ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleColumnFrozen('email_verified_at')"
-                                severity="contrast"
+                            <HeaderCell
+                                :text="t('user.columns.email_verified_at')"
+                                :frozen="frozenColumns.email_verified_at"
+                                :reorderTooltip="t('common.tooltips.reorder_columns')"
+                                :lockTooltip="t('common.tooltips.lock_column')"
+                                :unlockTooltip="t('common.tooltips.unlock_column')"
+                                @toggle="toggleColumnFrozen('email_verified_at')"
                             />
-                        </div>
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -450,7 +444,7 @@ onUnmounted(() => {
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <div class="flex flex-col gap-2">
-                            <Dropdown
+                            <Select
                                 v-model="filterModel.matchMode"
                                 :options="[
                                     { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
@@ -469,16 +463,14 @@ onUnmounted(() => {
                                 <InputGroupAddon>
                                     <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
                                     <Button
-                                        size="small"
-                                        icon="pi pi-times"
-                                        severity="danger"
-                                        outlined
-                                        :disabled="!filterModel.value"
-                                        @click="
-                                            (() => {
-                                                filterModel.value = null;
-                                                applyFilter();
-                                            })()
+                                            <HeaderCell
+                                                :text="t('user.columns.roles')"
+                                                :frozen="frozenColumns.roles"
+                                                :reorderTooltip="t('common.tooltips.reorder_columns')"
+                                                :lockTooltip="t('common.tooltips.lock_column')"
+                                                :unlockTooltip="t('common.tooltips.unlock_column')"
+                                                @toggle="toggleColumnFrozen('roles')"
+                                            />
                                         "
                                     />
                                 </InputGroupAddon>
@@ -546,16 +538,14 @@ onUnmounted(() => {
                     class="min-w-40"
                 >
                     <template #header>
-                        <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.created_at }">{{ t('user.columns.created_at') }}</div>
-                            <Button
-                                v-tooltip.top="frozenColumns.created_at ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.created_at ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleColumnFrozen('created_at')"
-                                severity="contrast"
+                            <HeaderCell
+                                :text="t('user.columns.created_at')"
+                                :frozen="frozenColumns.created_at"
+                                :reorderTooltip="t('common.tooltips.reorder_columns')"
+                                :lockTooltip="t('common.tooltips.lock_column')"
+                                :unlockTooltip="t('common.tooltips.unlock_column')"
+                                @toggle="toggleColumnFrozen('created_at')"
                             />
-                        </div>
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -565,7 +555,7 @@ onUnmounted(() => {
                     <template #filter="{ filterModel, applyFilter }">
                         <div class="flex flex-col gap-2">
                             <!-- Match Mode Selector -->
-                            <Dropdown
+                            <Select
                                 v-model="filterModel.matchMode"
                                 :options="[
                                     { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
@@ -616,16 +606,14 @@ onUnmounted(() => {
                     class="min-w-40"
                 >
                     <template #header>
-                        <div class="flex justify-between w-full items-center">
-                            <div :class="{ 'font-bold': frozenColumns.updated_at }">{{ t('user.columns.updated_at') }}</div>
-                            <Button
-                                v-tooltip.top="frozenColumns.updated_at ? t('common.tooltips.unlock_column') : t('common.tooltips.lock_column')"
-                                :icon="frozenColumns.updated_at ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                @click="toggleColumnFrozen('updated_at')"
-                                severity="contrast"
+                            <HeaderCell
+                                :text="t('user.columns.updated_at')"
+                                :frozen="frozenColumns.updated_at"
+                                :reorderTooltip="t('common.tooltips.reorder_columns')"
+                                :lockTooltip="t('common.tooltips.lock_column')"
+                                :unlockTooltip="t('common.tooltips.unlock_column')"
+                                @toggle="toggleColumnFrozen('updated_at')"
                             />
-                        </div>
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -634,7 +622,7 @@ onUnmounted(() => {
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <div class="flex flex-col gap-2">
-                            <Dropdown
+                            <Select
                                 v-model="filterModel.matchMode"
                                 :options="[
                                     { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
