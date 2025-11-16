@@ -1,6 +1,7 @@
 <script setup>
 import Contact from '@/components/Contact.vue';
 import { useAccountService } from '@/services/useAccountService';
+import { usePlanService } from '@/services/usePlanService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
@@ -16,6 +17,7 @@ const loading = useLoading();
 const record = ref({});
 const dialogRef = inject('dialogRef');
 const action = ref();
+const plans = ref([]);
 
 // Use external account schema
 const schema = accountSchema;
@@ -68,6 +70,16 @@ const closeDialog = () => {
 onMounted(() => {
     record.value = dialogRef.value.data.record;
     action.value = dialogRef.value.data.action;
+    // Load available plans for selection
+    usePlanService
+        .getPlans({ page: 1, per_page: 1000 })
+        .then((response) => {
+            const list = response?.data || [];
+            plans.value = list || [];
+        })
+        .catch(() => {
+            plans.value = [];
+        });
 });
 </script>
 <template>
@@ -163,18 +175,15 @@ onMounted(() => {
                     {{ t(authStore.errors?.['rib']?.[0]) }}
                 </Message>
             </div>
-            <!-- Plan -->
+            <!-- Plan (model) -->
             <div class="col-span-2">
                 <FloatLabel variant="on" class="w-full">
                     <Select
                         id="plan"
                         v-model="record.plan"
-                        :options="[
-                            { label: t('common.labels.free'), value: 'free' },
-                            { label: t('common.labels.paid'), value: 'paid' }
-                        ]"
-                        optionLabel="label"
-                        optionValue="value"
+                        :options="plans"
+                        optionLabel="name"
+                        optionValue="id"
                         :disabled="loading.isPageLoading"
                         class="w-full"
                         :invalid="authStore.errors?.['plan']?.[0] ? true : false"

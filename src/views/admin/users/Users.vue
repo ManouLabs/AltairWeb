@@ -17,9 +17,6 @@ import { useI18n } from 'vue-i18n';
 
 onMounted(() => {
     initialize();
-    if (filters.value?.roles) {
-        filters.value.roles.relation = { name: 'roles', column: 'name' };
-    }
     subscribeToEcho();
 });
 
@@ -28,7 +25,10 @@ const defaultFiltersConfig = {
     name: FilterMatchMode.CONTAINS,
     email: FilterMatchMode.CONTAINS,
     email_verified_at: FilterMatchMode.DATE_IS,
-    roles: FilterMatchMode.IN,
+    roles: {
+        matchMode: FilterMatchMode.IN,
+        relation: { name: 'roles', column: 'name' }
+    },
     created_at: FilterMatchMode.DATE_IS,
     updated_at: FilterMatchMode.DATE_IS
 };

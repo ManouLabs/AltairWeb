@@ -26,6 +26,12 @@ const model = computed(() => [
                 visible: can('view_accounts')
             },
             {
+                label: t('navigation.side_bar.plans'),
+                icon: 'pi pi-fw pi-list',
+                to: '/admin/plans',
+                visible: can('view_plans')
+            },
+            {
                 label: t('navigation.side_bar.user'),
                 icon: 'pi pi-fw pi-user',
                 visible: can('view_users') || can('view_roles'),

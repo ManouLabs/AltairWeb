@@ -12,10 +12,8 @@ export const accountSchema = z.object({
     nif: optionalString,
     nis: optionalString,
     rib: optionalString,
-    plan: z.enum(['free', 'paid'], {
-        required_error: 'common.messages.is_required',
-        invalid_type_error: 'common.messages.is_required'
-    }),
+    // Switch from static plan enum to relational plan_id
+    plan_id: z.coerce.number({ invalid_type_error: 'common.messages.is_required', required_error: 'common.messages.is_required' }).int({ message: 'common.messages.is_required' }).positive({ message: 'common.messages.is_required' }),
     active: z.boolean().optional().default(true),
     contacts: z
         .array(

@@ -6,6 +6,8 @@
         "roles": "Roles",
         "account": "Account",
         "accounts": "Accounts",
+        "plan": "Plan",
+        "plans": "Plans",
         "my_account": "My Account",
         "my_informations": "Account Information"
     },
@@ -186,6 +188,7 @@
             "home": "Home",
             "dashboard": "Dashboard",
             "accounts": "Accounts",
+            "plans": "Plans",
             "user": "User",
             "users": "Users",
             "roles": "Roles"
@@ -244,6 +247,17 @@
             "active": "Active",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        }
+    },
+    "plan": {
+        "columns": {
+            "name": "Name",
+            "active": "Active",
+            "orders": "Orders",
+            "products": "Products",
+            "users": "Users",
+            "shops": "Shops",
+            "price": "Price"
         }
     },
     "contact": {

@@ -19,8 +19,13 @@ export function useDataTable(dataFetcher, defaultFiltersConfig = {}, debounceDel
             global: { value: null, matchMode: FilterMatchMode.CONTAINS }
         };
 
-        Object.entries(defaultFiltersConfig).forEach(([field, matchMode]) => {
-            defaultFilters[field] = { value: null, matchMode };
+        Object.entries(defaultFiltersConfig).forEach(([field, config]) => {
+            if (config && typeof config === 'object') {
+                const { matchMode, ...rest } = config;
+                defaultFilters[field] = { value: null, matchMode, ...rest };
+            } else {
+                defaultFilters[field] = { value: null, matchMode: config };
+            }
         });
 
         return defaultFilters;
@@ -59,9 +64,23 @@ export function useDataTable(dataFetcher, defaultFiltersConfig = {}, debounceDel
         }
     }, debounceDelay);
 
+    const attachFilterMeta = (incomingFilters) => {
+        if (!incomingFilters) return incomingFilters;
+        const enriched = { ...incomingFilters };
+        Object.entries(defaultFiltersConfig).forEach(([field, config]) => {
+            if (config && typeof config === 'object' && config.relation && enriched[field]) {
+                enriched[field] = { ...enriched[field], relation: config.relation };
+            }
+        });
+        return enriched;
+    };
+
     const onPage = (event) => {
         loading.startDataLoading();
         lazyParams.value = extractLazyParams(event);
+        if (lazyParams.value.filters) {
+            lazyParams.value.filters = attachFilterMeta(lazyParams.value.filters);
+        }
         loadLazyData();
     };
 
@@ -72,6 +91,9 @@ export function useDataTable(dataFetcher, defaultFiltersConfig = {}, debounceDel
         if (recordDataTable.value) {
             recordDataTable.value.resetPage();
         }
+        if (lazyParams.value.filters) {
+            lazyParams.value.filters = attachFilterMeta(lazyParams.value.filters);
+        }
         loadLazyData();
     };
 
@@ -79,6 +101,9 @@ export function useDataTable(dataFetcher, defaultFiltersConfig = {}, debounceDel
         loading.startDataLoading();
         lazyParams.value = extractLazyParams(event);
         resetPages();
+        if (lazyParams.value.filters) {
+            lazyParams.value.filters = attachFilterMeta(lazyParams.value.filters);
+        }
         loadLazyData();
     };
 
@@ -94,7 +119,7 @@ export function useDataTable(dataFetcher, defaultFiltersConfig = {}, debounceDel
 
     const searchDone = () => {
         loading.startDataLoading();
-        lazyParams.value.filters = filters.value;
+        lazyParams.value.filters = attachFilterMeta(filters.value);
         resetPages();
         loadLazyData();
     };
