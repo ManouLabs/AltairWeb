@@ -32,6 +32,18 @@ const model = computed(() => [
                 visible: can('view_plans')
             },
             {
+                label: t('navigation.side_bar.regions'),
+                icon: 'pi pi-fw pi-map',
+                to: '/admin/regions',
+                visible: can('view_regions')
+            },
+            {
+                label: t('navigation.side_bar.cities'),
+                icon: 'pi pi-fw pi-building',
+                to: '/admin/cities',
+                visible: can('view_cities')
+            },
+            {
                 label: t('navigation.side_bar.user'),
                 icon: 'pi pi-fw pi-user',
                 visible: can('view_users') || can('view_roles'),

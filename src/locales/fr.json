@@ -3,7 +3,11 @@
         "user": "Utilisateur",
         "users": "Utilisateurs",
         "role": "Rôle",
-        "roles": "Rôles"
+        "roles": "Rôles",
+        "region": "Région",
+        "regions": "Régions",
+        "city": "Ville",
+        "cities": "Villes"
     },
     "common": {
         "contents": {
@@ -135,6 +139,8 @@
         "side_bar": {
             "home": "Accueil",
             "dashboard": "Tableau de bord",
+            "regions": "Régions",
+            "cities": "Villes",
             "user": "Utilisateur",
             "users": "Utilisateurs",
             "roles": "Rôles",
@@ -176,6 +182,26 @@
             "email_verified_at": "Email vérifié le",
             "created_at": "Créé le",
             "updated_at": "Mis à jour le"
+        }
+    },
+    "region": {
+        "columns": {
+            "name": "Nom",
+            "name_ar": "Nom en Arabe",
+            "name_fr": "Nom en Français",
+            "longitude": "Longitude",
+            "latitude": "Latitude"
+        }
+    },
+    "city": {
+        "columns": {
+            "name": "Nom",
+            "name_ar": "Nom en Arabe",
+            "name_fr": "Nom en Français",
+            "postal_code": "Code postal",
+            "region": "Région",
+            "longitude": "Longitude",
+            "latitude": "Latitude"
         }
     },
     "primevue": {

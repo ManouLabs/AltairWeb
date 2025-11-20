@@ -23,6 +23,18 @@ const adminRoutes = [
         meta: { requiresAuth: true, requiresPermission: 'view_plans' }
     },
     {
+        path: 'regions',
+        name: 'regions',
+        component: () => import('@/views/admin/regions/Regions.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_regions' }
+    },
+    {
+        path: 'cities',
+        name: 'cities',
+        component: () => import('@/views/admin/cities/Cities.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_cities' }
+    },
+    {
         path: 'users',
         name: 'users',
         component: () => import('@/views/admin/users/Users.vue'),

@@ -8,6 +8,10 @@
         "accounts": "Accounts",
         "plan": "Plan",
         "plans": "Plans",
+        "region": "Region",
+        "regions": "Regions",
+        "city": "City",
+        "cities": "Cities",
         "my_account": "My Account",
         "my_informations": "Account Information"
     },
@@ -189,6 +193,8 @@
             "dashboard": "Dashboard",
             "accounts": "Accounts",
             "plans": "Plans",
+            "regions": "Regions",
+            "cities": "Cities",
             "user": "User",
             "users": "Users",
             "roles": "Roles"
@@ -258,6 +264,26 @@
             "users": "Users",
             "shops": "Shops",
             "price": "Price"
+        }
+    },
+    "region": {
+        "columns": {
+            "name": "Name",
+            "name_ar": "Arabic Name",
+            "name_fr": "French Name",
+            "longitude": "Longitude",
+            "latitude": "Latitude"
+        }
+    },
+    "city": {
+        "columns": {
+            "name": "Name",
+            "name_ar": "Arabic Name",
+            "name_fr": "French Name",
+            "postal_code": "Postal Code",
+            "region": "Region",
+            "longitude": "Longitude",
+            "latitude": "Latitude"
         }
     },
     "contact": {

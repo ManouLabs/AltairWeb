@@ -3,7 +3,11 @@
         "user": "مستخدم",
         "users": "المستخدمون",
         "role": "دور",
-        "roles": "الأدوار"
+        "roles": "الأدوار",
+        "region": "منطقة",
+        "regions": "المناطق",
+        "city": "مدينة",
+        "cities": "المدن"
     },
     "common": {
         "contents": {
@@ -134,6 +138,8 @@
         "side_bar": {
             "home": "الرئيسية",
             "dashboard": "لوحة التحكم",
+            "regions": "المناطق",
+            "cities": "المدن",
             "user": "مستخدم",
             "users": "المستخدمون",
             "roles": "الأدوار",
@@ -175,6 +181,26 @@
             "email_verified_at": "تاريخ تحقق البريد",
             "created_at": "تاريخ الإنشاء",
             "updated_at": "تاريخ التحديث"
+        }
+    },
+    "region": {
+        "columns": {
+            "name": "الاسم",
+            "name_ar": "الاسم بالعربية",
+            "name_fr": "الاسم بالفرنسية",
+            "longitude": "طول العرض",
+            "latitude": "عرض البلد"
+        }
+    },
+    "city": {
+        "columns": {
+            "name": "الاسم",
+            "name_ar": "الاسم بالعربية",
+            "name_fr": "الاسم بالفرنسية",
+            "postal_code": "رمز بريدي",
+            "region": "المنطقة",
+            "longitude": "طول العرض",
+            "latitude": "عرض البلد"
         }
     },
     "primevue": {
