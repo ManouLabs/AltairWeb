@@ -15,7 +15,7 @@ const loading = useLoading();
 const record = ref({});
 const dialogRef = inject('dialogRef');
 const action = ref();
-const regionsOptions = ref([], []);
+const regionsOptions = ref([]);
 
 // Validation schema
 const schema = citySchema;
@@ -80,6 +80,7 @@ onMounted(() => {
                         :disabled="loading.isPageLoading"
                         autofocus
                         class="w-full"
+                        maxlength="50"
                         :invalid="authStore.errors?.['name']?.[0] ? true : false"
                         @input="() => authStore.clearErrors(['name'])"
                         @blur="() => onBlurField('name')"
@@ -99,6 +100,7 @@ onMounted(() => {
                         v-model="record.name_ar"
                         :disabled="loading.isPageLoading"
                         class="w-full"
+                        maxlength="50"
                         :invalid="authStore.errors?.['name_ar']?.[0] ? true : false"
                         @input="() => authStore.clearErrors(['name_ar'])"
                         @blur="() => onBlurField('name_ar')"
@@ -118,6 +120,7 @@ onMounted(() => {
                         v-model="record.name_fr"
                         :disabled="loading.isPageLoading"
                         class="w-full"
+                        maxlength="50"
                         :invalid="authStore.errors?.['name_fr']?.[0] ? true : false"
                         @input="() => authStore.clearErrors(['name_fr'])"
                         @blur="() => onBlurField('name_fr')"
@@ -137,6 +140,7 @@ onMounted(() => {
                         v-model="record.postal_code"
                         :disabled="loading.isPageLoading"
                         class="w-full"
+                        maxlength="20"
                         :invalid="authStore.errors?.['postal_code']?.[0] ? true : false"
                         @input="() => authStore.clearErrors(['postal_code'])"
                         @blur="() => onBlurField('postal_code')"
@@ -155,7 +159,7 @@ onMounted(() => {
                         <Select
                             id="region_id"
                             v-model="record.region_id"
-                            :options="regionsOptions[0]"
+                            :options="regionsOptions"
                             optionLabel="name"
                             optionValue="id"
                             :placeholder="t('common.placeholders.select')"
@@ -183,7 +187,7 @@ onMounted(() => {
                         class="w-full"
                         :useGrouping="false"
                         :min-fraction-digits="0"
-                        :max-fraction-digits="10"
+                        :max-fraction-digits="7"
                         :invalid="authStore.errors?.['longitude']?.[0] ? true : false"
                         @blur="() => onBlurField('longitude')"
                     />
@@ -204,7 +208,7 @@ onMounted(() => {
                         class="w-full"
                         :useGrouping="false"
                         :min-fraction-digits="0"
-                        :max-fraction-digits="10"
+                        :max-fraction-digits="7"
                         :invalid="authStore.errors?.['latitude']?.[0] ? true : false"
                         @blur="() => onBlurField('latitude')"
                     />

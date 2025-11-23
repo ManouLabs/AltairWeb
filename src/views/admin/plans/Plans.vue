@@ -454,7 +454,6 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     v-if="selectedColumns.some((column) => column.field === 'orders')"
                     :frozen="frozenColumns.orders"
-                    :header="t('plan.columns.orders')"
                     sortable
                     class="min-w-32"
                 >
@@ -494,7 +493,6 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     v-if="selectedColumns.some((column) => column.field === 'products')"
                     :frozen="frozenColumns.products"
-                    :header="t('plan.columns.products')"
                     sortable
                     class="min-w-32"
                 >
@@ -534,7 +532,6 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     v-if="selectedColumns.some((column) => column.field === 'users')"
                     :frozen="frozenColumns.users"
-                    :header="t('plan.columns.users')"
                     sortable
                     class="min-w-32"
                 >
@@ -574,7 +571,6 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     v-if="selectedColumns.some((column) => column.field === 'shops')"
                     :frozen="frozenColumns.shops"
-                    :header="t('plan.columns.shops')"
                     sortable
                     class="min-w-32"
                 >
@@ -614,7 +610,6 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     v-if="selectedColumns.some((column) => column.field === 'price')"
                     :frozen="frozenColumns.price"
-                    :header="t('plan.columns.price')"
                     sortable
                     class="min-w-32"
                 >

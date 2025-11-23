@@ -18,7 +18,7 @@ onMounted(() => {
     initialize();
     subscribeToEcho();
 });
-// Filters config (supports relation metadata via useDataTable)
+
 const defaultFiltersConfig = {
     id: FilterMatchMode.CONTAINS,
     legal_name: FilterMatchMode.CONTAINS,
@@ -55,10 +55,8 @@ const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
 
-// Use highlights composable
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
-// Use DataTable locking composable (row locking + column freezing)
 const defaultFields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib', 'plan', 'active', 'created_at', 'updated_at'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
@@ -156,6 +154,7 @@ const openDialog = () => {
         },
         data: {
             record: record.value,
+            planOptions: allPlans.value,
             action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE
         },
         onClose: (result) => {

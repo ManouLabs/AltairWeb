@@ -2,6 +2,12 @@
 import apiClient from '@/services/axios';
 import { defineStore } from 'pinia';
 
+const defaultSettings = {
+    theme: 'light',
+    menuMode: 'static',
+    locale: import.meta.env.VITE_DEFAULT_LOCALE || 'fr'
+};
+
 export const useSettingStore = defineStore('settings', {
     state: () => ({
         settings: {}
@@ -11,8 +17,19 @@ export const useSettingStore = defineStore('settings', {
         async fetchSettings() {
             try {
                 const response = await apiClient.get('/api/settings');
-                this.settings = response.data;
-            } catch (error) {}
+                const fetchedSettings = response.data || {};
+
+                // If settings are empty or null, use defaults
+                if (!fetchedSettings || Object.keys(fetchedSettings).length === 0) {
+                    this.settings = { ...defaultSettings };
+                } else {
+                    // Merge fetched settings with defaults (in case some keys are missing)
+                    this.settings = { ...defaultSettings, ...fetchedSettings };
+                }
+            } catch (error) {
+                // On error, use default settings
+                this.settings = { ...defaultSettings };
+            }
         },
 
         async saveSettings() {
@@ -26,6 +43,10 @@ export const useSettingStore = defineStore('settings', {
             try {
                 await apiClient.post('/api/settings/update-key', { key, value });
             } catch (error) {}
+        },
+
+        initializeDefaults() {
+            this.settings = { ...defaultSettings };
         }
     },
 

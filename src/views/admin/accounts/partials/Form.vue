@@ -1,7 +1,6 @@
 <script setup>
 import Contact from '@/components/Contact.vue';
 import { useAccountService } from '@/services/useAccountService';
-import { usePlanService } from '@/services/usePlanService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
@@ -17,19 +16,16 @@ const loading = useLoading();
 const record = ref({});
 const dialogRef = inject('dialogRef');
 const action = ref();
-const plans = ref([]);
+const plansOptions = ref([]);
 
-// Use external account schema
 const schema = accountSchema;
 
-// Manual validation function using reusable helper
 const validateForm = () => {
     const { ok, errors } = validate(schema, record.value);
     authStore.errors = ok ? {} : errors;
     return ok;
 };
 
-// Field-level validation on blur
 const onBlurField = (path) => {
     const { ok, errors } = validateField(schema, record.value, path);
     if (ok) {
@@ -39,9 +35,7 @@ const onBlurField = (path) => {
     }
 };
 
-// Submit form
 const onFormSubmit = () => {
-    // Validate form before submission
     if (!validateForm()) {
         return;
     }
@@ -70,16 +64,9 @@ const closeDialog = () => {
 onMounted(() => {
     record.value = dialogRef.value.data.record;
     action.value = dialogRef.value.data.action;
-    // Load available plans for selection
-    usePlanService
-        .getPlans({ page: 1, per_page: 1000 })
-        .then((response) => {
-            const list = response?.data || [];
-            plans.value = list || [];
-        })
-        .catch(() => {
-            plans.value = [];
-        });
+    plansOptions.value = dialogRef.value.data.planOptions;
+    console.log('Plans Options:', plansOptions.value);
+    console.log('Record Plan:', record.value.plan);
 });
 </script>
 <template>
@@ -94,6 +81,7 @@ onMounted(() => {
                         :disabled="loading.isPageLoading"
                         autofocus
                         class="w-full"
+                        maxlength="150"
                         :invalid="authStore.errors?.['legal_name']?.[0] ? true : false"
                         @input="() => authStore.clearErrors([`legal_name`])"
                         @blur="() => onBlurField('legal_name')"
@@ -113,6 +101,7 @@ onMounted(() => {
                         v-model="record.trade_name"
                         :disabled="loading.isPageLoading"
                         class="w-full"
+                        maxlength="255"
                         :invalid="authStore.errors?.['trade_name']?.[0] ? true : false"
                         @input="() => authStore.clearErrors([`trade_name`])"
                         @blur="() => onBlurField('trade_name')"
@@ -132,6 +121,7 @@ onMounted(() => {
                         v-model="record.rc_number"
                         :disabled="loading.isPageLoading"
                         class="w-full"
+                        maxlength="25"
                         :invalid="authStore.errors?.['rc_number']?.[0] ? true : false"
                         @input="() => authStore.clearErrors([`rc_number`])"
                         @blur="() => onBlurField('rc_number')"
@@ -146,7 +136,16 @@ onMounted(() => {
             <!-- NIF -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputText id="nif" v-model="record.nif" :disabled="loading.isPageLoading" class="w-full" :invalid="authStore.errors?.['nif']?.[0] ? true : false" @input="() => authStore.clearErrors([`nif`])" @blur="() => onBlurField('nif')" />
+                    <InputText
+                        id="nif"
+                        v-model="record.nif"
+                        :disabled="loading.isPageLoading"
+                        class="w-full"
+                        maxlength="25"
+                        :invalid="authStore.errors?.['nif']?.[0] ? true : false"
+                        @input="() => authStore.clearErrors([`nif`])"
+                        @blur="() => onBlurField('nif')"
+                    />
                     <label for="nif">{{ t('account.columns.nif') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['nif']?.[0]" severity="error" size="small">
@@ -157,7 +156,16 @@ onMounted(() => {
             <!-- NIS -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputText id="nis" v-model="record.nis" :disabled="loading.isPageLoading" class="w-full" :invalid="authStore.errors?.['nis']?.[0] ? true : false" @input="() => authStore.clearErrors([`nis`])" @blur="() => onBlurField('nis')" />
+                    <InputText
+                        id="nis"
+                        v-model="record.nis"
+                        :disabled="loading.isPageLoading"
+                        class="w-full"
+                        maxlength="25"
+                        :invalid="authStore.errors?.['nis']?.[0] ? true : false"
+                        @input="() => authStore.clearErrors([`nis`])"
+                        @blur="() => onBlurField('nis')"
+                    />
                     <label for="nis">{{ t('account.columns.nis') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['nis']?.[0]" severity="error" size="small">
@@ -168,7 +176,16 @@ onMounted(() => {
             <!-- RIB -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputText id="rib" v-model="record.rib" :disabled="loading.isPageLoading" class="w-full" :invalid="authStore.errors?.['rib']?.[0] ? true : false" @input="() => authStore.clearErrors([`rib`])" @blur="() => onBlurField('rib')" />
+                    <InputText
+                        id="rib"
+                        v-model="record.rib"
+                        :disabled="loading.isPageLoading"
+                        class="w-full"
+                        maxlength="25"
+                        :invalid="authStore.errors?.['rib']?.[0] ? true : false"
+                        @input="() => authStore.clearErrors([`rib`])"
+                        @blur="() => onBlurField('rib')"
+                    />
                     <label for="rib">{{ t('account.columns.rib') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['rib']?.[0]" severity="error" size="small">
@@ -181,19 +198,21 @@ onMounted(() => {
                     <Select
                         id="plan"
                         v-model="record.plan"
-                        :options="plans"
+                        :options="plansOptions"
                         optionLabel="name"
-                        optionValue="id"
                         :disabled="loading.isPageLoading"
                         class="w-full"
-                        :invalid="authStore.errors?.['plan']?.[0] ? true : false"
-                        @change="() => authStore.clearErrors(['plan'])"
+                        :invalid="authStore.errors?.['plan']?.[0] || authStore.errors?.['plan.id']?.[0] ? true : false"
+                        @change="() => authStore.clearErrors(['plan', 'plan.id'])"
                         @blur="() => onBlurField('plan')"
                     />
-                    <label for="plan">{{ t('account.columns.plan') }} *</label>
+                    <label for="plan">{{ t('account.columns.plan') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['plan']?.[0]" severity="error" size="small">
                     {{ t(authStore.errors?.['plan']?.[0]) }}
+                </Message>
+                <Message v-else-if="authStore.errors?.['plan.id']?.[0]" severity="error" size="small">
+                    {{ t(authStore.errors?.['plan.id']?.[0]) }}
                 </Message>
             </div>
             <div>

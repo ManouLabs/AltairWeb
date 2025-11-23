@@ -1,20 +1,18 @@
 // src/validations/city.js
 import { z } from 'zod';
 
-const requiredString = z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }));
+const requiredStringMax = (max) => z.preprocess((v) => (v === null || v === undefined ? '' : String(v)), z.string().min(1, { message: 'common.messages.is_required' }).max(max, { message: 'common.messages.max_length', length: max }));
 
-const requiredNumber = z.preprocess((v) => (v === null || v === undefined ? undefined : v), z.number().int().positive({ message: 'common.messages.is_required' }));
+const requiredNumber = z.preprocess((v) => (v === null || v === undefined || v === '' ? undefined : Number(v)), z.number().int().positive({ message: 'common.messages.is_required' }));
 
-const postalCode = z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }));
-
-const coordinate = z.preprocess((v) => (v === null || v === undefined ? 0 : Number(v)), z.number().optional());
+const optionalDecimal = z.preprocess((v) => (v === null || v === undefined || v === '' ? undefined : Number(v)), z.number()).optional();
 
 export const citySchema = z.object({
-    name: requiredString,
-    name_ar: requiredString,
-    name_fr: requiredString,
-    postal_code: postalCode,
+    name: requiredStringMax(50),
+    name_ar: requiredStringMax(50),
+    name_fr: requiredStringMax(50),
+    postal_code: requiredStringMax(20),
     region_id: requiredNumber,
-    longitude: coordinate,
-    latitude: coordinate
+    longitude: optionalDecimal,
+    latitude: optionalDecimal
 });

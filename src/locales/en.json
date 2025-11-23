@@ -263,7 +263,9 @@
             "products": "Products",
             "users": "Users",
             "shops": "Shops",
-            "price": "Price"
+            "price": "Price",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
         }
     },
     "region": {
@@ -271,8 +273,11 @@
             "name": "Name",
             "name_ar": "Arabic Name",
             "name_fr": "French Name",
+            "code": "Code",
             "longitude": "Longitude",
-            "latitude": "Latitude"
+            "latitude": "Latitude",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
         }
     },
     "city": {
@@ -283,7 +288,9 @@
             "postal_code": "Postal Code",
             "region": "Region",
             "longitude": "Longitude",
-            "latitude": "Latitude"
+            "latitude": "Latitude",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
         }
     },
     "contact": {

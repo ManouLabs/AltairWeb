@@ -1,19 +1,32 @@
 import { z } from 'zod';
 
-// Helpers to normalize null/undefined to proper validation expectations
+// Base helpers used across forms (keep unchanged semantics)
 export const requiredString = z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }));
-
 export const optionalString = z.string().nullable().optional();
 
+// Account-specific helpers matching DB constraints
+const requiredStringMax = (max) => z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }).max(max, { message: 'common.messages.max_length', length: max }));
+
+const optionalStringMax = (max) =>
+    z
+        .preprocess((v) => (v === null || v === undefined ? undefined : String(v)), z.string().max(max, { message: 'common.messages.max_length', length: max }))
+        .optional()
+        .nullable();
+
 export const accountSchema = z.object({
-    legal_name: requiredString,
-    trade_name: requiredString,
-    rc_number: optionalString,
-    nif: optionalString,
-    nis: optionalString,
-    rib: optionalString,
-    // Switch from static plan enum to relational plan_id
-    plan_id: z.coerce.number({ invalid_type_error: 'common.messages.is_required', required_error: 'common.messages.is_required' }).int({ message: 'common.messages.is_required' }).positive({ message: 'common.messages.is_required' }),
+    legal_name: requiredStringMax(150),
+    trade_name: optionalStringMax(150),
+    rc_number: optionalStringMax(30),
+    nif: optionalStringMax(30),
+    nis: optionalStringMax(30),
+    rib: optionalStringMax(30),
+    plan: z
+        .object({
+            id: z.coerce.number({ invalid_type_error: 'common.messages.is_required', required_error: 'common.messages.is_required' }).int({ message: 'common.messages.is_required' }).positive({ message: 'common.messages.is_required' }),
+            name: optionalString
+        })
+        .nullable()
+        .optional(),
     active: z.boolean().optional().default(true),
     contacts: z
         .array(
@@ -56,33 +69,18 @@ export const accountSchema = z.object({
                                 (data) => {
                                     const { type } = data;
                                     if (type === 'email') {
-                                        return {
-                                            message: 'common.messages.invalid_email',
-                                            path: ['value']
-                                        };
+                                        return { message: 'common.messages.invalid_email', path: ['value'] };
                                     }
                                     if (type === 'mobile') {
-                                        return {
-                                            message: 'common.messages.invalid_mobile',
-                                            path: ['value']
-                                        };
+                                        return { message: 'common.messages.invalid_mobile', path: ['value'] };
                                     }
                                     if (type === 'url') {
-                                        return {
-                                            message: 'common.messages.invalid_url',
-                                            path: ['value']
-                                        };
+                                        return { message: 'common.messages.invalid_url', path: ['value'] };
                                     }
                                     if (type === 'landline') {
-                                        return {
-                                            message: 'common.messages.invalid_landline',
-                                            path: ['value']
-                                        };
+                                        return { message: 'common.messages.invalid_landline', path: ['value'] };
                                     }
-                                    return {
-                                        message: 'common.messages.invalid_contact_method',
-                                        path: ['value']
-                                    };
+                                    return { message: 'common.messages.invalid_contact_method', path: ['value'] };
                                 }
                             )
                     )

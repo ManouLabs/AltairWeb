@@ -22,7 +22,14 @@ export const useLayoutStore = defineStore('layout', {
 
     actions: {
         applyFromSettings() {
-            const settings = useSettingStore().settings;
+            const settingsStore = useSettingStore();
+            const settings = settingsStore.settings;
+
+            // Ensure settings exist (important for first login)
+            if (!settings || Object.keys(settings).length === 0) {
+                settingsStore.initializeDefaults();
+            }
+
             this.preset = settings.preset || 'Lara';
             this.primary = settings.primary || 'emerald';
             this.surface = settings.surface || null;

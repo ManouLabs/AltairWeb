@@ -127,6 +127,26 @@ onMounted(() => {
                 </Message>
             </div>
 
+            <!-- Code -->
+            <div class="col-span-1">
+                <FloatLabel variant="on" class="w-full">
+                    <InputText
+                        id="code"
+                        v-model="record.code"
+                        :disabled="loading.isPageLoading"
+                        class="w-full"
+                        maxlength="3"
+                        :invalid="authStore.errors?.['code']?.[0] ? true : false"
+                        @input="() => authStore.clearErrors(['code'])"
+                        @blur="() => onBlurField('code')"
+                    />
+                    <label for="code">{{ t('region.columns.code') }} *</label>
+                </FloatLabel>
+                <Message v-if="authStore.errors?.['code']?.[0]" severity="error" size="small">
+                    {{ t(authStore.errors?.['code']?.[0]) }}
+                </Message>
+            </div>
+
             <!-- Longitude -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
