@@ -130,12 +130,13 @@ onMounted(() => {
             <!-- Code -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputText
+                    <InputNumber
                         id="code"
                         v-model="record.code"
                         :disabled="loading.isPageLoading"
                         class="w-full"
-                        maxlength="3"
+                        :min="0"
+                        :max="999"
                         :invalid="authStore.errors?.['code']?.[0] ? true : false"
                         @input="() => authStore.clearErrors(['code'])"
                         @blur="() => onBlurField('code')"

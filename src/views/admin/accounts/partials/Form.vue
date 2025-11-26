@@ -65,8 +65,6 @@ onMounted(() => {
     record.value = dialogRef.value.data.record;
     action.value = dialogRef.value.data.action;
     plansOptions.value = dialogRef.value.data.planOptions;
-    console.log('Plans Options:', plansOptions.value);
-    console.log('Record Plan:', record.value.plan);
 });
 </script>
 <template>
@@ -93,7 +91,6 @@ onMounted(() => {
                 </Message>
             </div>
 
-            <!-- Trade Name -->
             <div>
                 <FloatLabel variant="on" class="w-full">
                     <InputText
@@ -113,7 +110,6 @@ onMounted(() => {
                 </Message>
             </div>
 
-            <!-- RC Number -->
             <div>
                 <FloatLabel variant="on" class="w-full">
                     <InputText
@@ -133,7 +129,6 @@ onMounted(() => {
                 </Message>
             </div>
 
-            <!-- NIF -->
             <div>
                 <FloatLabel variant="on" class="w-full">
                     <InputText
@@ -199,20 +194,18 @@ onMounted(() => {
                         id="plan"
                         v-model="record.plan"
                         :options="plansOptions"
+                        filter
                         optionLabel="name"
                         :disabled="loading.isPageLoading"
                         class="w-full"
-                        :invalid="authStore.errors?.['plan']?.[0] || authStore.errors?.['plan.id']?.[0] ? true : false"
-                        @change="() => authStore.clearErrors(['plan', 'plan.id'])"
+                        :invalid="authStore.errors?.['plan']?.[0] ? true : false"
+                        @change="() => authStore.clearErrors(['plan'])"
                         @blur="() => onBlurField('plan')"
                     />
                     <label for="plan">{{ t('account.columns.plan') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['plan']?.[0]" severity="error" size="small">
                     {{ t(authStore.errors?.['plan']?.[0]) }}
-                </Message>
-                <Message v-else-if="authStore.errors?.['plan.id']?.[0]" severity="error" size="small">
-                    {{ t(authStore.errors?.['plan.id']?.[0]) }}
                 </Message>
             </div>
             <div>

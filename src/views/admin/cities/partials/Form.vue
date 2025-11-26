@@ -17,12 +17,12 @@ const dialogRef = inject('dialogRef');
 const action = ref();
 const regionsOptions = ref([]);
 
-// Validation schema
 const schema = citySchema;
 
 const validateForm = () => {
     const { ok, errors } = validate(schema, record.value);
     authStore.errors = ok ? {} : errors;
+    console.log(errors);
     return ok;
 };
 
@@ -71,7 +71,6 @@ onMounted(() => {
 <template>
     <form @submit.prevent="onFormSubmit" class="flex flex-col space-y-4">
         <div class="grid grid-cols-2 gap-4 pt-2">
-            <!-- Name (English) -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
                     <InputText
@@ -92,7 +91,6 @@ onMounted(() => {
                 </Message>
             </div>
 
-            <!-- Name (Arabic) -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
                     <InputText
@@ -112,7 +110,6 @@ onMounted(() => {
                 </Message>
             </div>
 
-            <!-- Name (French) -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
                     <InputText
@@ -132,10 +129,9 @@ onMounted(() => {
                 </Message>
             </div>
 
-            <!-- Postal Code -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputText
+                    <InputNumber
                         id="postal_code"
                         v-model="record.postal_code"
                         :disabled="loading.isPageLoading"
@@ -152,32 +148,27 @@ onMounted(() => {
                 </Message>
             </div>
 
-            <!-- Region -->
-            <div class="col-span-1">
+            <div class="col-span-2">
                 <FloatLabel variant="on" class="w-full">
-                    <div class="p-float-label w-full">
-                        <Select
-                            id="region_id"
-                            v-model="record.region_id"
-                            :options="regionsOptions"
-                            optionLabel="name"
-                            optionValue="id"
-                            :placeholder="t('common.placeholders.select')"
-                            :disabled="loading.isPageLoading"
-                            class="w-full"
-                            :invalid="authStore.errors?.['region_id']?.[0] ? true : false"
-                            @blur="() => onBlurField('region_id')"
-                            @change="() => authStore.clearErrors(['region_id'])"
-                        />
-                        <label for="region_id">{{ t('city.columns.region') }} *</label>
-                    </div>
+                    <Select
+                        id="region"
+                        v-model="record.region"
+                        :options="regionsOptions"
+                        optionLabel="name"
+                        filter
+                        :disabled="loading.isPageLoading"
+                        class="w-full"
+                        :invalid="authStore.errors?.['region']?.[0] ? true : false"
+                        @blur="() => onBlurField('region')"
+                        @change="() => authStore.clearErrors(['region'])"
+                    />
+                    <label for="region">{{ t('city.columns.region') }} *</label>
                 </FloatLabel>
-                <Message v-if="authStore.errors?.['region_id']?.[0]" severity="error" size="small">
-                    {{ t(authStore.errors?.['region_id']?.[0]) }}
+                <Message v-if="authStore.errors?.['region']?.[0]" severity="error" size="small">
+                    {{ t(authStore.errors?.['region']?.[0]) }}
                 </Message>
             </div>
 
-            <!-- Longitude -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
                     <InputNumber
@@ -198,7 +189,6 @@ onMounted(() => {
                 </Message>
             </div>
 
-            <!-- Latitude -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
                     <InputNumber
@@ -220,7 +210,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Form Actions -->
         <div class="flex justify-end gap-2 mt-4">
             <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
             <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />

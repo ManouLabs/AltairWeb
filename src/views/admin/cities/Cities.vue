@@ -1,4 +1,5 @@
 <script setup>
+import HeaderCell from '@/components/HeaderCell.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
 import { useLock } from '@/composables/useLock';
@@ -27,17 +28,18 @@ const defaultFiltersConfig = {
     name_fr: FilterMatchMode.CONTAINS,
     name_ar: FilterMatchMode.CONTAINS,
     postal_code: FilterMatchMode.CONTAINS,
-    longitude: FilterMatchMode.CONTAINS,
-    latitude: FilterMatchMode.CONTAINS,
+    region: {
+        matchMode: FilterMatchMode.IN,
+        relation: { name: 'region', column: 'name' }
+    },
     created_at: FilterMatchMode.DATE_IS,
-    updated_at: FilterMatchMode.DATE_IS,
-    region: { matchMode: FilterMatchMode.IN, relation: { name: 'region', column: 'name' } }
+    updated_at: FilterMatchMode.DATE_IS
 };
-
+const allRegions = ref(null);
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
     (params) =>
         useCityService.getCities(params).then((data) => {
-            allRegions.value = [data.regions, []];
+            allRegions.value = data.regions;
             return {
                 data: data.cities,
                 meta: data.meta
@@ -54,7 +56,7 @@ const { showToast } = useShowToast();
 
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
-const defaultFields = ['name', 'name_fr', 'name_ar', 'postal_code', 'region', 'longitude', 'latitude', 'created_at', 'updated_at'];
+const defaultFields = ['name', 'name_fr', 'name_ar', 'postal_code', 'region', 'created_at', 'updated_at'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref(null);
@@ -67,8 +69,6 @@ const defaultColumns = computed(() =>
 
 const { selectedColumns, columnChanged } = useDynamicColumns('citiesColumns', defaultFields, 'city.columns');
 const subscription = ref(null);
-
-const allRegions = ref(null);
 
 function subscribeToEcho() {
     subscription.value = Echo.private('data-stream.city').listen('DataStream', (event) => {
@@ -123,7 +123,7 @@ function addRecord() {
         name: '',
         name_ar: '',
         name_fr: '',
-        postal_code: '',
+        postal_code: null,
         region_id: null,
         longitude: null,
         latitude: null
@@ -148,7 +148,7 @@ const openDialog = () => {
         },
         data: {
             record: record.value,
-            regionsOptions: allRegions.value?.[0] || [],
+            regionsOptions: allRegions.value || [],
             action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE
         },
         onClose: (result) => {
@@ -381,80 +381,6 @@ onUnmounted(() => {
                     :showApplyButton="false"
                     :showFilterMatchModes="false"
                     :showFilterOperator="false"
-                    columnKey="postal_code"
-                    field="postal_code"
-                    :frozen="frozenColumns.postal_code"
-                    v-if="selectedColumns.some((column) => column.field === 'postal_code')"
-                    sortable
-                    class="min-w-32"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('city.columns.postal_code')"
-                            :frozen="frozenColumns.postal_code"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('postal_code')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.postal_code }">{{ data.postal_code }}</div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <InputText v-model="filterModel.value" size="small" />
-                            <InputGroupAddon>
-                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
-                    </template>
-                </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="region"
-                    field="region.name"
-                    :frozen="frozenColumns.region"
-                    v-if="selectedColumns.some((column) => column.field === 'region')"
-                    sortable
-                    class="min-w-32"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('city.columns.region')"
-                            :frozen="frozenColumns.region"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('region')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.region }">{{ data.region?.name }}</div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <MultiSelect v-model="filterModel.value" :options="allRegions?.[0]" optionLabel="name" optionValue="name" :placeholder="t('common.placeholders.select')" size="small" display="chip" />
-                            <InputGroupAddon>
-                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="!filterModel.value || !filterModel.value.length" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = []), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
-                    </template>
-                </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
                     columnKey="name_fr"
                     field="name_fr"
                     :frozen="frozenColumns.name_fr"
@@ -529,26 +455,26 @@ onUnmounted(() => {
                     :showApplyButton="false"
                     :showFilterMatchModes="false"
                     :showFilterOperator="false"
-                    columnKey="longitude"
-                    field="longitude"
-                    :frozen="frozenColumns.longitude"
-                    v-if="selectedColumns.some((column) => column.field === 'longitude')"
+                    columnKey="postal_code"
+                    field="postal_code"
+                    :frozen="frozenColumns.postal_code"
+                    v-if="selectedColumns.some((column) => column.field === 'postal_code')"
                     sortable
                     class="min-w-32"
                 >
                     <template #header>
                         <HeaderCell
-                            :text="t('city.columns.longitude')"
-                            :frozen="frozenColumns.longitude"
+                            :text="t('city.columns.postal_code')"
+                            :frozen="frozenColumns.postal_code"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('longitude')"
+                            @toggle="toggleColumnFrozen('postal_code')"
                         />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.longitude }">{{ data.longitude }}</div>
+                            <div :class="{ 'font-bold': frozenColumns.postal_code }">{{ data.postal_code }}</div>
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
@@ -566,38 +492,38 @@ onUnmounted(() => {
                     :showApplyButton="false"
                     :showFilterMatchModes="false"
                     :showFilterOperator="false"
-                    columnKey="latitude"
-                    field="latitude"
-                    :frozen="frozenColumns.latitude"
-                    v-if="selectedColumns.some((column) => column.field === 'latitude')"
-                    sortable
+                    columnKey="region"
+                    field="region"
+                    :frozen="frozenColumns.region"
+                    v-if="selectedColumns.some((column) => column.field === 'region')"
                     class="min-w-32"
                 >
                     <template #header>
                         <HeaderCell
-                            :text="t('city.columns.latitude')"
-                            :frozen="frozenColumns.latitude"
+                            :text="t('city.columns.region')"
+                            :frozen="frozenColumns.region"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('latitude')"
+                            @toggle="toggleColumnFrozen('region')"
                         />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.latitude }">{{ data.latitude }}</div>
+                            <Tag :value="data.region?.name" severity="info" rounded size="small" :class="{ 'font-bold': frozenColumns.region }" />
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>
-                            <InputText v-model="filterModel.value" size="small" />
+                            <MultiSelect v-model="filterModel.value" :options="allRegions" optionLabel="name" optionValue="name" :placeholder="t('common.placeholders.select')" class="w-full" size="small" display="chip" />
                             <InputGroupAddon>
                                 <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
                     </template>
                 </Column>
+
                 <Column
                     :showClearButton="false"
                     :showApplyButton="false"
