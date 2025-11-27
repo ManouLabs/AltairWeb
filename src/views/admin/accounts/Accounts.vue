@@ -129,7 +129,8 @@ function addRecord() {
         rib: null,
         plan: null,
         active: true,
-        contacts: [{ civility: null, first_name: '', last_name: '', contactMethods: [{ contact_id: null, type: 'mobile', value: '' }] }]
+        contacts: [{ civility: null, first_name: '', last_name: '', contactMethods: [{ contact_id: null, type: 'mobile', value: '' }] }],
+        addresses: [{ street: '', region: null, city: null, main: true }]
     };
     openDialog();
 }

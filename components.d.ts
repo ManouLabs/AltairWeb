@@ -7,9 +7,11 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Address: typeof import('./src/components/Address.vue')['default']
     Avatar: typeof import('primevue/avatar')['default']
     Badge: typeof import('primevue/badge')['default']
     Button: typeof import('primevue/button')['default']
+    Checkbox: typeof import('primevue/checkbox')['default']
     Column: typeof import('primevue/column')['default']
     ConfirmPopup: typeof import('primevue/confirmpopup')['default']
     Contact: typeof import('./src/components/Contact.vue')['default']
@@ -42,6 +44,11 @@ declare module 'vue' {
     Select: typeof import('primevue/select')['default']
     SelectButton: typeof import('primevue/selectbutton')['default']
     Skeleton: typeof import('primevue/skeleton')['default']
+    Step: typeof import('primevue/step')['default']
+    StepList: typeof import('primevue/steplist')['default']
+    StepPanel: typeof import('primevue/steppanel')['default']
+    StepPanels: typeof import('primevue/steppanels')['default']
+    Stepper: typeof import('primevue/stepper')['default']
     Tag: typeof import('primevue/tag')['default']
     Toast: typeof import('primevue/toast')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
