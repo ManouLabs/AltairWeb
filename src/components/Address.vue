@@ -1,11 +1,18 @@
 <script setup>
-import { useCityService } from '@/services/useCityService';
 import { useRegionService } from '@/services/useRegionService';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+
+// compute which name field to use for labels based on current locale
+const localeField = computed(() => {
+    const loc = String(locale.value || '').toLowerCase();
+    if (loc === 'fr' || loc.startsWith('fr')) return 'name_fr';
+    if (loc === 'ar' || loc.startsWith('ar')) return 'name_ar';
+    return 'name';
+});
 
 const authStore = useAuthStore();
 const props = defineProps({
@@ -16,36 +23,26 @@ const props = defineProps({
     disabled: {
         type: Boolean,
         default: false
-    },
-    // optional external options; if empty, component will fetch regions
-    regionOptions: {
-        type: Array,
-        default: () => []
-    },
-    // global city options (rarely used) - per-address city lists are fetched when region selected
-    cityOptions: {
-        type: Array,
-        default: () => []
     }
 });
 const emit = defineEmits(['update:modelValue', 'change']);
 
 const localAddresses = ref([]);
-const fetchedRegionOptions = ref([]);
-const cityOptionsMap = ref({}); // map index -> options array
+const regionOptions = ref([]);
+const cityOptions = ref([]);
 
 const clone = (v) => JSON.parse(JSON.stringify(v ?? []));
 
-// Sync from parent when modelValue changes
 watch(
     () => props.modelValue,
     (newValue) => {
         localAddresses.value = Array.isArray(newValue) ? clone(newValue) : [];
+        // reset shared city options when model changes
+        cityOptions.value = [];
     },
     { immediate: true }
 );
 
-// Emit changes when localAddresses change
 watch(
     localAddresses,
     (newValue) => {
@@ -58,40 +55,13 @@ watch(
     { deep: true }
 );
 
-// Watch for region changes per address to fetch cities for that address
-watch(
-    localAddresses,
-    async (newVal, oldVal) => {
-        for (let i = 0; i < newVal.length; i++) {
-            const newRegion = newVal[i]?.region;
-            const oldRegion = oldVal?.[i]?.region;
-            if (newRegion && newRegion !== oldRegion) {
-                // clear current city selection
-                localAddresses.value[i].city = null;
-                try {
-                    const params = { region_id: newRegion };
-                    const data = await useCityService.getCities(params);
-                    const options = (data.cities || []).map((c) => ({ value: c.id, label: c.name }));
-                    cityOptionsMap.value = { ...cityOptionsMap.value, [i]: options };
-                } catch (e) {
-                    cityOptionsMap.value = { ...cityOptionsMap.value, [i]: [] };
-                }
-            }
-        }
-    },
-    { deep: true }
-);
-
-// Fetch all regions on mount if not provided via props
 onMounted(async () => {
-    if (!props.regionOptions || props.regionOptions.length === 0) {
-        try {
-            const data = await useRegionService.getRegions({});
-            const regions = data.regions || [];
-            fetchedRegionOptions.value = regions.map((r) => ({ value: r.id, label: r.name }));
-        } catch (e) {
-            fetchedRegionOptions.value = [];
-        }
+    try {
+        const data = await useRegionService.getAllRegions();
+        const regions = data.regions || [];
+        regionOptions.value = regions;
+    } catch (e) {
+        regionOptions.value = [];
     }
 });
 
@@ -111,6 +81,7 @@ const addAddress = () => {
 const removeAddress = (index) => {
     if (localAddresses.value.length > 1) {
         localAddresses.value.splice(index, 1);
+        // shared cityOptions remains as-is (global list)
     }
 };
 
@@ -124,6 +95,27 @@ const onFieldBlur = (index, field) => {
     const key = `addresses.${index}.${field}`;
     // basic clearing behavior to match Contact component pattern
     authStore.clearErrors([key]);
+};
+
+// Called when a region is selected for a specific address index
+const onRegionChange = async (index, regionId) => {
+    // clear current city selection for this address
+    localAddresses.value[index].city = null;
+    // reset shared city options while loading
+    cityOptions.value = [];
+
+    if (!regionId) {
+        return;
+    }
+
+    try {
+        const data = await useRegionService.getRegionCities(regionId);
+        const cities = data.cities || data || [];
+        // set shared city options (no per-index mapping)
+        cityOptions.value = cities;
+    } catch (e) {
+        cityOptions.value = [];
+    }
 };
 </script>
 
@@ -155,11 +147,13 @@ const onFieldBlur = (index, field) => {
                             <Select
                                 :id="`region_${index}`"
                                 v-model="address.region"
-                                :options="regionOptions && regionOptions.length ? regionOptions : fetchedRegionOptions"
-                                optionValue="value"
-                                optionLabel="label"
+                                filter
+                                :options="regionOptions"
+                                :optionLabel="localeField"
+                                optionValue="id"
                                 :disabled="disabled"
                                 class="w-full"
+                                @change="(e) => onRegionChange(index, e.value)"
                                 @blur="() => onFieldBlur(index, 'region')"
                             />
                             <label :for="`region_${index}`">{{ t('address.labels.region') }}</label>
@@ -171,16 +165,8 @@ const onFieldBlur = (index, field) => {
 
                     <div>
                         <FloatLabel variant="on">
-                            <Select
-                                :id="`city_${index}`"
-                                v-model="address.city"
-                                :options="cityOptionsMap[index] ? cityOptionsMap[index] : cityOptions && cityOptions.length ? cityOptions : []"
-                                optionValue="value"
-                                optionLabel="label"
-                                :disabled="disabled"
-                                class="w-full"
-                                @blur="() => onFieldBlur(index, 'city')"
-                            />
+                            <Select :id="`city_${index}`" :optionLabel="localeField" v-model="address.city" filter :options="cityOptions" optionValue="id" :disabled="disabled" class="w-full" @blur="() => onFieldBlur(index, 'city')" />
+
                             <label :for="`city_${index}`">{{ t('address.labels.city') }}</label>
                         </FloatLabel>
                         <Message v-if="authStore.errors?.[`addresses.${index}.city`]" severity="error" size="small">

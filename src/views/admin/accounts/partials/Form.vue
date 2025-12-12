@@ -62,6 +62,98 @@ const closeDialog = () => {
     dialogRef.value.close();
 };
 
+// Per-step validation
+const validateStep1 = () => {
+    const fields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib', 'plan', 'active'];
+    let ok = true;
+    const newErrors = { ...authStore.errors };
+
+    for (const field of fields) {
+        const { ok: fieldOk, errors } = validateField(schema, record.value, field);
+        if (!fieldOk) {
+            ok = false;
+            Object.assign(newErrors, errors);
+        } else {
+            if (newErrors[field]) delete newErrors[field];
+        }
+    }
+
+    authStore.errors = newErrors;
+    return ok;
+};
+
+const validateStep2 = () => {
+    // validate entire form and extract issues related to contacts (nested paths)
+    const result = validate(schema, record.value);
+    if (result.ok) {
+        authStore.clearErrors(['contacts']);
+        return true;
+    }
+
+    // collect only errors that belong to contacts (path starts with 'contacts')
+    const contactErrors = {};
+    for (const [path, msgs] of Object.entries(result.errors || {})) {
+        if (String(path).startsWith('contacts')) {
+            contactErrors[path] = msgs;
+        }
+    }
+
+    if (Object.keys(contactErrors).length === 0) {
+        // no contact-specific errors -> clear any contacts errors
+        authStore.clearErrors(['contacts']);
+        return true;
+    }
+
+    authStore.errors = { ...authStore.errors, ...contactErrors };
+    return false;
+};
+
+const validateStep3 = () => {
+    // account schema doesn't include addresses; basic validation here
+    const errors = {};
+    const addrs = record.value.addresses || [];
+    if (!Array.isArray(addrs) || addrs.length === 0) {
+        errors['addresses'] = ['common.messages.is_required'];
+    } else {
+        addrs.forEach((a, i) => {
+            if (!a.street || String(a.street).trim() === '') {
+                errors[`addresses.${i}.street`] = ['common.messages.is_required'];
+            }
+            if (!a.region) {
+                errors[`addresses.${i}.region`] = ['common.messages.is_required'];
+            }
+            if (!a.city) {
+                errors[`addresses.${i}.city`] = ['common.messages.is_required'];
+            }
+        });
+    }
+
+    if (Object.keys(errors).length === 0) {
+        // clear address related errors
+        const keysToClear = ['addresses'];
+        for (let i = 0; i < (addrs.length || 0); i++) {
+            keysToClear.push(`addresses.${i}.street`, `addresses.${i}.region`, `addresses.${i}.city`);
+        }
+        authStore.clearErrors(keysToClear);
+        return true;
+    }
+
+    authStore.errors = { ...authStore.errors, ...errors };
+    return false;
+};
+
+const nextFromStep1 = (activateCallback) => {
+    if (validateStep1()) activateCallback('2');
+};
+
+const nextFromStep2 = (activateCallback) => {
+    if (validateStep2()) activateCallback('3');
+};
+
+const submitFromStep3 = () => {
+    if (validateStep3()) onFormSubmit();
+};
+
 onMounted(() => {
     record.value = dialogRef.value.data.record;
     action.value = dialogRef.value.data.action;
@@ -232,7 +324,7 @@ onMounted(() => {
                     </div>
 
                     <div class="flex pt-6 justify-end">
-                        <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="activateCallback('2')" />
+                        <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="nextFromStep1(activateCallback)" />
                     </div>
                 </StepPanel>
 
@@ -244,7 +336,7 @@ onMounted(() => {
                     </div>
                     <div class="flex pt-6 justify-between">
                         <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="activateCallback('1')" />
-                        <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="activateCallback('3')" />
+                        <Button label="Next" icon="pi pi-arrow-right" iconPos="right" @click="nextFromStep2(activateCallback)" />
                     </div>
                 </StepPanel>
 
@@ -256,7 +348,7 @@ onMounted(() => {
                     </div>
                     <div class="pt-6 flex justify-between">
                         <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="activateCallback('2')" />
-                        <Button label="Save" icon="pi pi-check" @click="onFormSubmit" :loading="loading.isPageLoading" />
+                        <Button label="Save" icon="pi pi-check" @click="submitFromStep3" :loading="loading.isPageLoading" />
                     </div>
                 </StepPanel>
             </StepPanels>

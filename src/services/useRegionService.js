@@ -11,6 +11,26 @@ export const useRegionService = {
         }
     },
 
+    // Fetch a simple list of all regions (no filters)
+    async getAllRegions() {
+        try {
+            const response = await apiClient.get('/api/admin/allregions');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // Fetch cities for a given region id
+    async getRegionCities(regionId) {
+        try {
+            const response = await apiClient.get(`/api/admin/region/${regionId}/cities`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async storeRegion(regionData) {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
