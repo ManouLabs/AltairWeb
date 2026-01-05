@@ -26,6 +26,12 @@ const model = computed(() => [
                 visible: can('view_accounts')
             },
             {
+                label: t('navigation.side_bar.shops'),
+                icon: 'pi pi-fw pi-store',
+                to: '/admin/shops',
+                visible: can('view_shops')
+            },
+            {
                 label: t('navigation.side_bar.plans'),
                 icon: 'pi pi-fw pi-list',
                 to: '/admin/plans',

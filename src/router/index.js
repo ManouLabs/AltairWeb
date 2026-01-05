@@ -17,6 +17,12 @@ const adminRoutes = [
         meta: { requiresAuth: true, requiresPermission: 'view_accounts' }
     },
     {
+        path: 'shops',
+        name: 'shops',
+        component: () => import('@/views/admin/shops/Shops.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_shops' }
+    },
+    {
         path: 'plans',
         name: 'plans',
         component: () => import('@/views/admin/plans/Plans.vue'),

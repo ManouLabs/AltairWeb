@@ -139,6 +139,9 @@
         "side_bar": {
             "home": "Accueil",
             "dashboard": "Tableau de bord",
+            "accounts": "Comptes",
+            "plans": "Forfaits",
+            "shops": "Boutiques",
             "regions": "Régions",
             "cities": "Villes",
             "user": "Utilisateur",

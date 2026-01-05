@@ -13,7 +13,9 @@
         "city": "City",
         "cities": "Cities",
         "my_account": "My Account",
-        "my_informations": "Account Information"
+        "my_informations": "Account Information",
+        "shop": "Shop",
+        "shops": "Shops"
     },
     "common": {
         "contents": {
@@ -193,6 +195,7 @@
             "dashboard": "Dashboard",
             "accounts": "Accounts",
             "plans": "Plans",
+            "shops": "Shops",
             "regions": "Regions",
             "cities": "Cities",
             "user": "User",
@@ -251,6 +254,15 @@
             "rib": "RIB",
             "plan": "Plan",
             "active": "Active",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
+        }
+    },
+    "shop": {
+        "columns": {
+            "name": "Name",
+            "description": "Description",
+            "status": "Status",
             "created_at": "Created At",
             "updated_at": "Updated At"
         }
