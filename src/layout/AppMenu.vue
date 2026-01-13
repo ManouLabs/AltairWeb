@@ -23,7 +23,7 @@ const model = computed(() => [
                 label: t('navigation.side_bar.accounts'),
                 icon: 'pi pi-fw pi-users',
                 to: '/admin/accounts',
-                visible: can('view_accounts')
+                visible: authStore.user?.roles?.includes('Super Admin')
             },
             {
                 label: t('navigation.side_bar.shops'),
@@ -35,19 +35,19 @@ const model = computed(() => [
                 label: t('navigation.side_bar.plans'),
                 icon: 'pi pi-fw pi-list',
                 to: '/admin/plans',
-                visible: can('view_plans')
+                visible: authStore.user?.roles?.includes('Super Admin')
             },
             {
                 label: t('navigation.side_bar.regions'),
                 icon: 'pi pi-fw pi-map',
                 to: '/admin/regions',
-                visible: can('view_regions')
+                visible: authStore.user?.roles?.includes('Super Admin')
             },
             {
                 label: t('navigation.side_bar.cities'),
                 icon: 'pi pi-fw pi-building',
                 to: '/admin/cities',
-                visible: can('view_cities')
+                visible: authStore.user?.roles?.includes('Super Admin')
             },
             {
                 label: t('navigation.side_bar.user'),

@@ -14,7 +14,7 @@ const adminRoutes = [
         path: 'accounts',
         name: 'accounts',
         component: () => import('@/views/admin/accounts/Accounts.vue'),
-        meta: { requiresAuth: true, requiresPermission: 'view_accounts' }
+        meta: { requiresAuth: true, requiresSuperAdmin: true }
     },
     {
         path: 'shops',
@@ -26,19 +26,19 @@ const adminRoutes = [
         path: 'plans',
         name: 'plans',
         component: () => import('@/views/admin/plans/Plans.vue'),
-        meta: { requiresAuth: true, requiresPermission: 'view_plans' }
+        meta: { requiresAuth: true, requiresSuperAdmin: true }
     },
     {
         path: 'regions',
         name: 'regions',
         component: () => import('@/views/admin/regions/Regions.vue'),
-        meta: { requiresAuth: true, requiresPermission: 'view_regions' }
+        meta: { requiresAuth: true, requiresSuperAdmin: true }
     },
     {
         path: 'cities',
         name: 'cities',
         component: () => import('@/views/admin/cities/Cities.vue'),
-        meta: { requiresAuth: true, requiresPermission: 'view_cities' }
+        meta: { requiresAuth: true, requiresSuperAdmin: true }
     },
     {
         path: 'users',
@@ -112,6 +112,10 @@ const handleRouteGuard = async (to, next, authStore) => {
                 return next({ name: 'dashboard' });
             }
         }
+    }
+
+    if (to.meta.requiresSuperAdmin && !authStore.user?.roles?.includes('Super Admin')) {
+        return next({ name: 'accessDenied' });
     }
 
     if (to.meta.requiresPermission && !authStore.hasPermission(to.meta.requiresPermission)) {
