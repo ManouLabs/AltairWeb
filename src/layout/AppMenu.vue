@@ -27,7 +27,7 @@ const model = computed(() => [
             },
             {
                 label: t('navigation.side_bar.shops'),
-                icon: 'pi pi-fw pi-store',
+                icon: 'pi pi-fw pi-shop',
                 to: '/admin/shops',
                 visible: can('view_shops')
             },
@@ -81,5 +81,3 @@ const model = computed(() => [
         </template>
     </ul>
 </template>
-
-<style lang="scss" scoped></style>

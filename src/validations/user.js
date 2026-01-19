@@ -12,8 +12,8 @@ const passwordStrength = z.preprocess(
     (v) => (v === null || v === undefined ? '' : v),
     z
         .string()
-        .min(8, { message: ('common.messages.minimum_length', { length: 8 }) })
-        .max(255, { message: ('common.messages.max_length', { length: 255 }) })
+        .min(8, { message: 'common.messages.minimum_length' })
+        .max(255, { message: 'common.messages.max_length' })
         .regex(/[a-z]/, { message: 'common.messages.require_lowercase' })
         .regex(/[A-Z]/, { message: 'common.messages.require_uppercase' })
         .regex(/[0-9]/, { message: 'common.messages.require_numeric' })
