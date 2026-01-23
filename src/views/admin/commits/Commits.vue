@@ -5,6 +5,7 @@ import { useLock } from '@/composables/useLock';
 import dayjs from '@/plugins/dayjs';
 import { useCommitService } from '@/services/useCommitService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { formatDate } from '@/utilities/helper';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useDialog } from 'primevue/usedialog';
@@ -30,6 +31,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 );
 
 const authStore = useAuthStore();
+const loading = useLoading();
 const dialog = useDialog();
 const fileDetailComponent = defineAsyncComponent(() => import('./partials/FileDetail.vue'));
 const { t } = useI18n();
@@ -96,7 +98,7 @@ function formatCommitHash(hash) {
             :lazy="true"
             :totalRecords="total"
             :rows="rows"
-            :loading="false"
+            :loading="loading.dataLoading"
             :paginator="true"
             :rowsPerPageOptions="[10, 25, 50, 100]"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"

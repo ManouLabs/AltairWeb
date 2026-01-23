@@ -46,7 +46,13 @@ function formatCommitHash(hash) {
 }
 
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text)
+        .then(() => {
+            // Could show a toast notification here if desired
+        })
+        .catch((error) => {
+            console.error('Failed to copy to clipboard:', error);
+        });
 }
 
 function close() {
