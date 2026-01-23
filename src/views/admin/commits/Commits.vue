@@ -100,7 +100,7 @@ function formatCommitHash(hash) {
             :paginator="true"
             :rowsPerPageOptions="[10, 25, 50, 100]"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            :currentPageReportTemplate="t('common.messages.showing_entries', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}' })"
+            :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.commits') })"
             :globalFilterFields="['file_name', 'file_path', 'commit_message', 'author_name']"
             dataKey="id"
             filterDisplay="menu"

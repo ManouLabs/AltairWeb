@@ -10,7 +10,7 @@ import { useI18n } from 'vue-i18n';
 import { z } from 'zod';
 import Activity from './partials/Activity.vue';
 import DangerZone from './partials/DangerZone.vue';
-import MyInformations from './partials/MyInformations.vue';
+import MyInformations from './partials/myInformations.vue';
 import Preferences from './partials/Preferences.vue';
 import Security from './partials/Security.vue';
 

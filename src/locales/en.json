@@ -30,6 +30,7 @@
         },
         "messages": {
             "no_records": "No records found",
+            "no_data": "No data available",
             "no_selected_records": "No records selected",
             "no_search_results": "No search results found",
             "no_permissions": "You do not have the necessary permisions. Please contact admins.",
