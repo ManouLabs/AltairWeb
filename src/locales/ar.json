@@ -245,7 +245,8 @@
             "no_history": "لا يوجد سجل كوميت متاح",
             "error_loading_content": "خطأ في تحميل محتوى الملف",
             "copied_to_clipboard": "تم النسخ إلى الحافظة بنجاح",
-            "copy_failed": "فشل النسخ إلى الحافظة"
+            "copy_failed": "فشل النسخ إلى الحافظة",
+            "copy_not_supported": "واجهة برمجة الحافظة غير متاحة في هذه البيئة"
         }
     },
     "primevue": {

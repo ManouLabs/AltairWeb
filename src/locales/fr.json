@@ -238,7 +238,8 @@
             "no_history": "Aucun historique de commit disponible",
             "error_loading_content": "Erreur lors du chargement du contenu du fichier",
             "copied_to_clipboard": "Copié dans le presse-papiers avec succès",
-            "copy_failed": "Échec de la copie dans le presse-papiers"
+            "copy_failed": "Échec de la copie dans le presse-papiers",
+            "copy_not_supported": "L'API du presse-papiers n'est pas disponible dans cet environnement"
         }
     },
     "shop": {

@@ -48,6 +48,18 @@ function formatCommitHash(hash) {
 }
 
 function copyToClipboard(text) {
+    // Check if clipboard API is available
+    if (!navigator.clipboard) {
+        console.error('Clipboard API not available');
+        showToast({
+            severity: 'error',
+            summary: t('common.labels.error'),
+            detail: t('commit.messages.copy_not_supported'),
+            life: 3000
+        });
+        return;
+    }
+
     navigator.clipboard.writeText(text)
         .then(() => {
             showToast({

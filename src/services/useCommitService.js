@@ -173,7 +173,8 @@ export default {
     name: 'MockComponent',
     data() {
         return {
-            message: 'Hello from ${filePath}'
+            message: 'Hello from ${filePath}',
+            filePath: '${filePath}'
         }
     }
 }`;

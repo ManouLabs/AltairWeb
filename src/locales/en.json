@@ -336,7 +336,8 @@
             "no_history": "No commit history available",
             "error_loading_content": "Error loading file content",
             "copied_to_clipboard": "Copied to clipboard successfully",
-            "copy_failed": "Failed to copy to clipboard"
+            "copy_failed": "Failed to copy to clipboard",
+            "copy_not_supported": "Clipboard API is not available in this environment"
         }
     },
     "contact": {
