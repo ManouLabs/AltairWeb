@@ -1,5 +1,5 @@
 // src/services/useCommitService.js
-import apiClient from './axios';
+// import apiClient from './axios'; // Commented out - will be used in production
 
 /**
  * Mock implementation for Git commits file search

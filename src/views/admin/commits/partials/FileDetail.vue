@@ -1,12 +1,14 @@
 <script setup>
 import { useCommitService } from '@/services/useCommitService';
 import { formatDate } from '@/utilities/helper';
+import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { inject, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const dialogRef = inject('dialogRef');
 const { file } = dialogRef.value.data;
 const { t } = useI18n();
+const { showToast } = useShowToast();
 
 const loading = ref(false);
 const fileContent = ref('');
@@ -48,10 +50,21 @@ function formatCommitHash(hash) {
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text)
         .then(() => {
-            // Could show a toast notification here if desired
+            showToast({
+                severity: 'success',
+                summary: t('common.labels.copy'),
+                detail: t('commit.messages.copied_to_clipboard'),
+                life: 2000
+            });
         })
         .catch((error) => {
             console.error('Failed to copy to clipboard:', error);
+            showToast({
+                severity: 'error',
+                summary: t('common.labels.error'),
+                detail: t('commit.messages.copy_failed'),
+                life: 3000
+            });
         });
 }
 

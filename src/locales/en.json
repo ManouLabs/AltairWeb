@@ -334,7 +334,9 @@
         "messages": {
             "no_content": "No content available",
             "no_history": "No commit history available",
-            "error_loading_content": "Error loading file content"
+            "error_loading_content": "Error loading file content",
+            "copied_to_clipboard": "Copied to clipboard successfully",
+            "copy_failed": "Failed to copy to clipboard"
         }
     },
     "contact": {
