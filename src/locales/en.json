@@ -15,7 +15,9 @@
         "my_account": "My Account",
         "my_informations": "Account Information",
         "shop": "Shop",
-        "shops": "Shops"
+        "shops": "Shops",
+        "commit": "Commit",
+        "commits": "Commits"
     },
     "common": {
         "contents": {
@@ -100,7 +102,10 @@
             "inactive": "Inactive",
             "select_plans": "Select Plans",
             "select_status": "Select Status",
-            "not_verified": "Not Verified"
+            "not_verified": "Not Verified",
+            "copy": "Copy",
+            "select_date": "Select Date",
+            "select_columns": "Select Columns"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -114,7 +119,8 @@
             "lock_column": "Lock this column",
             "unlock_column": "Unlock this column",
             "clear_all_filters": "Clear all filters",
-            "reorder_columns": "Reorder columns"
+            "reorder_columns": "Reorder columns",
+            "copy": "Copy to clipboard"
         },
         "columns": {
             "id": "ID",
@@ -305,6 +311,29 @@
             "latitude": "Latitude",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        }
+    },
+    "commit": {
+        "title": "Git Commit Files",
+        "columns": {
+            "file_name": "File Name",
+            "file_path": "Path",
+            "commit_hash": "Commit",
+            "commit_message": "Commit Message",
+            "author_name": "Author",
+            "committed_at": "Date"
+        },
+        "tabs": {
+            "file_content": "File Content",
+            "file_history": "History"
+        },
+        "labels": {
+            "commit_message": "Commit Message"
+        },
+        "messages": {
+            "no_content": "No content available",
+            "no_history": "No commit history available",
+            "error_loading_content": "Error loading file content"
         }
     },
     "contact": {
