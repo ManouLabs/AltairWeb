@@ -57,6 +57,12 @@ const adminRoutes = [
         name: 'myaccount',
         component: () => import('@/views/admin/myaccount/MyAccount.vue'),
         meta: { requiresAuth: true }
+    },
+    {
+        path: 'commits',
+        name: 'commits',
+        component: () => import('@/views/admin/commits/Commits.vue'),
+        meta: { requiresAuth: true, requiresSuperAdmin: true }
     }
 ];
 

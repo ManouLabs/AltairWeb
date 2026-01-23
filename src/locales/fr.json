@@ -9,7 +9,9 @@
         "city": "Ville",
         "cities": "Villes",
         "shop": "Boutique",
-        "shops": "Boutiques"
+        "shops": "Boutiques",
+        "commit": "Commit",
+        "commits": "Commits"
     },
     "common": {
         "contents": {
@@ -58,7 +60,10 @@
             "apply": "Appliquer",
             "clear": "Effacer",
             "clear_all_filters": "Effacer tous les filtres",
-            "select_status": "Sélectionner le statut"
+            "select_status": "Sélectionner le statut",
+            "copy": "Copier",
+            "select_date": "Sélectionner la date",
+            "select_columns": "Sélectionner les colonnes"
         },
         "tooltips": {
             "edit": "Modifier {entity}",
@@ -72,7 +77,8 @@
             "lock_column": "Verrouiller cette colonne",
             "unlock_column": "Déverrouiller cette colonne",
             "clear_all_filters": "Effacer tous les filtres",
-            "reorder_columns": "Déplacer"
+            "reorder_columns": "Déplacer",
+            "copy": "Copier dans le presse-papiers"
         },
         "columns": {
             "id": "ID",
@@ -208,6 +214,32 @@
             "region": "Région",
             "longitude": "Longitude",
             "latitude": "Latitude"
+        }
+    },
+    "commit": {
+        "title": "Fichiers de Commits Git",
+        "columns": {
+            "file_name": "Nom du fichier",
+            "file_path": "Chemin",
+            "commit_hash": "Commit",
+            "commit_message": "Message de commit",
+            "author_name": "Auteur",
+            "committed_at": "Date"
+        },
+        "tabs": {
+            "file_content": "Contenu du fichier",
+            "file_history": "Historique"
+        },
+        "labels": {
+            "commit_message": "Message de commit"
+        },
+        "messages": {
+            "no_content": "Aucun contenu disponible",
+            "no_history": "Aucun historique de commit disponible",
+            "error_loading_content": "Erreur lors du chargement du contenu du fichier",
+            "copied_to_clipboard": "Copié dans le presse-papiers avec succès",
+            "copy_failed": "Échec de la copie dans le presse-papiers",
+            "copy_not_supported": "L'API du presse-papiers n'est pas disponible dans cet environnement"
         }
     },
     "shop": {

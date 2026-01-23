@@ -9,7 +9,9 @@
         "city": "مدينة",
         "cities": "المدن",
         "shop": "متجر",
-        "shops": "المتاجر"
+        "shops": "المتاجر",
+        "commit": "كوميت",
+        "commits": "الكوميتات"
     },
     "common": {
         "contents": {
@@ -67,7 +69,10 @@
             "apply": "تطبيق",
             "clear": "مسح",
             "clear_all_filters": "مسح جميع الفلاتر",
-            "select_status": "اختر الحالة"
+            "select_status": "اختر الحالة",
+            "copy": "نسخ",
+            "select_date": "اختر التاريخ",
+            "select_columns": "اختر الأعمدة"
         },
         "tooltips": {
             "edit": "Modifier {entity}",
@@ -81,7 +86,8 @@
             "lock_column": "Verrouiller cette colonne",
             "unlock_column": "Déverrouiller cette colonne",
             "clear_all_filters": "Effacer tous les filtres",
-            "reorder_columns": "اسحب لإعادة ترتيب الأعمدة"
+            "reorder_columns": "اسحب لإعادة ترتيب الأعمدة",
+            "copy": "نسخ إلى الحافظة"
         },
         "columns": {
             "id": "ID",
@@ -215,6 +221,32 @@
             "region": "المنطقة",
             "longitude": "طول العرض",
             "latitude": "عرض البلد"
+        }
+    },
+    "commit": {
+        "title": "ملفات الكوميتات Git",
+        "columns": {
+            "file_name": "اسم الملف",
+            "file_path": "المسار",
+            "commit_hash": "الكوميت",
+            "commit_message": "رسالة الكوميت",
+            "author_name": "المؤلف",
+            "committed_at": "التاريخ"
+        },
+        "tabs": {
+            "file_content": "محتوى الملف",
+            "file_history": "السجل"
+        },
+        "labels": {
+            "commit_message": "رسالة الكوميت"
+        },
+        "messages": {
+            "no_content": "لا يوجد محتوى متاح",
+            "no_history": "لا يوجد سجل كوميت متاح",
+            "error_loading_content": "خطأ في تحميل محتوى الملف",
+            "copied_to_clipboard": "تم النسخ إلى الحافظة بنجاح",
+            "copy_failed": "فشل النسخ إلى الحافظة",
+            "copy_not_supported": "واجهة برمجة الحافظة غير متاحة في هذه البيئة"
         }
     },
     "primevue": {

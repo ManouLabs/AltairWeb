@@ -15,7 +15,9 @@
         "my_account": "My Account",
         "my_informations": "Account Information",
         "shop": "Shop",
-        "shops": "Shops"
+        "shops": "Shops",
+        "commit": "Commit",
+        "commits": "Commits"
     },
     "common": {
         "contents": {
@@ -28,6 +30,7 @@
         },
         "messages": {
             "no_records": "No records found",
+            "no_data": "No data available",
             "no_selected_records": "No records selected",
             "no_search_results": "No search results found",
             "no_permissions": "You do not have the necessary permisions. Please contact admins.",
@@ -100,7 +103,10 @@
             "inactive": "Inactive",
             "select_plans": "Select Plans",
             "select_status": "Select Status",
-            "not_verified": "Not Verified"
+            "not_verified": "Not Verified",
+            "copy": "Copy",
+            "select_date": "Select Date",
+            "select_columns": "Select Columns"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -114,7 +120,8 @@
             "lock_column": "Lock this column",
             "unlock_column": "Unlock this column",
             "clear_all_filters": "Clear all filters",
-            "reorder_columns": "Reorder columns"
+            "reorder_columns": "Reorder columns",
+            "copy": "Copy to clipboard"
         },
         "columns": {
             "id": "ID",
@@ -305,6 +312,32 @@
             "latitude": "Latitude",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        }
+    },
+    "commit": {
+        "title": "Git Commit Files",
+        "columns": {
+            "file_name": "File Name",
+            "file_path": "Path",
+            "commit_hash": "Commit",
+            "commit_message": "Commit Message",
+            "author_name": "Author",
+            "committed_at": "Date"
+        },
+        "tabs": {
+            "file_content": "File Content",
+            "file_history": "History"
+        },
+        "labels": {
+            "commit_message": "Commit Message"
+        },
+        "messages": {
+            "no_content": "No content available",
+            "no_history": "No commit history available",
+            "error_loading_content": "Error loading file content",
+            "copied_to_clipboard": "Copied to clipboard successfully",
+            "copy_failed": "Failed to copy to clipboard",
+            "copy_not_supported": "Clipboard API is not available in this environment"
         }
     },
     "contact": {
