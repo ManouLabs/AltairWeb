@@ -7,7 +7,9 @@
         "region": "منطقة",
         "regions": "المناطق",
         "city": "مدينة",
-        "cities": "المدن"
+        "cities": "المدن",
+        "shop": "متجر",
+        "shops": "المتاجر"
     },
     "common": {
         "contents": {
@@ -20,6 +22,16 @@
         },
         "messages": {
             "no_records": "لم يتم العثور على سجلات",
+            "shop": {
+                "columns": {
+                    "name": "الاسم",
+                    "description": "الوصف",
+                    "active": "نشط",
+                    "status": "الحالة",
+                    "created_at": "تاريخ الإنشاء",
+                    "updated_at": "تاريخ التحديث"
+                }
+            },
             "no_selected_records": "لم يتم تحديد سجلات",
             "no_search_results": "لم يتم العثور على نتائج",
             "no_permissions": "ليست لديك الصلاحيات اللازمة. يرجى الاتصال بالإدارة.",
@@ -54,7 +66,8 @@
             "export": "تصدير",
             "apply": "تطبيق",
             "clear": "مسح",
-            "clear_all_filters": "مسح جميع الفلاتر"
+            "clear_all_filters": "مسح جميع الفلاتر",
+            "select_status": "اختر الحالة"
         },
         "tooltips": {
             "edit": "Modifier {entity}",

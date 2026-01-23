@@ -17,6 +17,11 @@ const record = ref({});
 const dialogRef = inject('dialogRef');
 const action = ref();
 
+const syncStatusFromActive = () => {
+    if (!record.value) return;
+    record.value.status = record.value.active ? 'active' : 'inactive';
+};
+
 const schema = shopSchema;
 
 const validateForm = () => {
@@ -32,6 +37,9 @@ const onBlurField = (path) => {
 };
 
 const onFormSubmit = () => {
+    // keep backwards compatibility if API still expects `status`
+    syncStatusFromActive();
+
     if (!validateForm()) return;
     loading.startPageLoading();
 
@@ -55,6 +63,12 @@ const closeDialog = () => dialogRef.value.close();
 onMounted(() => {
     record.value = dialogRef.value.data.record;
     action.value = dialogRef.value.data.action;
+
+    // normalize incoming record so UI always uses `active`
+    if (record.value && typeof record.value.active !== 'boolean') {
+        record.value.active = record.value.status === 'active';
+    }
+    syncStatusFromActive();
 });
 </script>
 
@@ -81,7 +95,7 @@ onMounted(() => {
 
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputTextarea
+                    <Textarea
                         id="description"
                         v-model="record.description"
                         :disabled="loading.isPageLoading"
@@ -98,21 +112,13 @@ onMounted(() => {
             </div>
 
             <div class="col-span-1">
-                <FloatLabel variant="on" class="w-full">
-                    <Select
-                        id="status"
-                        v-model="record.status"
-                        :options="[
-                            { label: t('common.labels.active'), value: 'active' },
-                            { label: t('common.labels.inactive'), value: 'inactive' }
-                        ]"
-                        optionLabel="label"
-                        optionValue="value"
-                        :disabled="loading.isPageLoading"
-                    />
-                    <label for="status">{{ t('shop.columns.status') }}</label>
-                </FloatLabel>
-                <Message v-if="authStore.errors?.['status']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['status']?.[0]) }}</Message>
+                <div class="flex items-center gap-3">
+                    <ToggleSwitch id="active" v-model="record.active" :disabled="loading.isPageLoading" :class="{ 'p-invalid': authStore.errors?.active }" @change="() => (syncStatusFromActive(), onBlurField('active'))" />
+                    <label for="active" class="font-medium">
+                        {{ t('shop.columns.active') }}
+                    </label>
+                </div>
+                <Message v-if="authStore.errors?.['active']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['active']?.[0]) }}</Message>
             </div>
         </div>
 

@@ -270,7 +270,7 @@ onUnmounted(() => {
                             <template #start>
                                 <div class="flex space-x-2">
                                     <Button
-                                        v-if="authStore.hasPermission('store_city')"
+                                        v-if="authStore.hasPermission('createcity')"
                                         v-tooltip.top="t('common.tooltips.add', { entity: t('entity.city') })"
                                         :label="t('common.labels.new')"
                                         icon="pi pi-plus"
@@ -279,7 +279,6 @@ onUnmounted(() => {
                                         outlined
                                     />
                                     <Button
-                                        v-if="authStore.hasPermission('delete_city')"
                                         v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.city') })"
                                         :label="t('common.labels.delete_selected')"
                                         icon="pi pi-trash"
@@ -314,7 +313,6 @@ onUnmounted(() => {
                                         </IconField>
                                     </FloatLabel>
                                     <Button
-                                        v-if="authStore.hasPermission('export_city')"
                                         v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.city') })"
                                         :label="t('common.labels.export')"
                                         icon="pi pi-upload"
@@ -660,17 +658,9 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex justify-between">
                                 <div class="flex space-x-2">
-                                    <Button v-if="authStore.hasPermission('view_city')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.city') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
-                                    <Button v-if="authStore.hasPermission('update_city')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.city') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
-                                    <Button
-                                        v-if="authStore.hasPermission('delete_city')"
-                                        v-tooltip.top="$t('common.tooltips.delete', { entity: t('entity.city') })"
-                                        icon="pi pi-trash"
-                                        outlined
-                                        rounded
-                                        severity="danger"
-                                        @click="confirmDeleteRecord($event, [data.id])"
-                                    />
+                                    <Button v-tooltip.top="t('common.tooltips.view', { entity: t('entity.city') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
+                                    <Button v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.city') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
+                                    <Button v-tooltip.top="$t('common.tooltips.delete', { entity: t('entity.city') })" icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteRecord($event, [data.id])" />
                                 </div>
                                 <Button
                                     v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"

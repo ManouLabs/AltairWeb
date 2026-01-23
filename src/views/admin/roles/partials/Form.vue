@@ -81,28 +81,7 @@ const closeDialog = () => {
                     {{ $t(authStore.errors?.['name']?.[0]) }}
                 </Message>
             </div>
-            <div>
-                <FloatLabel>
-                    <label for="guard_name" class="block font-bold mb-3">{{ $t('role.columns.guard_name') }}</label>
-                    <Select
-                        :disabled="loading.isPageLoading"
-                        id="guard_name"
-                        v-model="record.guard_name"
-                        :options="['sanctum', 'api', 'web']"
-                        :placeholder="$t('role.placeholders.select_guard_name')"
-                        fluid
-                        checkmark
-                        showClear
-                        :invalid="authStore.errors?.guard_name ? true : false"
-                        required
-                        @input="() => authStore.clearErrors([`guard_name`])"
-                        @change="onBlurField('guard_name')"
-                    ></Select>
-                </FloatLabel>
-                <Message v-if="authStore.errors?.['guard_name']?.[0]" severity="error" size="small">
-                    {{ $t(authStore.errors?.['guard_name']?.[0]) }}
-                </Message>
-            </div>
+            <!-- guard_name removed (server will enforce hard-coded guard) -->
             <div>
                 <Message v-if="authStore.errors?.['permissions']?.[0]" severity="error" size="small">
                     {{ $t(authStore.errors?.['permissions']?.[0]) }}

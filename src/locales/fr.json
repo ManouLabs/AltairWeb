@@ -7,7 +7,9 @@
         "region": "Région",
         "regions": "Régions",
         "city": "Ville",
-        "cities": "Villes"
+        "cities": "Villes",
+        "shop": "Boutique",
+        "shops": "Boutiques"
     },
     "common": {
         "contents": {
@@ -55,7 +57,8 @@
             "export": "Exporter",
             "apply": "Appliquer",
             "clear": "Effacer",
-            "clear_all_filters": "Effacer tous les filtres"
+            "clear_all_filters": "Effacer tous les filtres",
+            "select_status": "Sélectionner le statut"
         },
         "tooltips": {
             "edit": "Modifier {entity}",
@@ -205,6 +208,16 @@
             "region": "Région",
             "longitude": "Longitude",
             "latitude": "Latitude"
+        }
+    },
+    "shop": {
+        "columns": {
+            "name": "Nom",
+            "description": "Description",
+            "active": "Actif",
+            "status": "Statut",
+            "created_at": "Créé le",
+            "updated_at": "Mis à jour le"
         }
     },
     "primevue": {

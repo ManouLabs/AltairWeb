@@ -14,5 +14,5 @@ const optionalStringMax = (max) =>
 export const shopSchema = z.object({
     name: requiredStringMax(150),
     description: optionalStringMax(500),
-    status: z.enum(['active', 'inactive'], { required_error: 'common.messages.is_required', invalid_type_error: 'common.messages.is_required' })
+    active: z.boolean().optional().default(true)
 });

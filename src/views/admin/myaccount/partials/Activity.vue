@@ -13,9 +13,11 @@ const activities = ref([{}, {}, {}, {}]); // Placeholder for initial loading sta
 const getActivityIconAndColor = (activity) => {
     switch (activity.log_name) {
         case 'user_log':
-            return { icon: 'pi pi-user', color: 'var(--primary-color)' };
+            return { icon: 'pi pi-user', color: 'bg-blue-500' };
+        case 'role_log':
+            return { icon: 'pi pi-shield', color: 'bg-sky-600' };
         default:
-            return { icon: 'pi pi-info-circle', color: '#9E9E9E' };
+            return { icon: 'pi pi-info-circle', color: 'bg-gray-600' };
     }
 };
 
@@ -45,7 +47,7 @@ onMounted(async () => {
                 <span v-if="loading.isDataLoading" class="flex w-8 h-8 items-center justify-center rounded-full z-10 shadow-sm">
                     <Skeleton shape="circle" size="2rem" />
                 </span>
-                <span v-else class="flex w-8 h-8 items-center justify-center text-white rounded-full z-10 shadow-sm" :style="{ backgroundColor: slotProps.item.color }">
+                <span v-else class="flex w-8 h-8 items-center justify-center text-white rounded-full z-10 shadow-sm" :class="slotProps.item.color">
                     <i :class="slotProps.item.icon"></i>
                 </span>
             </template>
@@ -63,8 +65,7 @@ onMounted(async () => {
                             :class="{
                                 'bg-primary': slotProps.item.event === 'created',
                                 'bg-blue-500': slotProps.item.event === 'updated',
-                                'bg-red-500': slotProps.item.event === 'deleted',
-                                'bg-primary': !['created', 'updated', 'deleted'].includes(slotProps.item.event)
+                                'bg-red-500': slotProps.item.event === 'deleted'
                             }"
                         >
                             {{ t('common.labels.' + slotProps.item.event) }}

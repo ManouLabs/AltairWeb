@@ -12,6 +12,5 @@ const permissionsArray = z.array(z.union([z.number(), z.string()])).min(1, { mes
 export const roleSchema = z.object({
     id: z.union([z.number(), z.string()]).optional(),
     name: requiredStringWithMax(255, 'common.messages.max_length_255'),
-    guard_name: requiredStringWithMax(50, 'role.messages.guard_name_max'),
     permissions: permissionsArray
 });

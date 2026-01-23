@@ -99,7 +99,8 @@
             "active": "Active",
             "inactive": "Inactive",
             "select_plans": "Select Plans",
-            "select_status": "Select Status"
+            "select_status": "Select Status",
+            "not_verified": "Not Verified"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -262,6 +263,7 @@
         "columns": {
             "name": "Name",
             "description": "Description",
+            "active": "Active",
             "status": "Status",
             "created_at": "Created At",
             "updated_at": "Updated At"

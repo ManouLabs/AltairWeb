@@ -59,6 +59,31 @@ const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(def
 
 const record = ref(null);
 
+const avatarColors = ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#9333EA'];
+
+const hashString = (s) => {
+    if (!s) return 0;
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+        h = (h << 5) - h + s.charCodeAt(i);
+        h |= 0;
+    }
+    return Math.abs(h);
+};
+
+const getInitials = (name) => {
+    if (!name) return '';
+    const parts = String(name).trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+};
+
+const getAvatarColor = (name) => {
+    const idx = hashString(name || '') % avatarColors.length;
+    return avatarColors[idx];
+};
+
 const defaultColumns = computed(() =>
     defaultFields.map((field) => ({
         field,
@@ -74,7 +99,9 @@ const allRoles = ref(null);
 const rolesOptions = ref([], []);
 
 function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.user').listen('DataStream', (event) => {
+    const accountId = authStore.user?.account_id;
+    if (!accountId) return;
+    subscription.value = Echo.private(`data-stream.user.${accountId}`).listen('DataStream', (event) => {
         handleEchoEvent(event);
     });
 }
@@ -273,7 +300,7 @@ onUnmounted(() => {
                             <template #start>
                                 <div class="flex space-x-2">
                                     <Button
-                                        v-if="authStore.hasPermission('store_user')"
+                                        v-if="authStore.hasPermission('create_users')"
                                         v-tooltip.top="t('common.tooltips.add', { entity: t('entity.user') })"
                                         :label="t('common.labels.new')"
                                         icon="pi pi-plus"
@@ -282,7 +309,7 @@ onUnmounted(() => {
                                         outlined
                                     />
                                     <Button
-                                        v-if="authStore.hasPermission('delete_user')"
+                                        v-if="authStore.hasPermission('delete_users')"
                                         v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.users') })"
                                         :label="t('common.labels.delete_selected')"
                                         icon="pi pi-trash"
@@ -317,7 +344,7 @@ onUnmounted(() => {
                                         </IconField>
                                     </FloatLabel>
                                     <Button
-                                        v-if="authStore.hasPermission('export_user')"
+                                        v-if="authStore.hasPermission('export_users')"
                                         v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.users') })"
                                         :label="t('common.labels.export')"
                                         icon="pi pi-upload"
@@ -332,11 +359,11 @@ onUnmounted(() => {
                     </div>
                 </template>
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
-                <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
+                <!-- <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
                     <template #body="{ data }">
                         <DataCell>{{ data.id }}</DataCell>
                     </template>
-                </Column>
+                </Column> -->
                 <Column
                     :showClearButton="false"
                     :showApplyButton="false"
@@ -350,19 +377,22 @@ onUnmounted(() => {
                     class="min-w-32"
                 >
                     <template #header>
-                            <HeaderCell
-                                :text="t('user.columns.name')"
-                                :frozen="frozenColumns.name"
-                                :reorderTooltip="t('common.tooltips.reorder_columns')"
-                                :lockTooltip="t('common.tooltips.lock_column')"
-                                :unlockTooltip="t('common.tooltips.unlock_column')"
-                                @toggle="toggleColumnFrozen('name')"
-                            />
+                        <HeaderCell
+                            :text="t('user.columns.name')"
+                            :frozen="frozenColumns.name"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('name')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
-                                <span>{{ data.name }}</span>
+                                <div class="flex items-center gap-2">
+                                    <Avatar :label="getInitials(data.name)" shape="circle" :style="{ backgroundColor: getAvatarColor(data.name), color: '#fff' }" />
+                                    {{ data.name }}
+                                </div>
                                 <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
                         </DataCell>
@@ -390,14 +420,14 @@ onUnmounted(() => {
                     class="min-w-32"
                 >
                     <template #header>
-                            <HeaderCell
-                                :text="t('user.columns.email')"
-                                :frozen="frozenColumns.email"
-                                :reorderTooltip="t('common.tooltips.reorder_columns')"
-                                :lockTooltip="t('common.tooltips.lock_column')"
-                                :unlockTooltip="t('common.tooltips.unlock_column')"
-                                @toggle="toggleColumnFrozen('email')"
-                            />
+                        <HeaderCell
+                            :text="t('user.columns.email')"
+                            :frozen="frozenColumns.email"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('email')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -428,18 +458,21 @@ onUnmounted(() => {
                     class="min-w-40"
                 >
                     <template #header>
-                            <HeaderCell
-                                :text="t('user.columns.email_verified_at')"
-                                :frozen="frozenColumns.email_verified_at"
-                                :reorderTooltip="t('common.tooltips.reorder_columns')"
-                                :lockTooltip="t('common.tooltips.lock_column')"
-                                :unlockTooltip="t('common.tooltips.unlock_column')"
-                                @toggle="toggleColumnFrozen('email_verified_at')"
-                            />
+                        <HeaderCell
+                            :text="t('user.columns.email_verified_at')"
+                            :frozen="frozenColumns.email_verified_at"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('email_verified_at')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.email_verified_at }">{{ dayjs(data.email_verified_at).format('l') }}</div>
+                            <div :class="{ 'font-bold': frozenColumns.email_verified_at }">
+                                <span v-if="data.email_verified_at">{{ dayjs(data.email_verified_at).format('l') }}</span>
+                                <Tag v-else :value="t('common.labels.not_verified')" severity="danger" />
+                            </div>
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
@@ -462,17 +495,7 @@ onUnmounted(() => {
                                 <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
                                 <InputGroupAddon>
                                     <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                    <Button
-                                            <HeaderCell
-                                                :text="t('user.columns.roles')"
-                                                :frozen="frozenColumns.roles"
-                                                :reorderTooltip="t('common.tooltips.reorder_columns')"
-                                                :lockTooltip="t('common.tooltips.lock_column')"
-                                                :unlockTooltip="t('common.tooltips.unlock_column')"
-                                                @toggle="toggleColumnFrozen('roles')"
-                                            />
-                                        "
-                                    />
+                                    <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                                 </InputGroupAddon>
                             </InputGroup>
                         </div>
@@ -503,8 +526,8 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell class="grid grid-cols-4 w-full">
-                            <div v-for="role in data.roles" :key="role.id" class="w-full">
-                                <Tag severity="info" :value="role.name" :class="{ 'font-bold': frozenColumns.roles }" />
+                            <div v-for="role in data.roles" :key="role.id">
+                                <Tag icon="pi pi-shield" severity="info" :value="role.name" :class="{ 'font-bold': frozenColumns.roles }" />
                             </div>
                         </DataCell>
                     </template>
@@ -524,149 +547,16 @@ onUnmounted(() => {
                         </InputGroup>
                     </template>
                 </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    dataType="date"
-                    columnKey="created_at"
-                    field="created_at"
-                    :frozen="frozenColumns.created_at"
-                    v-if="selectedColumns.some((column) => column.field === 'created_at')"
-                    sortable
-                    class="min-w-40"
-                >
-                    <template #header>
-                            <HeaderCell
-                                :text="t('user.columns.created_at')"
-                                :frozen="frozenColumns.created_at"
-                                :reorderTooltip="t('common.tooltips.reorder_columns')"
-                                :lockTooltip="t('common.tooltips.lock_column')"
-                                :unlockTooltip="t('common.tooltips.unlock_column')"
-                                @toggle="toggleColumnFrozen('created_at')"
-                            />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.created_at }">{{ dayjs(data.created_at).format('l') }}</div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <div class="flex flex-col gap-2">
-                            <!-- Match Mode Selector -->
-                            <Select
-                                v-model="filterModel.matchMode"
-                                :options="[
-                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
-                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
-                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
-                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
-                                ]"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-full"
-                                placeholder="Filter Mode"
-                            />
 
-                            <!-- Date Input + Apply/Clear -->
-                            <InputGroup>
-                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
-                                <InputGroupAddon>
-                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                    <Button
-                                        size="small"
-                                        icon="pi pi-times"
-                                        severity="danger"
-                                        outlined
-                                        :disabled="!filterModel.value"
-                                        @click="
-                                            (() => {
-                                                filterModel.value = null;
-                                                applyFilter();
-                                            })()
-                                        "
-                                    />
-                                </InputGroupAddon>
-                            </InputGroup>
-                        </div>
-                    </template>
-                </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    dataType="date"
-                    columnKey="updated_at"
-                    field="updated_at"
-                    :frozen="frozenColumns.updated_at"
-                    v-if="selectedColumns.some((column) => column.field === 'updated_at')"
-                    sortable
-                    class="min-w-40"
-                >
-                    <template #header>
-                            <HeaderCell
-                                :text="t('user.columns.updated_at')"
-                                :frozen="frozenColumns.updated_at"
-                                :reorderTooltip="t('common.tooltips.reorder_columns')"
-                                :lockTooltip="t('common.tooltips.lock_column')"
-                                :unlockTooltip="t('common.tooltips.unlock_column')"
-                                @toggle="toggleColumnFrozen('updated_at')"
-                            />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.updated_at }">{{ dayjs(data.updated_at).format('l') }}</div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <div class="flex flex-col gap-2">
-                            <Select
-                                v-model="filterModel.matchMode"
-                                :options="[
-                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
-                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
-                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
-                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
-                                ]"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-full"
-                                placeholder="Filter Mode"
-                            />
-
-                            <InputGroup>
-                                <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e) => formatDate(e, filterModel)" />
-                                <InputGroupAddon>
-                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                    <Button
-                                        size="small"
-                                        icon="pi pi-times"
-                                        severity="danger"
-                                        outlined
-                                        :disabled="!filterModel.value"
-                                        @click="
-                                            (() => {
-                                                filterModel.value = null;
-                                                applyFilter();
-                                            })()
-                                        "
-                                    />
-                                </InputGroupAddon>
-                            </InputGroup>
-                        </div>
-                    </template>
-                </Column>
                 <Column columnKey="actions" :exportable="false" style="min-width: 12rem" :header="t('common.columns.actions')">
                     <template #body="{ data, frozenRow, index }">
                         <DataCell>
                             <div class="flex justify-between">
                                 <div class="flex space-x-2">
-                                    <Button v-if="authStore.hasPermission('view_user')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.user') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
-                                    <Button v-if="authStore.hasPermission('update_user')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.user') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
+                                    <Button v-if="authStore.hasPermission('view_users')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.user') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
+                                    <Button v-if="authStore.hasPermission('update_users')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.user') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
                                     <Button
-                                        v-if="authStore.hasPermission('delete_user')"
+                                        v-if="authStore.hasPermission('delete_users')"
                                         v-tooltip.top="$t('common.tooltips.delete', { entity: t('entity.user') })"
                                         icon="pi pi-trash"
                                         outlined

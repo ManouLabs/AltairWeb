@@ -25,7 +25,6 @@ onMounted(() => {
 const defaultFiltersConfig = {
     id: FilterMatchMode.CONTAINS,
     name: FilterMatchMode.CONTAINS,
-    guard_name: FilterMatchMode.IN,
     permissions: FilterMatchMode.IN
 };
 
@@ -49,7 +48,7 @@ const { showToast } = useShowToast();
 const { t } = useI18n();
 
 const { highlights, markHighlight, getRowClass } = useRowEffects();
-const defaultFields = ['name', 'guard_name', 'permissions'];
+const defaultFields = ['name', 'permissions'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref(null);
@@ -66,7 +65,9 @@ const allPermissions = ref(null);
 const permissionsOptions = ref([], []);
 
 function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.role').listen('DataStream', (event) => {
+    const accountId = authStore.user?.account_id;
+    if (!accountId) return;
+    subscription.value = Echo.private(`data-stream.role.${accountId}`).listen('DataStream', (event) => {
         handleEchoEvent(event);
     });
 }
@@ -113,7 +114,7 @@ function handleStore(event) {
 }
 
 function addRecord() {
-    record.value = { name: null, guard_name: null, permissions: [] };
+    record.value = { name: null, permissions: [] };
     permissionsOptions.value = allPermissions.value;
     authStore.errors = {};
     openDialog();
@@ -265,7 +266,7 @@ onUnmounted(() => {
                             <template #start>
                                 <div class="flex space-x-2">
                                     <Button
-                                        v-if="authStore.hasPermission('store_role')"
+                                        v-if="authStore.hasPermission('create_roles')"
                                         v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })"
                                         :label="t('common.labels.new')"
                                         icon="pi pi-plus"
@@ -274,7 +275,7 @@ onUnmounted(() => {
                                         outlined
                                     />
                                     <Button
-                                        v-if="authStore.hasPermission('delete_role')"
+                                        v-if="authStore.hasPermission('delete_roles')"
                                         v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.roles') })"
                                         :label="t('common.labels.delete_selected')"
                                         icon="pi pi-trash"
@@ -309,7 +310,7 @@ onUnmounted(() => {
                                         </IconField>
                                     </FloatLabel>
                                     <Button
-                                        v-if="authStore.hasPermission('export_role')"
+                                        v-if="authStore.hasPermission('export_roles')"
                                         v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.roles') })"
                                         :label="t('common.labels.export')"
                                         icon="pi pi-upload"
@@ -324,11 +325,7 @@ onUnmounted(() => {
                     </div>
                 </template>
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
-                <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
-                    <template #body="{ data }">
-                        <DataCell>{{ data.id }}</DataCell>
-                    </template>
-                </Column>
+                <!-- ID column removed (hard-coded or not needed) -->
                 <Column
                     :showClearButton="false"
                     :showApplyButton="false"
@@ -354,7 +351,7 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
-                                <span>{{ data.name }}</span>
+                                <div class="flex items-center gap-2"><i class="pi pi-shield"></i> {{ data.name }}</div>
                                 <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
                         </DataCell>
@@ -369,49 +366,7 @@ onUnmounted(() => {
                         </InputGroup>
                     </template>
                 </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="guard_name"
-                    field="guard_name"
-                    :frozen="frozenColumns.guard_name"
-                    v-if="selectedColumns.some((column) => column.field === 'guard_name')"
-                    sortable
-                    class="min-w-32"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('role.columns.guard_name')"
-                            :frozen="frozenColumns.guard_name"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('guard_name')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.guard_name }">{{ data.guard_name }}</div></DataCell
-                        >
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <MultiSelect size="small" v-model="filterModel.value" :options="['api', 'sanctum', 'web']" @input="applyFilter()">
-                                <template #option="slotProps">
-                                    <div class="flex items-center gap-2">
-                                        <span>{{ slotProps.option }}</span>
-                                    </div>
-                                </template>
-                            </MultiSelect>
-                            <InputGroupAddon>
-                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
-                    </template>
-                </Column>
+                <!-- guard_name column removed (hard-coded on server) -->
                 <Column
                     :showFilterMatchModes="false"
                     :showFilterOperator="false"
@@ -461,10 +416,10 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex justify-between">
                                 <div class="flex space-x-2">
-                                    <Button v-if="authStore.hasPermission('view_role')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.role') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
-                                    <Button v-if="authStore.hasPermission('update_role')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.role') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
+                                    <Button v-if="authStore.hasPermission('view_roles')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.role') })" icon="pi pi-eye" outlined rounded @click="editRecord(data)" severity="secondary" />
+                                    <Button v-if="authStore.hasPermission('update_roles')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.role') })" icon="pi pi-pencil" outlined rounded @click="editRecord(data)" />
                                     <Button
-                                        v-if="authStore.hasPermission('delete_role')"
+                                        v-if="authStore.hasPermission('delete_roles')"
                                         v-tooltip.top="$t('common.tooltips.delete', { entity: t('entity.role') })"
                                         icon="pi pi-trash"
                                         outlined
