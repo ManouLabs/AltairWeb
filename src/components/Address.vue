@@ -23,8 +23,16 @@ const props = defineProps({
     disabled: {
         type: Boolean,
         default: false
+    },
+    multiple: {
+        type: Boolean,
+        default: true
     }
 });
+
+// coerce prop value so string "false" from templates is handled
+const isMultiple = computed(() => (props.multiple === false || props.multiple === 'false' ? false : Boolean(props.multiple)));
+
 const emit = defineEmits(['update:modelValue', 'change']);
 
 const localAddresses = ref([]);
@@ -37,7 +45,9 @@ watch(
     () => props.modelValue,
     (newValue) => {
         localAddresses.value = Array.isArray(newValue) ? clone(newValue) : [];
-        // reset shared city options when model changes
+        if (!props.multiple && localAddresses.value.length > 0) {
+            localAddresses.value[0].main = true;
+        }
         cityOptions.value = [];
     },
     { immediate: true }
@@ -70,7 +80,7 @@ function createNewAddress() {
         street: '',
         region: null,
         city: null,
-        main: false
+        main: isMultiple
     };
 }
 
@@ -121,17 +131,17 @@ const onRegionChange = async (index, regionId) => {
 
 <template>
     <div class="addresses-component">
-        <div class="flex justify-end mb-6">
+        <div v-if="isMultiple" class="flex justify-end mb-6">
             <Button icon="pi pi-plus" :label="t('address.buttons.add_address')" @click="addAddress" outlined />
         </div>
 
         <div class="space-y-6">
-            <div v-for="(address, index) in localAddresses" :key="index" class="address-card border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900 shadow-sm">
-                <div v-if="localAddresses.length > 1" class="flex justify-end mb-4">
+            <div v-for="(address, index) in localAddresses" :key="index" :class="['address-card', { 'border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900 shadow-sm': isMultiple }]">
+                <div v-if="localAddresses.length > 1" class="flex justify-end">
                     <Button icon="pi pi-trash" @click="removeAddress(index)" severity="danger" size="small" outlined :title="t('address.buttons.remove')" />
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-2">
                         <FloatLabel variant="on">
                             <InputText :id="`street_${index}`" v-model="address.street" :disabled="disabled" class="w-full" maxlength="255" @blur="() => onFieldBlur(index, 'street')" />
@@ -175,7 +185,7 @@ const onRegionChange = async (index, regionId) => {
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-4">
+                <div v-if="isMultiple" class="flex items-center space-x-4">
                     <Checkbox :id="`main_${index}`" v-model="address.main" :disabled="disabled" @input="() => toggleMain(index)" />
                     <label :for="`main_${index}`">{{ t('address.labels.main') }}</label>
                 </div>

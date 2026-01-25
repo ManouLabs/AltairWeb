@@ -100,7 +100,11 @@
             "inactive": "Inactive",
             "select_plans": "Select Plans",
             "select_status": "Select Status",
-            "not_verified": "Not Verified"
+            "not_verified": "Not Verified",
+            "address": "Address",
+            "addresses": "Addresses",
+            "logo": "Logo",
+            "online_presence": "Online Presence"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -127,6 +131,15 @@
             "select": "Select...",
             "type": "Type...",
             "displayed_columns": "Displayed columns"
+        },
+        "file_upload": {
+            "select_file": "Select file",
+            "select_files": "Select files",
+            "choose": "Choose",
+            "clear": "Clear",
+            "drag_drop_hint": "Drag and drop files here",
+            "max_size": "Max size",
+            "accepted_formats": "Accepted formats"
         },
         "paggination": {
             "showing_to_of_entity": "Showing {first} to {last} of {totalRecords} {entity}"
@@ -263,8 +276,14 @@
         "columns": {
             "name": "Name",
             "description": "Description",
+            "file": "Logo",
             "active": "Active",
-            "status": "Status",
+            "phone": "Phone",
+            "email": "Email",
+            "whatsapp": "WhatsApp",
+            "website": "Website",
+            "linkedin": "LinkedIn",
+            "tiktok": "TikTok",
             "created_at": "Created At",
             "updated_at": "Updated At"
         }
@@ -305,6 +324,18 @@
             "latitude": "Latitude",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        }
+    },
+    "address": {
+        "labels": {
+            "street": "Street",
+            "region": "Region",
+            "city": "City",
+            "main": "Main Address"
+        },
+        "buttons": {
+            "add_address": "Add Address",
+            "remove": "Remove Address"
         }
     },
     "contact": {

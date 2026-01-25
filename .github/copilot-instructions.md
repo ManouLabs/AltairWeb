@@ -130,6 +130,8 @@ Translations in `src/locales/{ar,en,fr}.json`. Convention:
 - `common.messages.*` - validation/error messages
 - `common.toasts.<action>.*` - success/error notifications
 
+**IMPORTANT: Only update `src/locales/en.json` for translations. Do NOT modify `ar.json` or `fr.json`.**
+
 PrimeVue locale synced in `src/plugins/primevue.js` watching i18n.global.locale changes.
 
 ### State Management
@@ -169,6 +171,8 @@ npm run build
 ```bash
 npm run lint
 ```
+
+**Important:** Never run test commands. Tests are managed by the backend team only.
 
 **Environment variables required:**
 

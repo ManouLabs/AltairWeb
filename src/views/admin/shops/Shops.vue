@@ -91,7 +91,7 @@ function subscribeToEcho() {
     if (window.Echo) {
         const accountId = authStore.user?.account_id;
         if (!accountId) return;
-        subscription.value = window.Echo.private(`data-stream.shop.${accountId}`).listen('DataStream', (event) => {
+        subscription.value = window.Echo.private(`data-stream.shops.${accountId}`).listen('DataStream', (event) => {
             handleEchoEvent(event);
         });
     }
@@ -128,7 +128,14 @@ function handleEchoEvent(event) {
 
 function addRecord() {
     authStore.errors = {};
-    record.value = { name: null, description: null, active: true, status: 'active' };
+    record.value = {
+        name: null,
+        description: null,
+        active: true,
+        addresses: [{ street: '', region: null, city: null, main: true }],
+        contactMethods: { phone: null, email: null, whatsapp: null, website: null, linkedin: null, tiktok: null },
+        file: null
+    };
     openDialog();
 }
 
@@ -142,7 +149,7 @@ const openDialog = () => {
     dialog.open(formComponent, {
         props: {
             header: t('common.titles.add', { entity: t('entity.shop') }),
-            style: { width: '40vw' },
+            style: { width: '50vw' },
             breakpoints: { '960px': '75vw', '640px': '90vw' },
             modal: true,
             maximizable: true

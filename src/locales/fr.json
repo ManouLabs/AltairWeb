@@ -86,6 +86,15 @@
             "type": "Saisir...",
             "displayed_columns": "Colonnes affichées"
         },
+        "file_upload": {
+            "select_file": "Sélectionner un fichier",
+            "select_files": "Sélectionner des fichiers",
+            "choose": "Choisir",
+            "clear": "Effacer",
+            "drag_drop_hint": "Glissez-déposez les fichiers ici",
+            "max_size": "Taille max",
+            "accepted_formats": "Formats acceptés"
+        },
         "paggination": {
             "showing_to_of_entity": "Affichage de {first} à {last} sur {totalRecords} {entity}"
         },
@@ -214,6 +223,7 @@
         "columns": {
             "name": "Nom",
             "description": "Description",
+            "file": "Logo",
             "active": "Actif",
             "status": "Statut",
             "created_at": "Créé le",

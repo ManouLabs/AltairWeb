@@ -71,7 +71,7 @@ const { selectedColumns, columnChanged } = useDynamicColumns('citiesColumns', de
 const subscription = ref(null);
 
 function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.city').listen('DataStream', (event) => {
+    subscription.value = Echo.private('data-stream.cities').listen('DataStream', (event) => {
         handleEchoEvent(event);
     });
 }

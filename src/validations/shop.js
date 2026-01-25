@@ -14,5 +14,6 @@ const optionalStringMax = (max) =>
 export const shopSchema = z.object({
     name: requiredStringMax(150),
     description: optionalStringMax(500),
-    active: z.boolean().optional().default(true)
+    active: z.boolean().optional().default(true),
+    file: z.any().optional().nullable()
 });

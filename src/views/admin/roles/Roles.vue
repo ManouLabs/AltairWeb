@@ -67,7 +67,7 @@ const permissionsOptions = ref([], []);
 function subscribeToEcho() {
     const accountId = authStore.user?.account_id;
     if (!accountId) return;
-    subscription.value = Echo.private(`data-stream.role.${accountId}`).listen('DataStream', (event) => {
+    subscription.value = Echo.private(`data-stream.roles.${accountId}`).listen('DataStream', (event) => {
         handleEchoEvent(event);
     });
 }

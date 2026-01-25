@@ -304,13 +304,6 @@ const onClearExisting = () => {
 
 <template>
     <div class="file-upload-field">
-        <!-- Label -->
-        <label v-if="label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {{ label }} *
-            <span v-if="required" class="text-red-500 ml-1">*</span>
-        </label>
-
-        <!-- FileUpload Component -->
         <FileUpload
             ref="fileUploadRef"
             :mode="uploadMode"
@@ -325,7 +318,7 @@ const onClearExisting = () => {
             :showCancelButton="showCancelButton"
             :pt="{
                 root: { class: 'w-full' },
-                content: { class: 'border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center' },
+                content: { class: 'border-2 border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900 rounded-lg p-6 text-center' },
                 chooseButton: {
                     class: props.disabled ? 'opacity-50 cursor-not-allowed' : 'bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md transition-colors'
                 }

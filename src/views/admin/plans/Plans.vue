@@ -67,7 +67,7 @@ const { selectedColumns, columnChanged } = useDynamicColumns('plansColumns', def
 const subscription = ref(null);
 
 function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.plan').listen('DataStream', (event) => {
+    subscription.value = Echo.private('data-stream.plans').listen('DataStream', (event) => {
         handleEchoEvent(event);
     });
 }

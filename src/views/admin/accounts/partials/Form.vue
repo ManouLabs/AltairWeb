@@ -343,7 +343,7 @@ onMounted(() => {
                 <StepPanel v-slot="{ activateCallback }" value="3">
                     <div class="grid grid-cols-2 gap-4 pt-2">
                         <div class="col-span-2">
-                            <Address v-model="record.addresses" :disabled="loading.isPageLoading" :regionOptions="[]" :cityOptions="[]" />
+                            <Address v-model="record.addresses" :disabled="loading.isPageLoading" :multiple="true" />
                         </div>
                     </div>
                     <div class="pt-6 flex justify-between">

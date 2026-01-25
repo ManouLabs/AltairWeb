@@ -95,6 +95,15 @@
             "type": "Saisir...",
             "displayed_columns": "Colonnes affichées"
         },
+        "file_upload": {
+            "select_file": "اختر ملفًا",
+            "select_files": "اختر ملفات",
+            "choose": "اختر",
+            "clear": "مسح",
+            "drag_drop_hint": "اسحب وأفلت الملفات هنا",
+            "max_size": "الحجم الأقصى",
+            "accepted_formats": "الصيغ المقبولة"
+        },
         "paggination": {
             "showing_to_of_entity": "Affichage de {first} à {last} sur {totalRecords} {entity}"
         },
@@ -215,6 +224,17 @@
             "region": "المنطقة",
             "longitude": "طول العرض",
             "latitude": "عرض البلد"
+        }
+    },
+    "shop": {
+        "columns": {
+            "name": "الاسم",
+            "description": "الوصف",
+            "file": "الشعار",
+            "active": "نشط",
+            "status": "الحالة",
+            "created_at": "تاريخ الإنشاء",
+            "updated_at": "تاريخ التحديث"
         }
     },
     "primevue": {

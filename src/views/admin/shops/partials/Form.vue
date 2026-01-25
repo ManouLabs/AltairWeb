@@ -13,7 +13,22 @@ const loading = useLoading();
 const { showToast } = useShowToast();
 const { t } = useI18n();
 
-const record = ref({});
+const record = ref({
+    name: null,
+    description: null,
+    active: true,
+    addresses: [{ street: '', region: null, city: null, main: true }],
+    contactMethods: {
+        phone: null,
+        email: null,
+        whatsapp: null,
+        website: null,
+        linkedin: null,
+        tiktok: null
+    },
+    file: null,
+    status: 'active'
+});
 const dialogRef = inject('dialogRef');
 const action = ref();
 
@@ -37,7 +52,6 @@ const onBlurField = (path) => {
 };
 
 const onFormSubmit = () => {
-    // keep backwards compatibility if API still expects `status`
     syncStatusFromActive();
 
     if (!validateForm()) return;
@@ -61,13 +75,15 @@ const onFormSubmit = () => {
 const closeDialog = () => dialogRef.value.close();
 
 onMounted(() => {
-    record.value = dialogRef.value.data.record;
+    record.value = {
+        ...record.value, // keeps defaults
+        ...dialogRef.value.data.record,
+        contactMethods: {
+            ...record.value.contactMethods,
+            ...dialogRef.value.data.record?.contactMethods
+        }
+    };
     action.value = dialogRef.value.data.action;
-
-    // normalize incoming record so UI always uses `active`
-    if (record.value && typeof record.value.active !== 'boolean') {
-        record.value.active = record.value.status === 'active';
-    }
     syncStatusFromActive();
 });
 </script>
@@ -109,6 +125,122 @@ onMounted(() => {
                     <label for="description">{{ t('shop.columns.description') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['description']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['description']?.[0]) }}</Message>
+            </div>
+            <div class="col-span-1 border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
+                <h3 class="text-lg font-semibold mb-2">{{ t('contact.labels.contacts') }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FloatLabel variant="on" class="w-full">
+                        <InputText
+                            id="phone"
+                            v-model="record.contactMethods.phone"
+                            :disabled="loading.isPageLoading"
+                            class="w-full"
+                            maxlength="50"
+                            :invalid="authStore.errors?.['contactMethods.phone']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['contactMethods.phone'])"
+                            @blur="() => onBlurField('contactMethods.phone')"
+                        />
+                        <label for="phone">{{ t('shop.columns.phone') }}</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['contactMethods.phone']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.phone']?.[0]) }}</Message>
+
+                    <FloatLabel variant="on" class="w-full">
+                        <InputText
+                            id="email"
+                            v-model="record.contactMethods.email"
+                            :disabled="loading.isPageLoading"
+                            class="w-full"
+                            maxlength="150"
+                            :invalid="authStore.errors?.['contactMethods.email']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['contactMethods.email'])"
+                            @blur="() => onBlurField('contactMethods.email')"
+                        />
+                        <label for="email">{{ t('shop.columns.email') }}</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['contactMethods.email']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.email']?.[0]) }}</Message>
+
+                    <FloatLabel variant="on" class="w-full">
+                        <InputText
+                            id="whatsapp"
+                            v-model="record.contactMethods.whatsapp"
+                            :disabled="loading.isPageLoading"
+                            class="w-full"
+                            maxlength="50"
+                            :invalid="authStore.errors?.['contactMethods.whatsapp']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['contactMethods.whatsapp'])"
+                            @blur="() => onBlurField('contactMethods.whatsapp')"
+                        />
+                        <label for="whatsapp">{{ t('shop.columns.whatsapp') }}</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['contactMethods.whatsapp']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.whatsapp']?.[0]) }}</Message>
+                </div>
+            </div>
+            <div class="col-span-1 border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
+                <h3 class="text-lg font-semibold mb-4">{{ t('common.labels.address') }} *</h3>
+                <Address v-model="record.addresses" :disabled="loading.isPageLoading" :multiple="false" />
+            </div>
+            <div class="col-span-1 border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
+                <h3 class="text-lg font-semibold mb-4">{{ t('common.labels.online_presence') }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FloatLabel variant="on" class="w-full">
+                        <InputText
+                            id="website"
+                            v-model="record.contactMethods.website"
+                            :disabled="loading.isPageLoading"
+                            class="w-full"
+                            maxlength="250"
+                            :invalid="authStore.errors?.['contactMethods.website']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['contactMethods.website'])"
+                            @blur="() => onBlurField('contactMethods.website')"
+                        />
+                        <label for="website">{{ t('shop.columns.website') }}</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['contactMethods.website']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.website']?.[0]) }}</Message>
+
+                    <FloatLabel variant="on" class="w-full">
+                        <InputText
+                            id="linkedin"
+                            v-model="record.contactMethods.linkedin"
+                            :disabled="loading.isPageLoading"
+                            class="w-full"
+                            maxlength="250"
+                            :invalid="authStore.errors?.['contactMethods.linkedin']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['contactMethods.linkedin'])"
+                            @blur="() => onBlurField('contactMethods.linkedin')"
+                        />
+                        <label for="linkedin">{{ t('shop.columns.linkedin') }}</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['contactMethods.linkedin']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.linkedin']?.[0]) }}</Message>
+
+                    <FloatLabel variant="on" class="w-full">
+                        <InputText
+                            id="tiktok"
+                            v-model="record.contactMethods.tiktok"
+                            :disabled="loading.isPageLoading"
+                            class="w-full"
+                            maxlength="250"
+                            :invalid="authStore.errors?.['contactMethods.tiktok']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['contactMethods.tiktok'])"
+                            @blur="() => onBlurField('contactMethods.tiktok')"
+                        />
+                        <label for="tiktok">{{ t('shop.columns.tiktok') }}</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['contactMethods.tiktok']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.tiktok']?.[0]) }}</Message>
+                </div>
+            </div>
+            <div class="col-span-1">
+                <h3 class="text-lg font-semibold mb-2">{{ t('common.labels.logo') }}</h3>
+                <FileUploadField
+                    v-model="record.file"
+                    :disabled="loading.isPageLoading"
+                    :label="t('shop.columns.file')"
+                    accept="image/*"
+                    :multiple="false"
+                    :maxFiles="1"
+                    :maxFileSize="5000000"
+                    :error="authStore.errors?.['file']?.[0] ? t(authStore.errors?.['file']?.[0]) : null"
+                    @select="() => authStore.clearErrors(['file'])"
+                />
             </div>
 
             <div class="col-span-1">

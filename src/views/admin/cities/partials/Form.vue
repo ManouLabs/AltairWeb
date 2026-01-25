@@ -22,7 +22,6 @@ const schema = citySchema;
 const validateForm = () => {
     const { ok, errors } = validate(schema, record.value);
     authStore.errors = ok ? {} : errors;
-    console.log(errors);
     return ok;
 };
 
