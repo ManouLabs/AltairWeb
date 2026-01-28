@@ -32,9 +32,9 @@ const hasFile = (shopData) => {
 };
 
 export const useShopService = {
-    async getShops(params) {
+    async getShops() {
         try {
-            const response = await apiClient.post('/api/admin/shops/filter', { params });
+            const response = await apiClient.get('/api/admin/shops');
             return response.data;
         } catch (error) {
             throw error;
@@ -79,6 +79,16 @@ export const useShopService = {
             }
 
             const response = await apiClient.put(`/api/admin/shops/${shopId}`, updatedData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async toggleActiveShop(shopId) {
+        try {
+            await apiClient.get('/sanctum/csrf-cookie');
+            const response = await apiClient.patch(`/api/admin/shops/${shopId}/toggle`);
             return response.data;
         } catch (error) {
             throw error;

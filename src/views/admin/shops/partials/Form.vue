@@ -19,12 +19,12 @@ const record = ref({
     active: true,
     addresses: [{ street: '', region: null, city: null, main: true }],
     contactMethods: {
-        phone: null,
-        email: null,
-        whatsapp: null,
-        website: null,
-        linkedin: null,
-        tiktok: null
+        phone: { type: 'phone', value: null },
+        email: { type: 'email', value: null },
+        whatsapp: { type: 'whatsapp', value: null },
+        website: { type: 'website', value: null },
+        linkedin: { type: 'linkedin', value: null },
+        tiktok: { type: 'tiktok', value: null }
     },
     file: null,
     status: 'active'
@@ -75,13 +75,22 @@ const onFormSubmit = () => {
 const closeDialog = () => dialogRef.value.close();
 
 onMounted(() => {
+    const incoming = dialogRef.value.data.record || {};
+    const incomingContacts = incoming.contactMethods || {};
+    const normalizedContacts = { ...record.value.contactMethods };
+    for (const key of Object.keys(normalizedContacts)) {
+        const val = incomingContacts[key];
+        if (val && typeof val === 'object' && (val.type || val.value)) {
+            normalizedContacts[key] = { type: val.type ?? key, value: val.value ?? null };
+        } else if (val || val === 0) {
+            normalizedContacts[key] = { type: key, value: val };
+        }
+    }
+
     record.value = {
         ...record.value, // keeps defaults
-        ...dialogRef.value.data.record,
-        contactMethods: {
-            ...record.value.contactMethods,
-            ...dialogRef.value.data.record?.contactMethods
-        }
+        ...incoming,
+        contactMethods: normalizedContacts
     };
     action.value = dialogRef.value.data.action;
     syncStatusFromActive();
@@ -132,7 +141,7 @@ onMounted(() => {
                     <FloatLabel variant="on" class="w-full">
                         <InputText
                             id="phone"
-                            v-model="record.contactMethods.phone"
+                            v-model="record.contactMethods.phone.value"
                             :disabled="loading.isPageLoading"
                             class="w-full"
                             maxlength="50"
@@ -147,7 +156,7 @@ onMounted(() => {
                     <FloatLabel variant="on" class="w-full">
                         <InputText
                             id="email"
-                            v-model="record.contactMethods.email"
+                            v-model="record.contactMethods.email.value"
                             :disabled="loading.isPageLoading"
                             class="w-full"
                             maxlength="150"
@@ -162,7 +171,7 @@ onMounted(() => {
                     <FloatLabel variant="on" class="w-full">
                         <InputText
                             id="whatsapp"
-                            v-model="record.contactMethods.whatsapp"
+                            v-model="record.contactMethods.whatsapp.value"
                             :disabled="loading.isPageLoading"
                             class="w-full"
                             maxlength="50"
@@ -185,7 +194,7 @@ onMounted(() => {
                     <FloatLabel variant="on" class="w-full">
                         <InputText
                             id="website"
-                            v-model="record.contactMethods.website"
+                            v-model="record.contactMethods.website.value"
                             :disabled="loading.isPageLoading"
                             class="w-full"
                             maxlength="250"
@@ -200,7 +209,7 @@ onMounted(() => {
                     <FloatLabel variant="on" class="w-full">
                         <InputText
                             id="linkedin"
-                            v-model="record.contactMethods.linkedin"
+                            v-model="record.contactMethods.linkedin.value"
                             :disabled="loading.isPageLoading"
                             class="w-full"
                             maxlength="250"
@@ -215,7 +224,7 @@ onMounted(() => {
                     <FloatLabel variant="on" class="w-full">
                         <InputText
                             id="tiktok"
-                            v-model="record.contactMethods.tiktok"
+                            v-model="record.contactMethods.tiktok.value"
                             :disabled="loading.isPageLoading"
                             class="w-full"
                             maxlength="250"
