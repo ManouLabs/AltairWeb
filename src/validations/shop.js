@@ -11,9 +11,32 @@ const optionalStringMax = (max) =>
         .optional()
         .nullable();
 
+const addressSchema = z.object({
+    street: optionalStringMax(255),
+    region: z.number().int().nullable().optional(),
+    city: z.number().int().nullable().optional(),
+    main: z.boolean().optional()
+});
+
+const contactMethodSchema = z.object({
+    type: z.string().optional(),
+    value: optionalStringMax(255)
+});
+
 export const shopSchema = z.object({
     name: requiredStringMax(150),
     description: optionalStringMax(500),
     active: z.boolean().optional().default(true),
+    addresses: z.array(addressSchema).optional(),
+    contactMethods: z
+        .object({
+            phone: contactMethodSchema.optional(),
+            email: contactMethodSchema.optional(),
+            whatsapp: contactMethodSchema.optional(),
+            website: contactMethodSchema.optional(),
+            linkedin: contactMethodSchema.optional(),
+            tiktok: contactMethodSchema.optional()
+        })
+        .optional(),
     file: z.any().optional().nullable()
 });

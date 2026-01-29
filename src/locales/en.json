@@ -118,7 +118,9 @@
             "lock_column": "Lock this column",
             "unlock_column": "Unlock this column",
             "clear_all_filters": "Clear all filters",
-            "reorder_columns": "Reorder columns"
+            "reorder_columns": "Reorder columns",
+            "activate": "Activate {entity}",
+            "deactivate": "Deactivate {entity}"
         },
         "columns": {
             "id": "ID",
@@ -284,8 +286,13 @@
             "website": "Website",
             "linkedin": "LinkedIn",
             "tiktok": "TikTok",
+            "facebook": "Facebook",
+            "instagram": "Instagram",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        },
+        "labels": {
+            "no_shops": "No shops available. Please add a new shop..."
         }
     },
     "plan": {
