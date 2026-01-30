@@ -220,7 +220,7 @@ const menuItems = computed(() => [
                             </div>
                         </Popover>
                     </div>
-                    <template v-if="user.profile_image">
+                    <template v-if="user?.profile_image">
                         <OverlayBadge severity="success">
                             <Avatar class="p-overlay-badge cursor-pointer hover:shadow" :image="user.profile_image" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
                         </OverlayBadge>

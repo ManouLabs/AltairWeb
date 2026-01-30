@@ -20,13 +20,11 @@ const records = ref([]);
 const subscription = ref(null);
 
 function subscribeToEcho() {
-    if (window.Echo) {
-        const accountId = authStore.user?.account_id;
-        if (!accountId) return;
-        subscription.value = window.Echo.private(`data-stream.shops.${accountId}`).listen('DataStream', (event) => {
-            handleEchoEvent(event);
-        });
-    }
+    const shopsChannel = Echo.private(`data-stream.shops${authStore.user.account_id}`);
+    subscription.value = shopsChannel.listen('DataStream', (event) => {
+        console.log('Received Echo event for shops:', event);
+        handleEchoEvent(event);
+    });
 }
 
 function handleEchoEvent(event) {
@@ -34,23 +32,20 @@ function handleEchoEvent(event) {
         case ACTIONS.DELETE:
             event.data.forEach((id) => {
                 const index = findRecordIndex(records, id);
-                console.log('Deleting shop with id:', id, 'at index:', index);
                 if (index !== -1) records.value.splice(index, 1);
             });
             break;
         case ACTIONS.UPDATE: {
             const index = findRecordIndex(records, event.data.id);
             if (index !== -1) {
-                records.value[index] = normalizeShop(event.data);
-                markHighlight(event.data.id, 'updated');
+                records.value[index] = event.data;
             }
             break;
         }
         case ACTIONS.STORE: {
             const exists = records.value.some((r) => r.id === event.data.id);
             if (!exists) {
-                records.value.unshift(normalizeShop(event.data));
-                markHighlight(event.data.id, 'new');
+                records.value.unshift(event.data);
             }
             break;
         }

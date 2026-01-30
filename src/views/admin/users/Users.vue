@@ -99,9 +99,8 @@ const allRoles = ref(null);
 const rolesOptions = ref([], []);
 
 function subscribeToEcho() {
-    const accountId = authStore.user?.account_id;
-    if (!accountId) return;
-    subscription.value = Echo.private(`data-stream.users.${accountId}`).listen('DataStream', (event) => {
+    const usersChannel = Echo.private(`data-stream.users${authStore.user.account_id}`);
+    subscription.value = usersChannel.listen('DataStream', (event) => {
         handleEchoEvent(event);
     });
 }
