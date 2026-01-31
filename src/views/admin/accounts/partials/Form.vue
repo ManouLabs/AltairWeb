@@ -41,7 +41,7 @@ const onFormSubmit = () => {
         return;
     }
 
-    loading.startPageLoading();
+    loading.startFormSending();
 
     const serviceAction = action.value === ACTIONS.CREATE ? useAccountService.storeAccount : (accountData) => useAccountService.updateAccount(record.value.id, accountData);
 
@@ -54,7 +54,7 @@ const onFormSubmit = () => {
             showToast('error', action.value, 'account', 'tr');
         })
         .finally(() => {
-            loading.stopPageLoading();
+            loading.stopFormSending();
         });
 };
 
@@ -178,7 +178,7 @@ onMounted(() => {
                                 <InputText
                                     id="legal_name"
                                     v-model="record.legal_name"
-                                    :disabled="loading.isPageLoading"
+                                    :disabled="loading.isFormSending"
                                     autofocus
                                     class="w-full"
                                     maxlength="150"
@@ -198,7 +198,7 @@ onMounted(() => {
                                 <InputText
                                     id="trade_name"
                                     v-model="record.trade_name"
-                                    :disabled="loading.isPageLoading"
+                                    :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="255"
                                     :invalid="authStore.errors?.['trade_name']?.[0] ? true : false"
@@ -217,7 +217,7 @@ onMounted(() => {
                                 <InputText
                                     id="rc_number"
                                     v-model="record.rc_number"
-                                    :disabled="loading.isPageLoading"
+                                    :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="25"
                                     :invalid="authStore.errors?.['rc_number']?.[0] ? true : false"
@@ -236,7 +236,7 @@ onMounted(() => {
                                 <InputText
                                     id="nif"
                                     v-model="record.nif"
-                                    :disabled="loading.isPageLoading"
+                                    :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="25"
                                     :invalid="authStore.errors?.['nif']?.[0] ? true : false"
@@ -256,7 +256,7 @@ onMounted(() => {
                                 <InputText
                                     id="nis"
                                     v-model="record.nis"
-                                    :disabled="loading.isPageLoading"
+                                    :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="25"
                                     :invalid="authStore.errors?.['nis']?.[0] ? true : false"
@@ -276,7 +276,7 @@ onMounted(() => {
                                 <InputText
                                     id="rib"
                                     v-model="record.rib"
-                                    :disabled="loading.isPageLoading"
+                                    :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="25"
                                     :invalid="authStore.errors?.['rib']?.[0] ? true : false"
@@ -298,7 +298,7 @@ onMounted(() => {
                                     :options="plansOptions"
                                     filter
                                     optionLabel="name"
-                                    :disabled="loading.isPageLoading"
+                                    :disabled="loading.isFormSending"
                                     class="w-full"
                                     :invalid="authStore.errors?.['plan']?.[0] ? true : false"
                                     @change="() => authStore.clearErrors(['plan'])"
@@ -331,7 +331,7 @@ onMounted(() => {
                 <StepPanel v-slot="{ activateCallback }" value="2">
                     <div class="grid grid-cols-2 gap-4 pt-2">
                         <div class="col-span-2">
-                            <Contact v-model="record.contacts" :disabled="loading.isPageLoading" />
+                            <Contact v-model="record.contacts" :disabled="loading.isFormSending" />
                         </div>
                     </div>
                     <div class="flex pt-6 justify-between">
@@ -343,12 +343,12 @@ onMounted(() => {
                 <StepPanel v-slot="{ activateCallback }" value="3">
                     <div class="grid grid-cols-2 gap-4 pt-2">
                         <div class="col-span-2">
-                            <Address v-model="record.addresses" :disabled="loading.isPageLoading" :multiple="true" />
+                            <Address v-model="record.addresses" :disabled="loading.isFormSending" :multiple="true" />
                         </div>
                     </div>
                     <div class="pt-6 flex justify-between">
                         <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="activateCallback('2')" />
-                        <Button label="Save" icon="pi pi-check" @click="submitFromStep3" :loading="loading.isPageLoading" />
+                        <Button label="Save" icon="pi pi-check" @click="submitFromStep3" :loading="loading.isFormSending" />
                     </div>
                 </StepPanel>
             </StepPanels>

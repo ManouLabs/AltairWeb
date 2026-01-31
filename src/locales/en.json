@@ -292,7 +292,8 @@
             "updated_at": "Updated At"
         },
         "labels": {
-            "no_shops": "No shops available. Please add a new shop..."
+            "no_shops": "No shops available. Please add a new shop...",
+            "manage_subtitle": "Manage your shops and their configurations"
         }
     },
     "plan": {

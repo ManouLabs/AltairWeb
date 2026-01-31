@@ -136,7 +136,7 @@ function getStatusLabel(status) {
 
 <template>
     <div>
-        <div class="card">
+        <div class="card shadow-glow">
             <Toolbar class="mb-6">
                 <template #start>
                     <Button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" @click="openNew" />

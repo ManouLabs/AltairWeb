@@ -39,7 +39,7 @@ const onFormSubmit = () => {
         return;
     }
 
-    loading.startPageLoading();
+    loading.startFormSending();
 
     const serviceAction = action.value === ACTIONS.CREATE ? useCityService.storeCity : (cityData) => useCityService.updateCity(record.value.id, cityData);
 
@@ -52,7 +52,7 @@ const onFormSubmit = () => {
             showToast('error', action.value, 'city', 'tr');
         })
         .finally(() => {
-            loading.stopPageLoading();
+            loading.stopFormSending();
         });
 };
 
@@ -75,7 +75,7 @@ onMounted(() => {
                     <InputText
                         id="name"
                         v-model="record.name"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         autofocus
                         class="w-full"
                         maxlength="50"
@@ -95,7 +95,7 @@ onMounted(() => {
                     <InputText
                         id="name_ar"
                         v-model="record.name_ar"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         maxlength="50"
                         :invalid="authStore.errors?.['name_ar']?.[0] ? true : false"
@@ -114,7 +114,7 @@ onMounted(() => {
                     <InputText
                         id="name_fr"
                         v-model="record.name_fr"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         maxlength="50"
                         :invalid="authStore.errors?.['name_fr']?.[0] ? true : false"
@@ -133,7 +133,7 @@ onMounted(() => {
                     <InputNumber
                         id="postal_code"
                         v-model="record.postal_code"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         maxlength="20"
                         :invalid="authStore.errors?.['postal_code']?.[0] ? true : false"
@@ -155,7 +155,7 @@ onMounted(() => {
                         :options="regionsOptions"
                         optionLabel="name"
                         filter
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :invalid="authStore.errors?.['region']?.[0] ? true : false"
                         @blur="() => onBlurField('region')"
@@ -173,7 +173,7 @@ onMounted(() => {
                     <InputNumber
                         id="longitude"
                         v-model="record.longitude"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :useGrouping="false"
                         :min-fraction-digits="0"
@@ -193,7 +193,7 @@ onMounted(() => {
                     <InputNumber
                         id="latitude"
                         v-model="record.latitude"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :useGrouping="false"
                         :min-fraction-digits="0"
@@ -211,7 +211,7 @@ onMounted(() => {
 
         <div class="flex justify-end gap-2 mt-4">
             <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />
+            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
     </form>
 </template>

@@ -11,10 +11,13 @@ const authStore = useAuthStore();
 
 const loginUser = async () => {
     try {
+        loading.startFormSending();
         await authStore.login(email.value, password.value);
         authStore.redirectUser();
     } catch (error) {
         showToast('error', 'error', 'login', 'tc');
+    } finally {
+        loading.stopFormSending();
     }
 };
 </script>
@@ -67,7 +70,7 @@ const loginUser = async () => {
                         </div>
 
                         <!-- Trigger loginUser method on form submission -->
-                        <Button type="submit" :label="$t('login.sign_in')" class="w-full" :loading="loading.isPageLoading" icon="pi pi-lock" />
+                        <Button type="submit" :label="$t('login.sign_in')" class="w-full" :loading="loading.isFormSending" icon="pi pi-lock" />
                     </form>
                 </div>
             </div>

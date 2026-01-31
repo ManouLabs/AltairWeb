@@ -39,7 +39,7 @@ const onFormSubmit = () => {
         return;
     }
 
-    loading.startPageLoading();
+    loading.startFormSending();
 
     const serviceAction = action.value === ACTIONS.CREATE ? useRegionService.storeRegion : (regionData) => useRegionService.updateRegion(record.value.id, regionData);
 
@@ -52,7 +52,7 @@ const onFormSubmit = () => {
             showToast('error', action.value, 'region', 'tr');
         })
         .finally(() => {
-            loading.stopPageLoading();
+            loading.stopFormSending();
         });
 };
 
@@ -75,7 +75,7 @@ onMounted(() => {
                     <InputText
                         id="name"
                         v-model="record.name"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         autofocus
                         class="w-full"
                         :invalid="authStore.errors?.['name']?.[0] ? true : false"
@@ -95,7 +95,7 @@ onMounted(() => {
                     <InputText
                         id="name_ar"
                         v-model="record.name_ar"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :invalid="authStore.errors?.['name_ar']?.[0] ? true : false"
                         @input="() => authStore.clearErrors(['name_ar'])"
@@ -114,7 +114,7 @@ onMounted(() => {
                     <InputText
                         id="name_fr"
                         v-model="record.name_fr"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :invalid="authStore.errors?.['name_fr']?.[0] ? true : false"
                         @input="() => authStore.clearErrors(['name_fr'])"
@@ -133,7 +133,7 @@ onMounted(() => {
                     <InputNumber
                         id="code"
                         v-model="record.code"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :min="0"
                         :max="999"
@@ -154,7 +154,7 @@ onMounted(() => {
                     <InputNumber
                         id="longitude"
                         v-model="record.longitude"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :useGrouping="false"
                         :min-fraction-digits="0"
@@ -175,7 +175,7 @@ onMounted(() => {
                     <InputNumber
                         id="latitude"
                         v-model="record.latitude"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :useGrouping="false"
                         :min-fraction-digits="0"
@@ -194,7 +194,7 @@ onMounted(() => {
         <!-- Form Actions -->
         <div class="flex justify-end gap-2 mt-4">
             <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />
+            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
     </form>
 </template>

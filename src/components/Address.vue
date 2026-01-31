@@ -6,10 +6,9 @@ import { useI18n } from 'vue-i18n';
 
 const { t, locale } = useI18n();
 const authStore = useAuthStore();
-
+const loading = ref(false);
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },
-    disabled: { type: Boolean, default: false },
     multiple: { type: Boolean, default: true }
 });
 
@@ -76,7 +75,7 @@ const getCitiesForRegion = async (regionId) => {
     if (!regionId) return [];
     const cache = citiesCache.value;
     if (cache.has(regionId)) return cache.get(regionId);
-
+    loading.value = true;
     try {
         const data = await useRegionService.getRegionCities(regionId);
         const cities = data?.cities ?? data ?? [];
@@ -85,6 +84,8 @@ const getCitiesForRegion = async (regionId) => {
     } catch {
         cache.set(regionId, []);
         return [];
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -140,11 +141,14 @@ watch(
 
 // ---------- lifecycle ----------
 onMounted(async () => {
+    loading.value = true;
     try {
         const data = await useRegionService.getAllRegions();
         regionOptions.value = data?.regions ?? [];
     } catch {
         regionOptions.value = [];
+    } finally {
+        loading.value = false;
     }
 });
 
@@ -204,8 +208,11 @@ const onRegionChange = async (index, regionId) => {
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="col-span-2">
                         <FloatLabel variant="on">
-                            <InputText :id="`street_${address._key}`" v-model="address.street" :disabled="disabled" class="w-full" maxlength="255" @blur="() => onFieldBlur(index, 'street')" />
-                            <label :for="`street_${address._key}`">{{ t('address.labels.street') }}</label>
+                            <IconField>
+                                <InputIcon class="pi pi-map-marker" />
+                                <InputText :id="`street_${address._key}`" v-model="address.street" class="w-full" maxlength="255" @blur="() => onFieldBlur(index, 'street')" />
+                                <label :for="`street_${address._key}`">{{ t('address.labels.street') }}</label>
+                            </IconField>
                         </FloatLabel>
                         <Message v-if="authStore.errors?.[`addresses.${index}.street`]" severity="error" size="small">
                             {{ t(authStore.errors?.[`addresses.${index}.street`]?.[0]) }}
@@ -219,9 +226,9 @@ const onRegionChange = async (index, regionId) => {
                                 v-model="address.region"
                                 filter
                                 :options="regionOptions"
+                                dropdownIcon="pi pi-map"
                                 :optionLabel="localeField"
                                 optionValue="id"
-                                :disabled="disabled"
                                 class="w-full"
                                 @change="(e) => onRegionChange(index, e.value)"
                                 @blur="() => onFieldBlur(index, 'region')"
@@ -239,10 +246,12 @@ const onRegionChange = async (index, regionId) => {
                                 :id="`city_${address._key}`"
                                 v-model="address.city"
                                 filter
+                                dropdownIcon="pi pi-building"
                                 :options="cityOptionsFor(address.region)"
                                 :optionLabel="localeField"
                                 optionValue="id"
-                                :disabled="disabled || !address.region"
+                                :disabled="!address.region || loading"
+                                :loading="loading"
                                 class="w-full"
                                 @blur="() => onFieldBlur(index, 'city')"
                             />
@@ -255,7 +264,7 @@ const onRegionChange = async (index, regionId) => {
                 </div>
 
                 <div v-if="isMultiple" class="flex items-center space-x-4 mt-4">
-                    <Checkbox :id="`main_${address._key}`" :modelValue="address.main" :binary="true" :disabled="disabled" @update:modelValue="() => setMain(index)" />
+                    <Checkbox :id="`main_${address._key}`" :modelValue="address.main" :binary="true" @update:modelValue="() => setMain(index)" />
                     <label :for="`main_${address._key}`">{{ t('address.labels.main') }}</label>
                 </div>
             </div>

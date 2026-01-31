@@ -51,15 +51,32 @@ const onBlurField = (path) => {
     else authStore.errors = { ...authStore.errors, ...errors };
 };
 
+const prepareFormData = () => {
+    const data = { ...record.value };
+
+    // Extract actual File object for multipart/form-data upload
+    if (data.files) {
+        if (data.files instanceof File) {
+            data.file = data.files;
+        } else if (Array.isArray(data.files) && data.files.length > 0 && data.files[0] instanceof File) {
+            data.file = data.files[0];
+        }
+    }
+    delete data.files;
+
+    return data;
+};
+
 const onFormSubmit = () => {
     syncStatusFromActive();
 
     if (!validateForm()) return;
-    loading.startPageLoading();
+    loading.startFormSending();
 
+    const formData = prepareFormData();
     const serviceAction = action.value === ACTIONS.CREATE ? useShopService.storeShop : (data) => useShopService.updateShop(record.value.id, data);
 
-    serviceAction(record.value)
+    serviceAction(formData)
         .then((response) => {
             dialogRef.value.close({ record: response.data, action: action.value });
         })
@@ -68,7 +85,7 @@ const onFormSubmit = () => {
             showToast('error', action.value, 'shop', 'tr');
         })
         .finally(() => {
-            loading.stopPageLoading();
+            loading.stopFormSending();
         });
 };
 
@@ -102,17 +119,20 @@ onMounted(() => {
         <div class="grid grid-cols-1 gap-4 pt-2">
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputText
-                        id="name"
-                        v-model="record.name"
-                        :disabled="loading.isPageLoading"
-                        class="w-full"
-                        maxlength="150"
-                        :invalid="authStore.errors?.['name']?.[0] ? true : false"
-                        @input="() => authStore.clearErrors(['name'])"
-                        @blur="() => onBlurField('name')"
-                        autofocus
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-shop" />
+                        <InputText
+                            id="name"
+                            v-model="record.name"
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            maxlength="150"
+                            :invalid="authStore.errors?.['name']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['name'])"
+                            @blur="() => onBlurField('name')"
+                            autofocus
+                        />
+                    </IconField>
                     <label for="name">{{ t('shop.columns.name') }} *</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['name']?.[0]) }}</Message>
@@ -123,7 +143,7 @@ onMounted(() => {
                     <Textarea
                         id="description"
                         v-model="record.description"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         maxlength="500"
                         rows="4"
@@ -140,48 +160,57 @@ onMounted(() => {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <FloatLabel variant="on" class="w-full">
-                            <InputText
-                                id="phone"
-                                v-model="record.contactMethods.phone.value"
-                                :disabled="loading.isPageLoading"
-                                class="w-full"
-                                maxlength="50"
-                                :invalid="authStore.errors?.['contactMethods.phone.value']?.[0] ? true : false"
-                                @input="() => authStore.clearErrors(['contactMethods.phone.value'])"
-                                @blur="() => onBlurField('contactMethods.phone.value')"
-                            />
+                            <IconField>
+                                <InputIcon class="pi pi-phone" />
+                                <InputText
+                                    id="phone"
+                                    v-model="record.contactMethods.phone.value"
+                                    :disabled="loading.isFormSending"
+                                    class="w-full"
+                                    maxlength="50"
+                                    :invalid="authStore.errors?.['contactMethods.phone.value']?.[0] ? true : false"
+                                    @input="() => authStore.clearErrors(['contactMethods.phone.value'])"
+                                    @blur="() => onBlurField('contactMethods.phone.value')"
+                                />
+                            </IconField>
                             <label for="phone">{{ t('shop.columns.phone') }}</label>
                         </FloatLabel>
                         <Message v-if="authStore.errors?.['contactMethods.phone.value']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.phone.value']?.[0]) }}</Message>
                     </div>
                     <div>
                         <FloatLabel variant="on" class="w-full">
-                            <InputText
-                                id="email"
-                                v-model="record.contactMethods.email.value"
-                                :disabled="loading.isPageLoading"
-                                class="w-full"
-                                maxlength="150"
-                                :invalid="authStore.errors?.['contactMethods.email.value']?.[0] ? true : false"
-                                @input="() => authStore.clearErrors(['contactMethods.email.value'])"
-                                @blur="() => onBlurField('contactMethods.email.value')"
-                            />
+                            <IconField>
+                                <InputIcon class="pi pi-envelope" />
+                                <InputText
+                                    id="email"
+                                    v-model="record.contactMethods.email.value"
+                                    :disabled="loading.isFormSending"
+                                    class="w-full"
+                                    maxlength="150"
+                                    :invalid="authStore.errors?.['contactMethods.email.value']?.[0] ? true : false"
+                                    @input="() => authStore.clearErrors(['contactMethods.email.value'])"
+                                    @blur="() => onBlurField('contactMethods.email.value')"
+                                />
+                            </IconField>
                             <label for="email">{{ t('shop.columns.email') }}</label>
                         </FloatLabel>
                         <Message v-if="authStore.errors?.['contactMethods.email.value']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.email.value']?.[0]) }}</Message>
                     </div>
                     <div>
                         <FloatLabel variant="on" class="w-full">
-                            <InputText
-                                id="whatsapp"
-                                v-model="record.contactMethods.whatsapp.value"
-                                :disabled="loading.isPageLoading"
-                                class="w-full"
-                                maxlength="50"
-                                :invalid="authStore.errors?.['contactMethods.whatsapp.value']?.[0] ? true : false"
-                                @input="() => authStore.clearErrors(['contactMethods.whatsapp.value'])"
-                                @blur="() => onBlurField('contactMethods.whatsapp.value')"
-                            />
+                            <IconField>
+                                <InputIcon class="pi pi-whatsapp" />
+                                <InputText
+                                    id="whatsapp"
+                                    v-model="record.contactMethods.whatsapp.value"
+                                    :disabled="loading.isFormSending"
+                                    class="w-full"
+                                    maxlength="50"
+                                    :invalid="authStore.errors?.['contactMethods.whatsapp.value']?.[0] ? true : false"
+                                    @input="() => authStore.clearErrors(['contactMethods.whatsapp.value'])"
+                                    @blur="() => onBlurField('contactMethods.whatsapp.value')"
+                                />
+                            </IconField>
                             <label for="whatsapp">{{ t('shop.columns.whatsapp') }}</label>
                         </FloatLabel>
                         <Message v-if="authStore.errors?.['contactMethods.whatsapp.value']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['contactMethods.whatsapp.value']?.[0]) }}</Message>
@@ -190,23 +219,34 @@ onMounted(() => {
             </div>
             <div class="col-span-1 border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
                 <h3 class="text-lg font-semibold mb-4">{{ t('common.labels.address') }}</h3>
-                <Address v-model="record.addresses" :disabled="loading.isPageLoading" :multiple="false" />
+                <Address v-model="record.addresses" :multiple="false" />
             </div>
             <div class="col-span-1 border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
                 <h3 class="text-lg font-semibold mb-4">{{ t('common.labels.online_presence') }}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div v-for="key in ['website', 'facebook', 'instagram', 'linkedin', 'tiktok']" :key="key">
                         <FloatLabel variant="on" class="w-full">
-                            <InputText
-                                :id="key"
-                                v-model="record.contactMethods[key].value"
-                                :disabled="loading.isPageLoading"
-                                class="w-full"
-                                maxlength="250"
-                                :invalid="authStore.errors?.[`contactMethods.${key}.value`]?.[0] ? true : false"
-                                @input="() => authStore.clearErrors([`contactMethods.${key}.value`])"
-                                @blur="() => onBlurField(`contactMethods.${key}.value`)"
-                            />
+                            <IconField>
+                                <InputIcon
+                                    :class="{
+                                        'pi pi-globe': key === 'website',
+                                        'pi pi-facebook': key === 'facebook',
+                                        'pi pi-instagram': key === 'instagram',
+                                        'pi pi-linkedin': key === 'linkedin',
+                                        'pi pi-tiktok': key === 'tiktok'
+                                    }"
+                                />
+                                <InputText
+                                    :id="key"
+                                    v-model="record.contactMethods[key].value"
+                                    :disabled="loading.isFormSending"
+                                    class="w-full"
+                                    maxlength="250"
+                                    :invalid="authStore.errors?.[`contactMethods.${key}.value`]?.[0] ? true : false"
+                                    @input="() => authStore.clearErrors([`contactMethods.${key}.value`])"
+                                    @blur="() => onBlurField(`contactMethods.${key}.value`)"
+                                />
+                            </IconField>
                             <label :for="key">{{ t(`shop.columns.${key}`) }}</label>
                         </FloatLabel>
                         <Message v-if="authStore.errors?.[`contactMethods.${key}.value`]?.[0]" severity="error" size="small">{{ t(authStore.errors?.[`contactMethods.${key}.value`]?.[0]) }}</Message>
@@ -217,7 +257,6 @@ onMounted(() => {
                 <h3 class="text-lg font-semibold mb-2">{{ t('common.labels.logo') }}</h3>
                 <FileUploadField
                     v-model="record.files"
-                    :disabled="loading.isPageLoading"
                     :label="t('shop.columns.file')"
                     accept="image/*"
                     :multiple="false"
@@ -230,7 +269,7 @@ onMounted(() => {
 
             <div class="col-span-1">
                 <div class="flex items-center gap-3">
-                    <ToggleSwitch id="active" v-model="record.active" :disabled="loading.isPageLoading" :class="{ 'p-invalid': authStore.errors?.active }" @change="() => (syncStatusFromActive(), onBlurField('active'))" />
+                    <ToggleSwitch id="active" v-model="record.active" :class="{ 'p-invalid': authStore.errors?.active }" @change="() => (syncStatusFromActive(), onBlurField('active'))" />
                     <label for="active" class="font-medium">
                         {{ t('shop.columns.active') }}
                     </label>
@@ -241,7 +280,7 @@ onMounted(() => {
 
         <div class="flex justify-end gap-2 mt-4">
             <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />
+            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
     </form>
 </template>

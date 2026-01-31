@@ -1,6 +1,6 @@
 // src/router/index.js
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useLoading } from '@/stores/useLoadingStore';
+//import { useLoading } from '@/stores/useLoadingStore';
 import { createRouter, createWebHistory } from 'vue-router';
 
 const adminRoutes = [
@@ -127,17 +127,16 @@ const handleRouteGuard = async (to, next, authStore) => {
 };
 
 router.beforeEach(async (to, from, next) => {
-    const loading = useLoading();
+    //const loading = useLoading();
     const authStore = useAuthStore();
     authStore.clearErrors();
-    loading.startPageLoading();
-
+    //loading.startPageLoading();
     try {
         await handleRouteGuard(to, next, authStore);
     } catch (error) {
         next({ name: 'login' });
     } finally {
-        loading.stopPageLoading();
+        // loading.stopPageLoading();
     }
 });
 

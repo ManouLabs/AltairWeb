@@ -218,7 +218,7 @@ onUnmounted(() => {
 
 <template>
     <div>
-        <div class="card">
+        <div class="card shadow-glow">
             <DataTable
                 ref="recordDataTable"
                 lazy

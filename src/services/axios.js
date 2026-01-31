@@ -1,6 +1,5 @@
 // src/services/axios.js
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useLoading } from '@/stores/useLoadingStore';
 import axios from 'axios';
 
 const apiClient = axios.create({
@@ -10,13 +9,8 @@ const apiClient = axios.create({
     withXSRFToken: true
 });
 
-const startPageLoading = () => useLoading().startPageLoading();
-const stopPageLoading = () => useLoading().stopPageLoading();
-
 apiClient.interceptors.request.use(
     async (config) => {
-        startPageLoading();
-
         try {
             const method = (config.method || '').toLowerCase();
             const isMutating = method && method !== 'get';
@@ -38,18 +32,15 @@ apiClient.interceptors.request.use(
         return config;
     },
     (error) => {
-        stopPageLoading();
         return Promise.reject(error);
     }
 );
 
 apiClient.interceptors.response.use(
     (response) => {
-        stopPageLoading();
         return response;
     },
     async (error) => {
-        stopPageLoading();
         const status = error.status;
         if ([401, 419].includes(status)) {
             const authStore = useAuthStore();

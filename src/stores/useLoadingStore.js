@@ -7,6 +7,8 @@ export const useLoading = defineStore('loading', () => {
 
     const isDataLoading = ref(false);
 
+    const isFormSending = ref(false);
+
     const startPageLoading = () => {
         isPageLoading.value = true;
     };
@@ -23,12 +25,23 @@ export const useLoading = defineStore('loading', () => {
         isDataLoading.value = false;
     };
 
+    const startFormSending = () => {
+        isFormSending.value = true;
+    };
+
+    const stopFormSending = () => {
+        isFormSending.value = false;
+    };
+
     return {
         isPageLoading,
         isDataLoading,
+        isFormSending,
         startPageLoading,
         stopPageLoading,
         startDataLoading,
-        stopDataLoading
+        stopDataLoading,
+        startFormSending,
+        stopFormSending
     };
 });

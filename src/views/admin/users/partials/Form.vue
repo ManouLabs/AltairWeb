@@ -50,7 +50,7 @@ const onBlurField = (path) => {
 async function saveRecord() {
     if (!validateForm()) return;
 
-    loading.startPageLoading();
+    loading.startFormSending();
     const payload = { ...record.value };
     // On update, if password empty, remove it to avoid overriding
     if (action.value !== ACTIONS.CREATE && !payload.password) {
@@ -68,7 +68,7 @@ async function saveRecord() {
             authStore.processError(error, t('common.messages.error_occurred'));
         })
         .finally(() => {
-            loading.stopPageLoading();
+            loading.stopFormSending();
         });
 }
 const closeDialog = () => {
@@ -81,7 +81,7 @@ const closeDialog = () => {
             <div>
                 <FloatLabel variant="on">
                     <label for="name" class="block font-bold mb-3">{{ $t('user.columns.name') }}</label>
-                    <InputText :disabled="loading.isPageLoading" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
+                    <InputText :disabled="loading.isFormSending" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
                     {{ $t(authStore.errors?.['name']?.[0]) }}
@@ -92,7 +92,7 @@ const closeDialog = () => {
                     <label for="email" class="block font-bold mb-3">{{ $t('user.columns.email') }}</label>
                     <InputText
                         type="email"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         id="email"
                         v-model.trim="record.email"
                         autofocus
@@ -110,7 +110,7 @@ const closeDialog = () => {
                 <FloatLabel variant="on">
                     <Password
                         v-model.trim="record.password"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         :invalid="authStore.errors?.password ? true : false"
                         :required="action === ACTIONS.CREATE"
                         autofocus
@@ -143,7 +143,7 @@ const closeDialog = () => {
                 <FloatLabel variant="on">
                     <Password
                         v-model.trim="record.password_confirmation"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         :invalid="authStore.errors?.password_confirmation ? true : false"
                         :required="action === ACTIONS.CREATE"
                         autofocus
@@ -163,7 +163,7 @@ const closeDialog = () => {
             <div>
                 <PickList
                     required
-                    :disabled="loading.isPageLoading"
+                    :disabled="loading.isFormSending"
                     v-model="rolesOptions"
                     dataKey="id"
                     breakpoint="1400px"
@@ -196,7 +196,7 @@ const closeDialog = () => {
         </div>
         <div class="flex justify-end gap-2 mt-4">
             <Button :label="$t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />
+            <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
     </form>
 </template>

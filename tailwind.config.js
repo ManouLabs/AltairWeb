@@ -1,3 +1,5 @@
+const { success } = require('zod/v4');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     darkMode: ['selector', '[class*="app-dark"]'],
@@ -11,6 +13,11 @@ module.exports = {
             lg: '992px',
             xl: '1200px',
             '2xl': '1920px'
+        },
+        extend: {
+            boxShadow: {
+                glow: '0 10px 20px #2e235e12'
+            }
         }
     }
 };

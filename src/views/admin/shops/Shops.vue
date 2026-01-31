@@ -1,6 +1,7 @@
 <script setup>
 import { useShopService } from '@/services/useShopService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex, humanizeDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -10,7 +11,8 @@ import { useI18n } from 'vue-i18n';
 const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
-
+const loadingStore = useLoading();
+const loading = ref(false);
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
@@ -84,7 +86,6 @@ const openDialog = () => {
         },
         data: { record: record.value, action: record.value?.id ? ACTIONS.EDIT : ACTIONS.CREATE },
         onClose: (result) => {
-            console.log('Dialog closed with result:', result);
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
@@ -112,6 +113,7 @@ function confirmDeleteRecord(event, shopIds) {
         rejectProps: { label: t('common.labels.cancel'), severity: 'secondary', icon: 'pi pi-times', outlined: true },
         acceptProps: { label: t('common.labels.delete'), icon: 'pi pi-trash', severity: 'danger' },
         accept: () => {
+            loading.value = true;
             useShopService
                 .deleteShops(shopIds)
                 .then(() => {
@@ -120,29 +122,36 @@ function confirmDeleteRecord(event, shopIds) {
                         if (index !== -1) records.value.splice(index, 1);
                     });
                     showToast('success', ACTIONS.DELETE, 'shop', 'tc');
+                    loading.value = false;
                 })
                 .catch((error) => {
                     console.error('Error deleting shops', error);
+                    loading.value = false;
                 });
         }
     });
 }
 function toggleActive(shopId) {
+    loading.value = true;
     useShopService
         .toggleActiveShop(shopId)
         .then((result) => {
             const index = findRecordIndex(records, shopId);
             records.value[index].active = !records.value[index].active;
             showToast('success', ACTIONS.EDIT, 'shop', 'tc');
+            loading.value = false;
         })
         .catch((error) => {
             if (error?.response?.status === 419 || error?.response?.status === 401) {
                 console.error('Session expired, redirecting to login');
             }
             console.error('Error updating shop status');
+            loading.value = false;
         });
 }
+
 const fetchRecords = () => {
+    loadingStore.startDataLoading();
     useShopService
         .getShops()
         .then((response) => {
@@ -150,8 +159,12 @@ const fetchRecords = () => {
         })
         .catch((error) => {
             console.error('Error fetching shops', error);
+        })
+        .finally(() => {
+            loadingStore.stopDataLoading();
         });
 };
+
 onMounted(() => {
     subscribeToEcho();
     fetchRecords();
@@ -163,11 +176,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="card">
+    <div class="card shadow-glow">
         <div class="flex items-center">
             <Toolbar class="w-full" :pt="{ root: { style: 'border:none !important; padding:0 !important;' } }">
                 <template #start>
-                    <h2 class="text-xl font-bold min-w-40">{{ t('common.titles.manage', { entity: t('entity.shop') }) }}</h2>
+                    <div>
+                        <h2 class="text-xl font-bold">{{ t('common.titles.manage', { entity: t('entity.shop') }) }}</h2>
+                        <span class="text-gray-500">{{ t('shop.labels.manage_subtitle') }}</span>
+                    </div>
                 </template>
 
                 <template #end>
@@ -178,20 +194,50 @@ onUnmounted(() => {
             </Toolbar>
         </div>
     </div>
-    <div v-if="records.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="record in records" :key="record.id">
-            <Panel :class="{ 'border-none bg-emerald-50 dark:bg-emerald-900 h-full': record.active, 'border-none bg-red-50 dark:bg-red-900 h-full': !record.active }">
+    <div v-if="loadingStore.isDataLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-for="n in 3" :key="n">
+            <Panel class="border-none h-full">
                 <template #header>
                     <div class="flex items-center gap-2">
-                        <Avatar image="/themes/shop-place-holder.svg" size="xlarge" />
+                        <Skeleton shape="circle" width="80px" height="80px" class="mr-2" />
+                        <Skeleton width="120px" height="32px" />
+                    </div>
+                </template>
+                <template #footer>
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-2">
+                            <Skeleton width="32px" height="32px" borderRadius="50%" />
+                            <Skeleton width="32px" height="32px" borderRadius="50%" />
+                            <Skeleton width="32px" height="32px" borderRadius="50%" />
+                        </div>
+                        <Skeleton width="100px" height="20px" />
+                    </div>
+                </template>
+                <template #icons>
+                    <Skeleton width="90px" height="32px" borderRadius="16px" />
+                </template>
+                <div class="mt-2">
+                    <Skeleton width="100%" height="24px" class="mb-2" />
+                    <Skeleton width="60%" height="20px" class="mb-2" />
+                    <Skeleton width="80%" height="20px" />
+                </div>
+            </Panel>
+        </div>
+    </div>
+    <div v-else-if="records.length > 0" class="card grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 shadow-glow">
+        <div v-for="record in records" :key="record.id">
+            <Panel :class="['border-none h-full', record.active ? 'bg-emerald-50 dark:bg-emerald-900' : 'bg-red-50 dark:bg-red-900']">
+                <template #header>
+                    <div class="flex items-center gap-2">
+                        <Image :src="record.files && record.files.length > 0 ? record.files[0].url : '/themes/shop-place-holder.svg'" alt="shop logo" width="80" preview />
                         <span class="font-bold text-lg text-surface-700 dark:text-surface-400">{{ record.name }}</span>
                     </div>
                 </template>
                 <template #footer>
                     <div class="flex flex-wrap items-center justify-between gap-4">
                         <div class="flex items-center gap-2">
-                            <Button v-if="authStore.hasPermission('view_shops')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.shop') })" icon="pi pi-eye" text @click="editRecord(record)" severity="secondary" />
-                            <Button v-if="authStore.hasPermission('update_shops')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.shop') })" icon="pi pi-pencil" text @click="editRecord(record)" />
+                            <Button v-if="authStore.hasPermission('view_shops')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.shop') })" icon="pi pi-eye" text @click="editRecord(record)" severity="secondary" :disabled="loading" />
+                            <Button v-if="authStore.hasPermission('update_shops')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.shop') })" icon="pi pi-pencil" text @click="editRecord(record)" :disabled="loading" />
                             <Button
                                 v-if="authStore.hasPermission('delete_shops')"
                                 v-tooltip.top="t('common.tooltips.delete', { entity: t('entity.shop') })"
@@ -199,30 +245,33 @@ onUnmounted(() => {
                                 text
                                 severity="danger"
                                 @click="confirmDeleteRecord($event, [record.id])"
+                                :disabled="loading"
                             />
                         </div>
                         <div class="text-surface-500 dark:text-surface-400">{{ t('common.labels.created') }} {{ humanizeDate(record.created_at, t) }}</div>
                     </div>
                 </template>
                 <template #icons>
-                    <Tag
-                        :value="record.active ? t('common.labels.active') : t('common.labels.inactive')"
-                        :class="record.active ? 'bg-emerald-600' : 'bg-red-600'"
-                        class="text-surface-100 dark:text-surface-300 font-bold"
+                    <Button
+                        :label="record.active ? t('common.labels.active') : t('common.labels.inactive')"
                         :icon="record.active ? 'pi pi-check-circle' : 'pi pi-times-circle'"
-                        rounded
+                        :severity="record.active ? 'success' : 'danger'"
                         size="small"
-                        :pt="{ root: { class: 'cursor-pointer' } }"
+                        rounded
+                        :loading="loading"
                         @click="toggleActive(record.id)"
                         v-tooltip.top="record.active ? t('common.tooltips.deactivate', { entity: t('entity.shop') }) : t('common.tooltips.activate', { entity: t('entity.shop') })"
                     />
                 </template>
 
-                <div class="mt-4">
-                    <div class="mb-10 text-surface-600 dark:text-surface-300">
+                <div class="mt-2 relative">
+                    <div v-if="record.description" class="text-surface-600 dark:text-surface-300">
                         {{ record.description }}
                     </div>
-                    <div v-if="record.addresses && record.addresses.length > 0"><i class="pi pi-map-marker"></i> {{ t('common.labels.address') }} : {{ record.addresses[0].street }} {{ record.addresses[0].street }}</div>
+                    <div v-if="record.addresses[0] && record.addresses.length > 0" class="flex space-x-2 items-start mt-4">
+                        <i class="pi pi-map-marker text-primary-700 dark:bg-primary-700 dark:text-primary-100 mt-1"></i>
+                        <span>{{ record.addresses[0].street }} {{ record.addresses[0].city?.name }} {{ record.addresses[0].region?.name }}</span>
+                    </div>
                     <div v-for="(contact, key) in record.contactMethods" :key="key" class="flex space-x-2 items-start mt-2">
                         <i
                             :class="{
@@ -243,7 +292,7 @@ onUnmounted(() => {
             </Panel>
         </div>
     </div>
-    <div class="card flex items-center justify-center" v-else>
-        <p>{{ t('shop.labels.no_shops') }}</p>
+    <div class="card flex items-center justify-center shadow-glow" v-else>
+        <p class="text-surface-700 dark:text-surface-300">{{ t('shop.labels.no_shops') }}</p>
     </div>
 </template>

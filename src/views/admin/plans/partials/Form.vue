@@ -39,7 +39,7 @@ const onFormSubmit = () => {
         return;
     }
 
-    loading.startPageLoading();
+    loading.startFormSending();
 
     const serviceAction = action.value === ACTIONS.CREATE ? usePlanService.storePlan : (planData) => usePlanService.updatePlan(record.value.id, planData);
 
@@ -52,7 +52,7 @@ const onFormSubmit = () => {
             showToast('error', action.value, 'plan', 'tr');
         })
         .finally(() => {
-            loading.stopPageLoading();
+            loading.stopFormSending();
         });
 };
 
@@ -75,7 +75,7 @@ onMounted(() => {
                     <InputText
                         id="name"
                         v-model="record.name"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         autofocus
                         class="w-full"
                         :invalid="authStore.errors?.['name']?.[0] ? true : false"
@@ -92,7 +92,7 @@ onMounted(() => {
             <!-- Orders -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber id="orders" v-model="record.orders" :disabled="loading.isPageLoading" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['orders']?.[0] ? true : false" @blur="() => onBlurField('orders')" />
+                    <InputNumber id="orders" v-model="record.orders" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['orders']?.[0] ? true : false" @blur="() => onBlurField('orders')" />
                     <label for="orders">{{ t('plan.columns.orders') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['orders']?.[0]" severity="error" size="small">
@@ -106,7 +106,7 @@ onMounted(() => {
                     <InputNumber
                         id="products"
                         v-model="record.products"
-                        :disabled="loading.isPageLoading"
+                        :disabled="loading.isFormSending"
                         class="w-full"
                         :useGrouping="false"
                         :min="0"
@@ -123,7 +123,7 @@ onMounted(() => {
             <!-- Users -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber id="users" v-model="record.users" :disabled="loading.isPageLoading" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['users']?.[0] ? true : false" @blur="() => onBlurField('users')" />
+                    <InputNumber id="users" v-model="record.users" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['users']?.[0] ? true : false" @blur="() => onBlurField('users')" />
                     <label for="users">{{ t('plan.columns.users') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['users']?.[0]" severity="error" size="small">
@@ -134,7 +134,7 @@ onMounted(() => {
             <!-- Shops -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber id="shops" v-model="record.shops" :disabled="loading.isPageLoading" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['shops']?.[0] ? true : false" @blur="() => onBlurField('shops')" />
+                    <InputNumber id="shops" v-model="record.shops" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['shops']?.[0] ? true : false" @blur="() => onBlurField('shops')" />
                     <label for="shops">{{ t('plan.columns.shops') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['shops']?.[0]" severity="error" size="small">
@@ -145,7 +145,7 @@ onMounted(() => {
             <!-- Price -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber id="price" v-model="record.price" :disabled="loading.isPageLoading" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['price']?.[0] ? true : false" @blur="() => onBlurField('price')" />
+                    <InputNumber id="price" v-model="record.price" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['price']?.[0] ? true : false" @blur="() => onBlurField('price')" />
                     <label for="price">{{ t('plan.columns.price') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['price']?.[0]" severity="error" size="small">
@@ -170,7 +170,7 @@ onMounted(() => {
         <!-- Form Actions -->
         <div class="flex justify-end gap-2 mt-4">
             <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isPageLoading" />
+            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
     </form>
 </template>
