@@ -32,6 +32,12 @@ const model = computed(() => [
                 visible: can('view_shops')
             },
             {
+                label: t('navigation.side_bar.shippers'),
+                icon: 'pi pi-fw pi-truck',
+                to: '/admin/shippers',
+                visible: can('view_shippers')
+            },
+            {
                 label: t('navigation.side_bar.plans'),
                 icon: 'pi pi-fw pi-list',
                 to: '/admin/plans',

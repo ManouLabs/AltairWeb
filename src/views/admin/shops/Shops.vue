@@ -4,9 +4,10 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex, humanizeDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
-import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 const authStore = useAuthStore();
 const confirm = useConfirm();
@@ -20,6 +21,35 @@ const { t } = useI18n();
 const record = ref(null);
 const records = ref([]);
 const subscription = ref(null);
+const searchQuery = ref('');
+
+const filteredRecords = computed(() => {
+    if (!searchQuery.value) return records.value;
+    const query = searchQuery.value.toLowerCase();
+    return records.value.filter((shop) => {
+        // Search in name
+        if (shop.name?.toLowerCase().includes(query)) return true;
+        // Search in description
+        if (shop.description?.toLowerCase().includes(query)) return true;
+        // Search in address
+        if (shop.addresses?.[0]?.street?.toLowerCase().includes(query)) return true;
+        if (shop.addresses?.[0]?.city?.name?.toLowerCase().includes(query)) return true;
+        if (shop.addresses?.[0]?.region?.name?.toLowerCase().includes(query)) return true;
+        // Search in contacts (phone, email)
+        if (shop.contactMethods?.some((c) => c.value?.toLowerCase().includes(query))) return true;
+        return false;
+    });
+});
+
+// Debounced search with loading state
+const performSearch = debounce(() => {
+    loadingStore.stopDataLoading();
+}, 200);
+
+watch(searchQuery, () => {
+    loadingStore.startDataLoading();
+    performSearch();
+});
 
 function subscribeToEcho() {
     const shopsChannel = Echo.private(`data-stream.shops${authStore.user.account_id}`);
@@ -76,15 +106,16 @@ function editRecord(row) {
 }
 
 const openDialog = () => {
+    const isEdit = !!record.value?.id;
     dialog.open(formComponent, {
         props: {
-            header: t('common.titles.add', { entity: t('entity.shop') }),
+            header: isEdit ? t('common.titles.edit', { entity: t('entity.shop') }) : t('common.titles.add', { entity: t('entity.shop') }),
             style: { width: '50vw' },
             breakpoints: { '960px': '75vw', '640px': '90vw' },
             modal: true,
             maximizable: true
         },
-        data: { record: record.value, action: record.value?.id ? ACTIONS.EDIT : ACTIONS.CREATE },
+        data: { record: record.value, action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE },
         onClose: (result) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
@@ -165,6 +196,42 @@ const fetchRecords = () => {
         });
 };
 
+function getSocialIcon(type) {
+    const iconMap = {
+        whatsapp: 'pi pi-whatsapp',
+        website: 'pi pi-globe',
+        linkedin: 'pi pi-linkedin',
+        tiktok: 'pi pi-tiktok',
+        facebook: 'pi pi-facebook',
+        instagram: 'pi pi-instagram'
+    };
+    return iconMap[type] || 'pi pi-link';
+}
+
+function getSocialLink(contact) {
+    const value = contact.value;
+    if (!value) return '#';
+
+    switch (contact.type) {
+        case 'whatsapp':
+            // Remove any non-digits and create WhatsApp link
+            return `https://wa.me/${value.replace(/\D/g, '')}`;
+        case 'website':
+            // Add https if not present
+            return value.startsWith('http') ? value : `https://${value}`;
+        case 'linkedin':
+            return value.startsWith('http') ? value : `https://linkedin.com/in/${value}`;
+        case 'tiktok':
+            return value.startsWith('http') ? value : `https://tiktok.com/@${value}`;
+        case 'facebook':
+            return value.startsWith('http') ? value : `https://facebook.com/${value}`;
+        case 'instagram':
+            return value.startsWith('http') ? value : `https://instagram.com/${value}`;
+        default:
+            return value;
+    }
+}
+
 onMounted(() => {
     subscribeToEcho();
     fetchRecords();
@@ -187,7 +254,13 @@ onUnmounted(() => {
                 </template>
 
                 <template #end>
-                    <div class="flex">
+                    <div class="flex gap-2">
+                        <IconField>
+                            <InputIcon>
+                                <i class="pi pi-search" />
+                            </InputIcon>
+                            <InputText v-model="searchQuery" :placeholder="t('common.placeholders.search')" />
+                        </IconField>
                         <Button v-if="authStore.hasPermission('create_shops')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shop') })" :label="t('common.labels.new')" icon="pi pi-plus" severity="primary" @click="addRecord" outlined />
                     </div>
                 </template>
@@ -224,17 +297,31 @@ onUnmounted(() => {
             </Panel>
         </div>
     </div>
-    <div v-else-if="records.length > 0" class="card grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 shadow-glow">
-        <div v-for="record in records" :key="record.id">
+    <div v-else-if="filteredRecords.length > 0" class="card grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 shadow-glow">
+        <div v-for="record in filteredRecords" :key="record.id">
             <Panel :class="['border-none h-full', record.active ? 'bg-emerald-50 dark:bg-emerald-900' : 'bg-red-50 dark:bg-red-900']">
                 <template #header>
                     <div class="flex items-center gap-2">
                         <Image :src="record.files && record.files.length > 0 ? record.files[0].url : '/themes/shop-place-holder.svg'" alt="shop logo" width="80" preview />
-                        <span class="font-bold text-lg text-surface-700 dark:text-surface-400">{{ record.name }}</span>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-lg text-surface-700 dark:text-surface-400">{{ record.name }}</span>
+                            <span class="text-sm text-surface-500 dark:text-surface-400">{{ humanizeDate(record.created_at, t) }}</span>
+                        </div>
                     </div>
                 </template>
                 <template #footer>
                     <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-1">
+                            <a
+                                v-for="(contact, key) in record.contactMethods.filter((c) => ['whatsapp', 'website', 'linkedin', 'tiktok', 'facebook', 'instagram'].includes(c.type))"
+                                :key="key"
+                                :href="getSocialLink(contact)"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Button :icon="getSocialIcon(contact.type)" text rounded severity="secondary" size="small" v-tooltip.top="contact.type.charAt(0).toUpperCase() + contact.type.slice(1)" />
+                            </a>
+                        </div>
                         <div class="flex items-center gap-2">
                             <Button v-if="authStore.hasPermission('view_shops')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.shop') })" icon="pi pi-eye" text @click="editRecord(record)" severity="secondary" :disabled="loading" />
                             <Button v-if="authStore.hasPermission('update_shops')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.shop') })" icon="pi pi-pencil" text @click="editRecord(record)" :disabled="loading" />
@@ -248,7 +335,6 @@ onUnmounted(() => {
                                 :disabled="loading"
                             />
                         </div>
-                        <div class="text-surface-500 dark:text-surface-400">{{ t('common.labels.created') }} {{ humanizeDate(record.created_at, t) }}</div>
                     </div>
                 </template>
                 <template #icons>
@@ -272,17 +358,11 @@ onUnmounted(() => {
                         <i class="pi pi-map-marker text-primary-700 dark:bg-primary-700 dark:text-primary-100 mt-1"></i>
                         <span>{{ record.addresses[0].street }} {{ record.addresses[0].city?.name }} {{ record.addresses[0].region?.name }}</span>
                     </div>
-                    <div v-for="(contact, key) in record.contactMethods" :key="key" class="flex space-x-2 items-start mt-2">
+                    <div v-for="(contact, key) in record.contactMethods.filter((c) => ['phone', 'email'].includes(c.type))" :key="key" class="flex space-x-2 items-start mt-2">
                         <i
                             :class="{
                                 'pi-phone': contact.type === 'phone',
-                                'pi-envelope': contact.type === 'email',
-                                'pi-whatsapp': contact.type === 'whatsapp',
-                                'pi-globe': contact.type === 'website',
-                                'pi-linkedin': contact.type === 'linkedin',
-                                'pi-tiktok': contact.type === 'tiktok',
-                                'pi-facebook': contact.type === 'facebook',
-                                'pi pi-instagram': contact.type === 'instagram'
+                                'pi-envelope': contact.type === 'email'
                             }"
                             class="pi text-primary-700 dark:bg-primary-700 dark:text-primary-100 mt-1"
                         />
@@ -291,6 +371,9 @@ onUnmounted(() => {
                 </div>
             </Panel>
         </div>
+    </div>
+    <div class="card flex items-center justify-center shadow-glow" v-else-if="searchQuery && filteredRecords.length === 0">
+        <p class="text-surface-700 dark:text-surface-300">{{ t('shop.labels.no_shop_found') }}</p>
     </div>
     <div class="card flex items-center justify-center shadow-glow" v-else>
         <p class="text-surface-700 dark:text-surface-300">{{ t('shop.labels.no_shops') }}</p>

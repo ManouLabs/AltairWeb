@@ -219,7 +219,7 @@ const handleChoose = (chooseCallback, files) => {
 };
 
 const getFileIcon = (file) => {
-    if (!file.type) return 'pi pi-file';
+    if (!file || !file.type) return 'pi pi-file';
 
     if (file.type.startsWith('image/')) {
         return 'pi pi-image';
@@ -233,7 +233,7 @@ const getFileIcon = (file) => {
 };
 
 const getFileType = (file) => {
-    if (!file.type) return 'Unknown';
+    if (!file || !file.type) return 'Unknown';
 
     const typeMap = {
         'image/jpeg': 'JPEG Image',
@@ -340,39 +340,41 @@ const onClearExisting = () => {
             <template #content="{ files, removeFileCallback }">
                 <div v-if="(files && files.length > 0) || (uploadedFiles && uploadedFiles.length > 0)" class="space-y-3">
                     <div v-for="(file, index) in files && files.length ? files : uploadedFiles" :key="index" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <!-- File preview for images -->
-                            <div v-if="file.type && file.type.startsWith('image/')" class="flex-shrink-0">
-                                <img :src="getObjectURL(file)" :alt="file.name" :width="previewWidth" class="rounded-md object-cover" :style="{ height: previewWidth + 'px' }" />
-                            </div>
+                        <template v-if="file">
+                            <div class="flex items-center space-x-3">
+                                <!-- File preview for images -->
+                                <div v-if="file.type?.startsWith('image/')" class="flex-shrink-0">
+                                    <img :src="getObjectURL(file)" :alt="file.name" :width="previewWidth" class="rounded-md object-cover" :style="{ height: previewWidth + 'px' }" />
+                                </div>
 
-                            <!-- Video preview -->
-                            <div v-else-if="file.type && file.type.startsWith('video/')" class="flex-shrink-0 relative">
-                                <video :width="previewWidth" :style="{ height: previewWidth + 'px' }" class="rounded-md object-cover" preload="metadata">
-                                    <source :src="getObjectURL(file)" :type="file.type" />
-                                </video>
-                                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-md">
-                                    <i class="pi pi-play text-white text-2xl"></i>
+                                <!-- Video preview -->
+                                <div v-else-if="file.type?.startsWith('video/')" class="flex-shrink-0 relative">
+                                    <video :width="previewWidth" :style="{ height: previewWidth + 'px' }" class="rounded-md object-cover" preload="metadata">
+                                        <source :src="getObjectURL(file)" :type="file.type" />
+                                    </video>
+                                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-md">
+                                        <i class="pi pi-play text-white text-2xl"></i>
+                                    </div>
+                                </div>
+
+                                <!-- File icon for other media types -->
+                                <div v-else class="flex-shrink-0 w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center">
+                                    <i :class="getFileIcon(file)" class="text-xl text-gray-500 dark:text-gray-400"></i>
+                                </div>
+
+                                <!-- File details -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                        {{ file.name }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatFileSize(file.size) }} • {{ getFileType(file) }}</p>
                                 </div>
                             </div>
 
-                            <!-- File icon for other media types -->
-                            <div v-else class="flex-shrink-0 w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center">
-                                <i :class="getFileIcon(file)" class="text-xl text-gray-500 dark:text-gray-400"></i>
-                            </div>
-
-                            <!-- File details -->
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                                    {{ file.name }}
-                                </p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatFileSize(file.size) }} • {{ getFileType(file) }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Remove button -->
-                        <Button v-if="files && files.length" @click="removeFileCallback(index)" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
-                        <Button v-else @click="removeUploaded(index)" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
+                            <!-- Remove button -->
+                            <Button v-if="files && files.length" @click="removeFileCallback(index)" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
+                            <Button v-else @click="removeUploaded(index)" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
+                        </template>
                     </div>
                 </div>
 

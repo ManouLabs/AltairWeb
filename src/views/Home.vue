@@ -1,4 +1,8 @@
 <script setup>
+import { useAuthStore } from '@/stores/useAuthStore';
+
+const authStore = useAuthStore();
+
 function smoothScroll(id) {
     document.body.click();
     document.querySelector(id).scrollIntoView({
@@ -64,8 +68,15 @@ function smoothScroll(id) {
                         </li>
                     </ul>
                     <div class="flex border-t lg:border-t-0 border-surface py-4 lg:py-0 mt-4 lg:mt-0 gap-2">
-                        <Button label="Login" text as="router-link" to="/auth/login" rounded></Button>
-                        <Button label="Register" to="/auth/login" rounded></Button>
+                        <!-- Show Admin button when logged in -->
+                        <template v-if="authStore.isLoggedIn">
+                            <Button label="Admin" icon="pi pi-cog" as="router-link" to="/admin" rounded></Button>
+                        </template>
+                        <!-- Show Login/Register when not logged in -->
+                        <template v-else>
+                            <Button label="Login" text as="router-link" to="/auth/login" rounded></Button>
+                            <Button label="Register" to="/auth/login" rounded></Button>
+                        </template>
                     </div>
                 </div>
             </div>

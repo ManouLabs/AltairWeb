@@ -32,6 +32,7 @@ const record = ref({
 });
 const dialogRef = inject('dialogRef');
 const action = ref();
+const originalFile = ref(null); // Track original file to detect changes
 
 const syncStatusFromActive = () => {
     if (!record.value) return;
@@ -54,14 +55,23 @@ const onBlurField = (path) => {
 const prepareFormData = () => {
     const data = { ...record.value };
 
-    // Extract actual File object for multipart/form-data upload
-    if (data.files) {
-        if (data.files instanceof File) {
-            data.file = data.files;
-        } else if (Array.isArray(data.files) && data.files.length > 0 && data.files[0] instanceof File) {
-            data.file = data.files[0];
-        }
+    // Handle file changes with best practice detection
+    const currentFile = data.files;
+    const hadOriginalFile = originalFile.value !== null;
+
+    if (currentFile instanceof File) {
+        // New file uploaded - send it
+        data.file = currentFile;
+    } else if (Array.isArray(currentFile) && currentFile.length > 0 && currentFile[0] instanceof File) {
+        // New file uploaded (from array)
+        data.file = currentFile[0];
+    } else if (currentFile === null && hadOriginalFile) {
+        // File was deleted - send flag to remove
+        data.remove_file = true;
     }
+    // If currentFile is an object with url (existing unchanged) - don't send anything
+    // Backend keeps existing file when no file/remove_file is sent
+
     delete data.files;
 
     return data;
@@ -93,21 +103,54 @@ const closeDialog = () => dialogRef.value.close();
 
 onMounted(() => {
     const incoming = dialogRef.value.data.record || {};
-    const incomingContacts = incoming.contactMethods || {};
+
+    // Transform array to keyed object if needed (backend returns array, form expects object)
+    let incomingContacts = incoming.contactMethods || {};
+    if (Array.isArray(incomingContacts)) {
+        const contactObj = {};
+        for (const contact of incomingContacts) {
+            if (contact.type) {
+                contactObj[contact.type] = contact;
+            }
+        }
+        incomingContacts = contactObj;
+    }
+
     const normalizedContacts = { ...record.value.contactMethods };
     for (const key of Object.keys(normalizedContacts)) {
         const val = incomingContacts[key];
         if (val && typeof val === 'object' && (val.type || val.value)) {
-            normalizedContacts[key] = { type: val.type ?? key, value: val.value ?? null };
+            normalizedContacts[key] = { id: val.id, type: val.type ?? key, value: val.value ?? null };
         } else if (val || val === 0) {
             normalizedContacts[key] = { type: key, value: val };
         }
     }
 
+    // Normalize addresses: extract region/city IDs from objects (backend returns {id, name}, form expects just ID)
+    let normalizedAddresses = record.value.addresses;
+    if (Array.isArray(incoming.addresses)) {
+        normalizedAddresses = incoming.addresses.map((addr) => ({
+            ...addr,
+            region: addr.region?.id ?? addr.region ?? null,
+            city: addr.city?.id ?? addr.city ?? null
+        }));
+    }
+
+    // Extract first file from files array for FileUploadField (expects object, not array)
+    let existingFile = null;
+    if (Array.isArray(incoming.files) && incoming.files.length > 0) {
+        existingFile = incoming.files[0];
+    }
+
+    // Store original file for change detection
+    originalFile.value = existingFile;
+
     record.value = {
         ...record.value, // keeps defaults
         ...incoming,
-        contactMethods: normalizedContacts
+        addresses: normalizedAddresses,
+        contactMethods: normalizedContacts,
+        files: existingFile
     };
     action.value = dialogRef.value.data.action;
     syncStatusFromActive();

@@ -15,7 +15,9 @@
         "my_account": "My Account",
         "my_informations": "Account Information",
         "shop": "Shop",
-        "shops": "Shops"
+        "shops": "Shops",
+        "shipper": "Shipper",
+        "shippers": "Shippers"
     },
     "common": {
         "contents": {
@@ -212,6 +214,7 @@
             "accounts": "Accounts",
             "plans": "Plans",
             "shops": "Shops",
+            "shippers": "Shippers",
             "regions": "Regions",
             "cities": "Cities",
             "user": "User",
@@ -293,7 +296,41 @@
         },
         "labels": {
             "no_shops": "No shops available. Please add a new shop...",
+            "no_shop_found": "No shop found matching your search.",
             "manage_subtitle": "Manage your shops and their configurations"
+        }
+    },
+    "shipper": {
+        "columns": {
+            "name": "Name",
+            "type": "Type",
+            "api": "API",
+            "api_configured": "API Status",
+            "active": "Active",
+            "region_code": "Code",
+            "region_name": "Region",
+            "enabled": "Enabled",
+            "price": "Price",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
+        },
+        "labels": {
+            "no_shippers": "No shippers available. Please add a new shipper...",
+            "basic_info": "Basic Information",
+            "api_config": "API Configuration",
+            "api_key": "API Key",
+            "api_hint": "Leave empty to keep the current API key unchanged.",
+            "region_pricing": "Region Pricing",
+            "connected": "Connected",
+            "not_configured": "Not Configured"
+        },
+        "types": {
+            "company": "Company",
+            "individual": "Individual"
+        },
+        "placeholders": {
+            "api_key": "Enter API key...",
+            "api_unchanged": "Leave empty to keep current API key"
         }
     },
     "plan": {

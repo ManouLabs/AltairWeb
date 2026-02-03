@@ -17,6 +17,9 @@ export const useAuthStore = defineStore('auth', {
     persist: {
         paths: ['user', 'permissions']
     },
+    getters: {
+        isLoggedIn: (state) => !!state.user
+    },
     actions: {
         async login(email, password) {
             try {

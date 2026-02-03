@@ -23,6 +23,24 @@ const adminRoutes = [
         meta: { requiresAuth: true, requiresPermission: 'view_shops' }
     },
     {
+        path: 'shippers',
+        name: 'shippers',
+        component: () => import('@/views/admin/shippers/Shippers.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_shippers' }
+    },
+    {
+        path: 'shippers/create',
+        name: 'shipper-create',
+        component: () => import('@/views/admin/shippers/ShipperForm.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'create_shippers', activeMenu: '/admin/shippers' }
+    },
+    {
+        path: 'shippers/:id/edit',
+        name: 'shipper-edit',
+        component: () => import('@/views/admin/shippers/ShipperForm.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'update_shippers', activeMenu: '/admin/shippers' }
+    },
+    {
         path: 'plans',
         name: 'plans',
         component: () => import('@/views/admin/plans/Plans.vue'),
@@ -104,13 +122,9 @@ const handleRouteGuard = async (to, next, authStore) => {
     }
 
     if (to.meta.requiresGuest) {
-        if (authStore.user) {
-            try {
-                await authStore.fetchUser();
-            } catch (e) {}
-            if (authStore.user) {
-                return next({ name: 'dashboard' });
-            }
+        // If user is logged in, redirect to admin
+        if (authStore.isLoggedIn) {
+            return next({ path: '/admin' });
         }
     }
 

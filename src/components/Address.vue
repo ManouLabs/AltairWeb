@@ -35,8 +35,8 @@ const normalizeIn = (arr) => {
     const normalized = incoming.map((a) => ({
         _key: makeKey(),
         street: a?.street ?? '',
-        region: a?.region ?? null,
-        city: a?.city ?? null,
+        region: typeof a?.region === 'object' && a?.region !== null ? a.region.id : (a?.region ?? null),
+        city: typeof a?.city === 'object' && a?.city !== null ? a.city.id : (a?.city ?? null),
         main: typeof a?.main === 'boolean' ? a.main : !isMultiple.value
     }));
 
@@ -56,8 +56,8 @@ const normalizeIn = (arr) => {
 const normalizeOut = (arr) =>
     (Array.isArray(arr) ? arr : []).map((a) => ({
         street: a?.street ?? '',
-        region: a?.region ?? null,
-        city: a?.city ?? null,
+        region: typeof a?.region === 'object' && a?.region !== null ? a.region.id : (a?.region ?? null),
+        city: typeof a?.city === 'object' && a?.city !== null ? a.city.id : (a?.city ?? null),
         main: Boolean(a?.main)
     }));
 
@@ -107,17 +107,14 @@ watch(
         const regions = [...new Set(localAddresses.value.map((a) => a.region).filter(Boolean))];
         await Promise.all(regions.map((rid) => getCitiesForRegion(rid)));
 
-        // drop invalid cities
-        for (const addr of localAddresses.value) {
-            if (!addr.region) {
-                addr.city = null;
-                continue;
-            }
-            const cities = cityOptionsFor(addr.region);
-            if (addr.city && !cities.some((c) => c.id === addr.city)) addr.city = null;
-        }
-
         suppressEmit.value = false;
+
+        // Emit normalized data to parent so it has IDs instead of objects
+        const payload = normalizeOut(localAddresses.value);
+        const propNorm = normalizeOut(props.modelValue);
+        if (!isEqualAddresses(payload, propNorm)) {
+            emit('update:modelValue', payload);
+        }
     },
     { immediate: true, deep: true }
 );

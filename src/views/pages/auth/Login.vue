@@ -2,12 +2,22 @@
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { useShowToast } from '@/utilities/toast';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+
 const { showToast } = useShowToast();
 const loading = useLoading();
+const router = useRouter();
 const email = ref('');
 const password = ref('');
 const authStore = useAuthStore();
+
+// Redirect to admin if already logged in
+onMounted(() => {
+    if (authStore.isLoggedIn) {
+        router.push('/admin');
+    }
+});
 
 const loginUser = async () => {
     try {
