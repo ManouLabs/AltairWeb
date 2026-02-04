@@ -7,7 +7,7 @@ import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { shipperSchema } from '@/validations/shipper';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -19,9 +19,11 @@ const loading = useLoading();
 const { showToast } = useShowToast();
 
 const isEdit = computed(() => !!route.params.id);
+const isLoading = ref(true);
 const regions = ref([]);
 const shops = ref([]);
 const selectedShopIds = ref([]);
+const formKey = ref(0);
 
 const shipperTypes = [
     { label: t('shipper.types.company'), value: 'company', icon: 'pi pi-building' },
@@ -33,7 +35,7 @@ const initialValues = reactive({
     name: '',
     type: 'company',
     api: '',
-    active: false
+    active: true
 });
 
 // Region pricing state (managed separately from form)
@@ -83,6 +85,10 @@ async function loadShops() {
     try {
         const response = await useShopService.getShops();
         shops.value = response.data || [];
+        // Auto-select all shops for new shippers
+        if (!isEdit.value) {
+            selectedShopIds.value = shops.value.map((shop) => shop.id);
+        }
     } catch (error) {
         console.error('Error loading shops:', error);
     }
@@ -117,6 +123,9 @@ async function loadShipper() {
         if (shipper.shop_ids) {
             selectedShopIds.value = shipper.shop_ids;
         }
+
+        // Force form to re-render with new initial values
+        formKey.value++;
     } catch (error) {
         console.error('Error loading shipper:', error);
         showToast('error', ACTIONS.FETCH, 'shipper', 'tc');
@@ -209,10 +218,13 @@ const onFormSubmit = async ({ valid, values }) => {
 
         router.push({ name: 'shippers' });
     } catch (error) {
-        if (error?.response?.data?.errors) {
+        if (error?.response?.status === 422 && error?.response?.data?.errors) {
+            // Validation error - display inline errors, no toast needed
             authStore.errors = error.response.data.errors;
+        } else {
+            // Other errors - show toast
+            showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'shipper', 'tc');
         }
-        showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'shipper', 'tc');
     } finally {
         loading.stopFormSending();
     }
@@ -231,9 +243,10 @@ function handleTypeChange(event) {
 }
 
 onMounted(async () => {
-    await loadRegions();
-    await loadShops();
+    // Load regions and shops in parallel first, then load shipper
+    await Promise.all([loadRegions(), loadShops()]);
     await loadShipper();
+    isLoading.value = false;
 });
 </script>
 
@@ -247,7 +260,57 @@ onMounted(async () => {
                 <Button :label="t('common.labels.back')" icon="pi pi-arrow-left" severity="secondary" outlined @click="goBack" />
             </div>
 
-            <Form v-slot="$form" :initialValues="initialValues" :resolver="resolver" :validateOnBlur="true" @submit="onFormSubmit" class="flex flex-col gap-6">
+            <!-- Loading Skeleton -->
+            <div v-if="isLoading" class="flex flex-col gap-6">
+                <!-- Basic Info Skeleton -->
+                <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
+                    <Skeleton width="150px" height="24px" class="mb-4" />
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Skeleton height="48px" class="w-full" />
+                        <Skeleton height="48px" class="w-full" />
+                        <Skeleton height="48px" class="w-full" />
+                    </div>
+                    <div class="mt-6 flex items-center gap-3">
+                        <Skeleton width="40px" height="24px" borderRadius="16px" />
+                        <Skeleton width="60px" height="20px" />
+                    </div>
+                </div>
+
+                <!-- API Config Skeleton -->
+                <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
+                    <Skeleton width="180px" height="24px" class="mb-4" />
+                    <Skeleton height="48px" class="w-full md:w-1/2" />
+                </div>
+
+                <!-- Region Pricing Skeleton -->
+                <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
+                    <Skeleton width="200px" height="24px" class="mb-4" />
+                    <div class="bg-surface-100 dark:bg-surface-800 rounded-lg p-4 mb-4">
+                        <div class="flex flex-wrap items-end gap-4">
+                            <Skeleton width="120px" height="48px" />
+                            <Skeleton width="120px" height="48px" />
+                            <Skeleton width="120px" height="48px" />
+                            <Skeleton width="100px" height="36px" />
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <Skeleton height="40px" class="w-full" />
+                        <Skeleton height="40px" class="w-full" />
+                        <Skeleton height="40px" class="w-full" />
+                        <Skeleton height="40px" class="w-full" />
+                        <Skeleton height="40px" class="w-full" />
+                    </div>
+                </div>
+
+                <!-- Actions Skeleton -->
+                <div class="flex justify-end gap-3">
+                    <Skeleton width="100px" height="40px" />
+                    <Skeleton width="100px" height="40px" />
+                </div>
+            </div>
+
+            <!-- Actual Form -->
+            <Form v-else :key="formKey" v-slot="$form" :initialValues="initialValues" :resolver="resolver" :validateOnBlur="true" @submit="onFormSubmit" class="flex flex-col gap-6">
                 <!-- Basic Info Section -->
                 <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
                     <h3 class="text-lg font-semibold mb-4">{{ t('shipper.labels.basic_info') }}</h3>
