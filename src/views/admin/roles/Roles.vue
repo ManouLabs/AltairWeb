@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -8,6 +8,7 @@ import { useRoleService } from '@/services/useRoleService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { RoleData, Permission } from '@/types/role';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
@@ -29,7 +30,7 @@ const defaultFiltersConfig = {
 };
 
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
-    (params) =>
+    (params: any) =>
         useRoleService.getRoles(params).then((data) => {
             allPermissions.value = [data.permissions, []];
             return {
@@ -51,27 +52,38 @@ const { highlights, markHighlight, getRowClass } = useRowEffects();
 const defaultFields = ['name', 'permissions'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
-const record = ref(null);
-const defaultColumns = computed(() =>
+const record = ref<RoleData | null>(null);
+
+interface Column {
+    field: string;
+    header: string;
+}
+
+const defaultColumns = computed<Column[]>(() =>
     defaultFields.map((field) => ({
         field,
         header: t(`role.columns.${field}`)
     }))
 );
 const { selectedColumns, columnChanged } = useDynamicColumns('rolesColumns', defaultFields, 'role.columns');
-const subscription = ref(null);
+const subscription = ref<any>(null);
 
-const allPermissions = ref(null);
-const permissionsOptions = ref([], []);
+const allPermissions = ref<Permission[][] | null>(null);
+const permissionsOptions = ref<Permission[][]>([[], []]);
 
-function subscribeToEcho() {
+interface EchoEvent {
+    action: string;
+    data: RoleData | number[];
+}
+
+function subscribeToEcho(): void {
     const rolesChannel = Echo.private(`data-stream.roles${authStore.user.account_id}`);
-    subscription.value = rolesChannel.listen('DataStream', (event) => {
+    subscription.value = rolesChannel.listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: EchoEvent): void {
     switch (event.action) {
         case ACTIONS.DELETE:
             handleDelete(event);
@@ -87,8 +99,8 @@ function handleEchoEvent(event) {
     }
 }
 
-async function handleDelete(event) {
-    for (const id of event.data) {
+async function handleDelete(event: EchoEvent): Promise<void> {
+    for (const id of event.data as number[]) {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
@@ -96,35 +108,37 @@ async function handleDelete(event) {
     }
 }
 
-function handleUpdate(event) {
-    const index = findRecordIndex(records, event.data.id);
+function handleUpdate(event: EchoEvent): void {
+    const data = event.data as RoleData;
+    const index = findRecordIndex(records, data.id);
     if (index !== -1) {
-        records.value[index] = event.data;
-        markHighlight(event.data.id, 'updated');
+        records.value[index] = data;
+        markHighlight(data.id, 'updated');
     }
 }
 
-function handleStore(event) {
-    const exists = records.value.some((record) => record.id === event.data.id);
+function handleStore(event: EchoEvent): void {
+    const data = event.data as RoleData;
+    const exists = records.value.some((record: RoleData) => record.id === data.id);
     if (!exists) {
-        records.value.unshift(event.data);
-        markHighlight(event.data.id, 'new');
+        records.value.unshift(data);
+        markHighlight(data.id, 'new');
     }
 }
 
-function addRecord() {
-    record.value = { name: null, permissions: [] };
-    permissionsOptions.value = allPermissions.value;
+function addRecord(): void {
+    record.value = { id: 0, name: '', permissions: [] } as RoleData;
+    permissionsOptions.value = allPermissions.value || [[], []];
     authStore.errors = {};
     openDialog();
 }
-function editRecord(row) {
+function editRecord(row: RoleData): void {
     record.value = row;
     permissionsOptions.value[1] = row.permissions;
-    permissionsOptions.value[0] = allPermissions.value?.[0]?.filter((permission) => !permissionsOptions.value[1]?.some((sp) => sp.id === permission.id)) || [];
+    permissionsOptions.value[0] = allPermissions.value?.[0]?.filter((permission: Permission) => !permissionsOptions.value[1]?.some((sp: Permission) => sp.id === permission.id)) || [];
     openDialog();
 }
-const openDialog = () => {
+const openDialog = (): void => {
     dialog.open(formComponent, {
         props: {
             header: t('common.titles.add', { entity: t('entity.role') }),
@@ -141,9 +155,9 @@ const openDialog = () => {
         data: {
             record: record.value,
             permissionsOptions: permissionsOptions.value,
-            action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE
+            action: record.value?.id ? ACTIONS.EDIT : ACTIONS.CREATE
         },
-        onClose: (result) => {
+        onClose: (result: any) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
@@ -166,10 +180,10 @@ const openDialog = () => {
     });
 };
 
-function confirmDeleteRecord(event, rolesIds) {
+function confirmDeleteRecord(event: MouseEvent, rolesIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget,
+        target: event.currentTarget as HTMLElement,
         message: rolesIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.roles') }) : t('common.confirmations.delete.message', { entity: t('entity.role') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -199,7 +213,7 @@ function confirmDeleteRecord(event, rolesIds) {
                     })();
                     showToast('success', ACTIONS.DELETE, 'role', 'tc');
                 })
-                .catch((error) => {
+                .catch((error: any) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
                         console.error('Session expired, redirecting to login');
                     }

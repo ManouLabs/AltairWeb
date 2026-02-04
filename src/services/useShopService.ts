@@ -1,11 +1,16 @@
-// src/services/useShopService.js
+// src/services/useShopService.ts
 import apiClient from '@/services/axios';
+import type { ShopFormData, ShopsResponse, ShopApiResponse, DeleteShopsResponse, ToggleActiveResponse } from '@/types/shop';
 
-const buildShopFormData = (shopData, { methodOverride } = {}) => {
+interface BuildFormDataOptions {
+    methodOverride?: string;
+}
+
+const buildShopFormData = (shopData: Partial<ShopFormData>, options: BuildFormDataOptions = {}): FormData => {
     const formData = new FormData();
 
-    if (methodOverride) {
-        formData.append('_method', methodOverride);
+    if (options.methodOverride) {
+        formData.append('_method', options.methodOverride);
     }
 
     for (const [key, value] of Object.entries(shopData || {})) {
@@ -33,27 +38,27 @@ const buildShopFormData = (shopData, { methodOverride } = {}) => {
     return formData;
 };
 
-const hasFile = (shopData) => {
+const hasFile = (shopData: Partial<ShopFormData>): boolean => {
     return typeof File !== 'undefined' && shopData?.file instanceof File;
 };
 
 export const useShopService = {
-    async getShops() {
+    async getShops(): Promise<ShopsResponse> {
         try {
-            const response = await apiClient.get('/api/admin/shops');
+            const response = await apiClient.get<ShopsResponse>('/api/admin/shops');
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    async storeShop(shopData) {
+    async storeShop(shopData: ShopFormData): Promise<ShopApiResponse> {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
 
             if (hasFile(shopData)) {
                 const formData = buildShopFormData(shopData);
-                const response = await apiClient.post('/api/admin/shops', formData, {
+                const response = await apiClient.post<ShopApiResponse>('/api/admin/shops', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
@@ -61,14 +66,14 @@ export const useShopService = {
                 return response.data;
             }
 
-            const response = await apiClient.post('/api/admin/shops', shopData);
+            const response = await apiClient.post<ShopApiResponse>('/api/admin/shops', shopData);
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    async updateShop(shopId, updatedData) {
+    async updateShop(shopId: number, updatedData: Partial<ShopFormData>): Promise<ShopApiResponse> {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
 
@@ -76,7 +81,7 @@ export const useShopService = {
             // For updates with a file, use method spoofing.
             if (hasFile(updatedData)) {
                 const formData = buildShopFormData(updatedData, { methodOverride: 'PUT' });
-                const response = await apiClient.post(`/api/admin/shops/${shopId}`, formData, {
+                const response = await apiClient.post<ShopApiResponse>(`/api/admin/shops/${shopId}`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
@@ -84,27 +89,27 @@ export const useShopService = {
                 return response.data;
             }
 
-            const response = await apiClient.put(`/api/admin/shops/${shopId}`, updatedData);
+            const response = await apiClient.put<ShopApiResponse>(`/api/admin/shops/${shopId}`, updatedData);
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    async toggleActiveShop(shopId) {
+    async toggleActiveShop(shopId: number): Promise<ToggleActiveResponse> {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.patch(`/api/admin/shops/${shopId}/toggle`);
+            const response = await apiClient.patch<ToggleActiveResponse>(`/api/admin/shops/${shopId}/toggle`);
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    async deleteShops(shopsIds) {
+    async deleteShops(shopsIds: number[]): Promise<DeleteShopsResponse> {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.delete('/api/admin/shops', { data: { shops: shopsIds } });
+            const response = await apiClient.delete<DeleteShopsResponse>('/api/admin/shops', { data: { shops: shopsIds } });
             return response.data;
         } catch (error) {
             throw error;

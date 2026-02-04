@@ -1,44 +1,60 @@
-<script setup>
+<script setup lang="ts">
 import { useUserService } from '@/services/useUserService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS } from '@/utilities/toast';
 import { userSchema } from '@/validations/user';
 import { validate, validateField } from '@/validations/validate';
-import { inject, onMounted, ref } from 'vue';
+import type { User, Role, UserFormData } from '@/types/user';
+import { inject, onMounted, ref, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
+interface DialogData {
+    record: User | UserFormData;
+    rolesOptions: Role[][];
+    action: string;
+}
+
+interface DialogRef {
+    value: {
+        data: DialogData;
+        close: (result?: { record: User; action: string }) => void;
+    };
+}
 
 const { t } = useI18n();
 const authStore = useAuthStore();
 const loading = useLoading();
-const dialogRef = inject('dialogRef');
+const dialogRef = inject<DialogRef>('dialogRef');
 
-const record = ref({});
-const action = ref();
-const rolesOptions = ref([]);
+const record: Ref<User | UserFormData> = ref({} as UserFormData);
+const action = ref<string>('');
+const rolesOptions = ref<Role[][]>([]);
 
 onMounted(() => {
-    record.value = dialogRef.value.data.record;
-    rolesOptions.value = dialogRef.value.data.rolesOptions;
-    action.value = dialogRef.value.data.action;
+    if (dialogRef?.value) {
+        record.value = dialogRef.value.data.record;
+        rolesOptions.value = dialogRef.value.data.rolesOptions;
+        action.value = dialogRef.value.data.action;
+    }
 });
 
 // Schema helpers
 const schema = userSchema;
-const syncRoles = () => {
+const syncRoles = (): void => {
     try {
-        record.value.roles = Array.isArray(rolesOptions.value?.[1]) ? rolesOptions.value[1].map((r) => r.id) : [];
+        (record.value as UserFormData).roles = Array.isArray(rolesOptions.value?.[1]) ? rolesOptions.value[1].map((r: Role) => r.id) : [];
     } catch {
-        record.value.roles = [];
+        (record.value as UserFormData).roles = [];
     }
 };
-const validateForm = () => {
+const validateForm = (): boolean => {
     syncRoles();
     const { ok, errors } = validate(schema, record.value);
     authStore.errors = ok ? {} : errors;
     return ok;
 };
-const onBlurField = (path) => {
+const onBlurField = (path: string): void => {
     const { ok, errors } = validateField(schema, record.value, path);
     if (ok) {
         authStore.clearErrors([path]);
@@ -47,32 +63,32 @@ const onBlurField = (path) => {
     }
 };
 
-async function saveRecord() {
+async function saveRecord(): Promise<void> {
     if (!validateForm()) return;
 
     loading.startFormSending();
-    const payload = { ...record.value };
+    const payload = { ...record.value } as UserFormData;
     // On update, if password empty, remove it to avoid overriding
     if (action.value !== ACTIONS.CREATE && !payload.password) {
         delete payload.password;
         delete payload.password_confirmation;
     }
 
-    const serviceAction = action.value === ACTIONS.CREATE ? useUserService.storeUser : (userData) => useUserService.updateUser(record.value.id, userData);
+    const serviceAction = action.value === ACTIONS.CREATE ? useUserService.storeUser : (userData: Partial<UserFormData>) => useUserService.updateUser((record.value as User).id, userData);
 
     serviceAction(payload)
         .then((response) => {
-            dialogRef.value.close({ record: response.data, action: action.value });
+            dialogRef?.value.close({ record: response.data, action: action.value });
         })
-        .catch((error) => {
+        .catch((error: any) => {
             authStore.processError(error, t('common.messages.error_occurred'));
         })
         .finally(() => {
             loading.stopFormSending();
         });
 }
-const closeDialog = () => {
-    dialogRef.value.close();
+const closeDialog = (): void => {
+    dialogRef?.value.close();
 };
 </script>
 <template>

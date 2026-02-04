@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -9,10 +9,11 @@ import { useUserService } from '@/services/useUserService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { User, Role } from '@/types/user';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 onMounted(() => {
@@ -57,11 +58,11 @@ const { highlights, markHighlight, getRowClass } = useRowEffects();
 const defaultFields = ['name', 'email', 'email_verified_at', 'roles', 'created_at', 'updated_at'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
-const record = ref(null);
+const record = ref<User | null>(null);
 
-const avatarColors = ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#9333EA'];
+const avatarColors: string[] = ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#9333EA'];
 
-const hashString = (s) => {
+const hashString = (s: string | null | undefined): number => {
     if (!s) return 0;
     let h = 0;
     for (let i = 0; i < s.length; i++) {
@@ -71,7 +72,7 @@ const hashString = (s) => {
     return Math.abs(h);
 };
 
-const getInitials = (name) => {
+const getInitials = (name: string | null | undefined): string => {
     if (!name) return '';
     const parts = String(name).trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return '';
@@ -79,12 +80,17 @@ const getInitials = (name) => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
 };
 
-const getAvatarColor = (name) => {
+const getAvatarColor = (name: string | null | undefined): string => {
     const idx = hashString(name || '') % avatarColors.length;
     return avatarColors[idx];
 };
 
-const defaultColumns = computed(() =>
+interface Column {
+    field: string;
+    header: string;
+}
+
+const defaultColumns = computed<Column[]>(() =>
     defaultFields.map((field) => ({
         field,
         header: t(`user.columns.${field}`)
@@ -93,19 +99,24 @@ const defaultColumns = computed(() =>
 
 const { selectedColumns, columnChanged } = useDynamicColumns('usersColumns', defaultFields, 'user.columns');
 
-const subscription = ref(null);
+const subscription = ref<any>(null);
 
-const allRoles = ref(null);
-const rolesOptions = ref([], []);
+const allRoles = ref<Role[][] | null>(null);
+const rolesOptions = ref<Role[][]>([[], []]);
 
-function subscribeToEcho() {
+interface EchoEvent {
+    action: string;
+    data: User | number[];
+}
+
+function subscribeToEcho(): void {
     const usersChannel = Echo.private(`data-stream.users${authStore.user.account_id}`);
-    subscription.value = usersChannel.listen('DataStream', (event) => {
+    subscription.value = usersChannel.listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: EchoEvent): void {
     switch (event.action) {
         case ACTIONS.DELETE:
             handleDelete(event);
@@ -121,8 +132,8 @@ function handleEchoEvent(event) {
     }
 }
 
-async function handleDelete(event) {
-    for (const id of event.data) {
+async function handleDelete(event: EchoEvent): Promise<void> {
+    for (const id of event.data as number[]) {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
@@ -130,32 +141,34 @@ async function handleDelete(event) {
     }
 }
 
-function handleUpdate(event) {
-    const index = findRecordIndex(records, event.data.id);
+function handleUpdate(event: EchoEvent): void {
+    const data = event.data as User;
+    const index = findRecordIndex(records, data.id);
     if (index !== -1) {
-        records.value[index] = event.data;
-        markHighlight(event.data.id, 'updated');
+        records.value[index] = data;
+        markHighlight(data.id, 'updated');
     }
 }
 
-function handleStore(event) {
-    const exists = records.value.some((record) => record.id === event.data.id);
+function handleStore(event: EchoEvent): void {
+    const data = event.data as User;
+    const exists = records.value.some((record: User) => record.id === data.id);
     if (!exists) {
-        records.value.unshift(event.data);
-        markHighlight(event.data.id, 'new');
+        records.value.unshift(data);
+        markHighlight(data.id, 'new');
     }
 }
 
-function addRecord() {
-    record.value = { name: null, email: null, password: null, password_confirmation: null, roles: [] };
-    rolesOptions.value = allRoles.value;
+function addRecord(): void {
+    record.value = { id: 0, name: '', email: '', password: null, password_confirmation: null, roles: [] } as unknown as User;
+    rolesOptions.value = allRoles.value || [[], []];
     authStore.errors = {};
     openDialog();
 }
-function editRecord(row) {
+function editRecord(row: User): void {
     record.value = row;
     rolesOptions.value[1] = row.roles;
-    rolesOptions.value[0] = allRoles.value?.[0]?.filter((role) => !rolesOptions.value[1]?.some((sr) => sr.id === role.id)) || [];
+    rolesOptions.value[0] = allRoles.value?.[0]?.filter((role: Role) => !rolesOptions.value[1]?.some((sr: Role) => sr.id === role.id)) || [];
     openDialog();
 }
 const openDialog = () => {
@@ -200,10 +213,10 @@ const openDialog = () => {
     });
 };
 
-function confirmDeleteRecord(event, usersIds) {
+function confirmDeleteRecord(event: MouseEvent, usersIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget,
+        target: event.currentTarget as HTMLElement,
         message: usersIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.users') }) : t('common.confirmations.delete.message', { entity: t('entity.user') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -233,7 +246,7 @@ function confirmDeleteRecord(event, usersIds) {
                     })();
                     showToast('success', ACTIONS.DELETE, 'user', 'tc');
                 })
-                .catch((error) => {
+                .catch((error: any) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
                         console.error('Session expired, redirecting to login');
                     }

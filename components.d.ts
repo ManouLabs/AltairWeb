@@ -42,6 +42,7 @@ declare module 'vue' {
     OverlayBadge: typeof import('primevue/overlaybadge')['default']
     Panel: typeof import('primevue/panel')['default']
     Password: typeof import('primevue/password')['default']
+    PickList: typeof import('primevue/picklist')['default']
     Popover: typeof import('primevue/popover')['default']
     ProgressBar: typeof import('primevue/progressbar')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

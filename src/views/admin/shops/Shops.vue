@@ -1,83 +1,96 @@
-<script setup>
+<script setup lang="ts">
 import { useShopService } from '@/services/useShopService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex, humanizeDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { ShopData, ShopFormData, ContactMethod, Address } from '@/types/shop';
 import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
 const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
 const loadingStore = useLoading();
-const loadingActiveId = ref(null);
+const loadingActiveId = ref<number | null>(null);
+const loading = ref<boolean>(false);
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
 
-const record = ref(null);
-const records = ref([]);
-const subscription = ref(null);
-const searchQuery = ref('');
+const record = ref<ShopData | ShopFormData | null>(null);
+const records = ref<ShopData[]>([]);
+const subscription = ref<any>(null);
+const searchQuery = ref<string>('');
 
-const filteredRecords = computed(() => {
+const filteredRecords = computed<ShopData[]>(() => {
     if (!searchQuery.value) return records.value;
     const query = searchQuery.value.toLowerCase();
-    return records.value.filter((shop) => {
+    return records.value.filter((shop: ShopData) => {
         // Search in name
         if (shop.name?.toLowerCase().includes(query)) return true;
         // Search in description
         if (shop.description?.toLowerCase().includes(query)) return true;
         // Search in address
         if (shop.addresses?.[0]?.street?.toLowerCase().includes(query)) return true;
-        if (shop.addresses?.[0]?.city?.name?.toLowerCase().includes(query)) return true;
-        if (shop.addresses?.[0]?.region?.name?.toLowerCase().includes(query)) return true;
+        const city = shop.addresses?.[0]?.city;
+        const region = shop.addresses?.[0]?.region;
+        if (city && typeof city === 'object' && 'name' in city && city.name?.toLowerCase().includes(query)) return true;
+        if (region && typeof region === 'object' && 'name' in region && region.name?.toLowerCase().includes(query)) return true;
         // Search in contacts (phone, email)
-        if (shop.contactMethods?.some((c) => c.value?.toLowerCase().includes(query))) return true;
+        if (shop.contactMethods?.some((c: ContactMethod) => c.value?.toLowerCase().includes(query))) return true;
         return false;
     });
 });
 
 // Debounced search with loading state
-const performSearch = debounce(() => {
+const performSearch = debounce((): void => {
     loadingStore.stopDataLoading();
 }, 200);
 
+import { watch } from 'vue';
 watch(searchQuery, () => {
     loadingStore.startDataLoading();
     performSearch();
 });
 
-function subscribeToEcho() {
+interface EchoEvent {
+    action: string;
+    data: ShopData | number[];
+}
+
+function subscribeToEcho(): void {
     const shopsChannel = Echo.private(`data-stream.shops${authStore.user.account_id}`);
-    subscription.value = shopsChannel.listen('DataStream', (event) => {
+    subscription.value = shopsChannel.listen('DataStream', (event: EchoEvent) => {
         console.log('Received Echo event for shops:', event);
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: EchoEvent): void {
     switch (event.action) {
         case ACTIONS.DELETE:
-            event.data.forEach((id) => {
+            (event.data as number[]).forEach((id: number) => {
                 const index = findRecordIndex(records, id);
                 if (index !== -1) records.value.splice(index, 1);
             });
             break;
         case ACTIONS.UPDATE: {
-            const index = findRecordIndex(records, event.data.id);
+            const data = event.data as ShopData;
+            const index = findRecordIndex(records, data.id);
             if (index !== -1) {
-                records.value[index] = event.data;
+                records.value[index] = data;
             }
             break;
         }
         case ACTIONS.STORE: {
-            const exists = records.value.some((r) => r.id === event.data.id);
+            const data = event.data as ShopData;
+            const exists = records.value.some((r: ShopData) => r.id === data.id);
             if (!exists) {
-                records.value.unshift(event.data);
+                records.value.unshift(data);
             }
             break;
         }
@@ -86,7 +99,7 @@ function handleEchoEvent(event) {
     }
 }
 
-function addRecord() {
+function addRecord(): void {
     authStore.errors = {};
     record.value = {
         name: null,
@@ -94,19 +107,19 @@ function addRecord() {
         active: true,
         addresses: [{ street: '', region: null, city: null, main: true }],
         contactMethods: { phone: null, email: null, whatsapp: null, website: null, linkedin: null, tiktok: null, facebook: null, instagram: null },
-        file: null
-    };
+        files: null
+    } as ShopFormData;
     openDialog();
 }
 
-function editRecord(row) {
+function editRecord(row: ShopData): void {
     authStore.errors = {};
     record.value = row;
     openDialog();
 }
 
-const openDialog = () => {
-    const isEdit = !!record.value?.id;
+const openDialog = (): void => {
+    const isEdit = !!(record.value as ShopData)?.id;
     dialog.open(formComponent, {
         props: {
             header: isEdit ? t('common.titles.edit', { entity: t('entity.shop') }) : t('common.titles.add', { entity: t('entity.shop') }),
@@ -116,7 +129,7 @@ const openDialog = () => {
             maximizable: true
         },
         data: { record: record.value, action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE },
-        onClose: (result) => {
+        onClose: (result: any) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
@@ -135,10 +148,10 @@ const openDialog = () => {
     });
 };
 
-function confirmDeleteRecord(event, shopIds) {
+function confirmDeleteRecord(event: MouseEvent, shopIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget,
+        target: event.currentTarget as HTMLElement,
         message: shopIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.shops') }) : t('common.confirmations.delete.message', { entity: t('entity.shop') }),
         icon: 'pi pi-info-circle',
         rejectProps: { label: t('common.labels.cancel'), severity: 'secondary', icon: 'pi pi-times', outlined: true },
@@ -148,31 +161,32 @@ function confirmDeleteRecord(event, shopIds) {
             useShopService
                 .deleteShops(shopIds)
                 .then(() => {
-                    shopIds.forEach((id) => {
+                    shopIds.forEach((id: number) => {
                         const index = findRecordIndex(records, id);
                         if (index !== -1) records.value.splice(index, 1);
                     });
                     showToast('success', ACTIONS.DELETE, 'shop', 'tc');
                     loading.value = false;
                 })
-                .catch((error) => {
+                .catch((error: any) => {
                     console.error('Error deleting shops', error);
                     loading.value = false;
                 });
         }
     });
 }
-function toggleActive(shopId) {
+
+function toggleActive(shopId: number): void {
     loadingActiveId.value = shopId;
     loadingStore.startPageLoading();
     useShopService
         .toggleActiveShop(shopId)
-        .then((result) => {
+        .then(() => {
             const index = findRecordIndex(records, shopId);
             records.value[index].active = !records.value[index].active;
             showToast('success', ACTIONS.EDIT, 'shop', 'tc');
         })
-        .catch((error) => {
+        .catch((error: any) => {
             if (error?.response?.status === 419 || error?.response?.status === 401) {
                 console.error('Session expired, redirecting to login');
             }
@@ -184,14 +198,14 @@ function toggleActive(shopId) {
         });
 }
 
-const fetchRecords = () => {
+const fetchRecords = (): void => {
     loadingStore.startDataLoading();
     useShopService
         .getShops()
         .then((response) => {
             records.value = response.data;
         })
-        .catch((error) => {
+        .catch((error: any) => {
             console.error('Error fetching shops', error);
         })
         .finally(() => {
@@ -199,8 +213,8 @@ const fetchRecords = () => {
         });
 };
 
-function getSocialIcon(type) {
-    const iconMap = {
+function getSocialIcon(type: string): string {
+    const iconMap: Record<string, string> = {
         whatsapp: 'pi pi-whatsapp',
         website: 'pi pi-globe',
         linkedin: 'pi pi-linkedin',
@@ -211,7 +225,7 @@ function getSocialIcon(type) {
     return iconMap[type] || 'pi pi-link';
 }
 
-function getSocialLink(contact) {
+function getSocialLink(contact: ContactMethod): string {
     const value = contact.value;
     if (!value) return '#';
 

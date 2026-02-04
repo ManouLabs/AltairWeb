@@ -1,19 +1,32 @@
-<script setup>
+<script setup lang="ts">
 import { useShopService } from '@/services/useShopService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { shopSchema } from '@/validations/shop';
 import { validate, validateField } from '@/validations/validate';
-import { inject, onMounted, ref } from 'vue';
+import type { ShopData, ShopFormData, Address, ContactMethods, ShopFile } from '@/types/shop';
+import { inject, onMounted, ref, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
+interface DialogData {
+    record: ShopData | ShopFormData;
+    action: string;
+}
+
+interface DialogRef {
+    value: {
+        data: DialogData;
+        close: (result?: { record: ShopData; action: string }) => void;
+    };
+}
 
 const authStore = useAuthStore();
 const loading = useLoading();
 const { showToast } = useShowToast();
 const { t } = useI18n();
 
-const record = ref({
+const record: Ref<ShopFormData> = ref({
     name: null,
     description: null,
     active: true,
@@ -30,42 +43,64 @@ const record = ref({
     },
     files: null
 });
-const dialogRef = inject('dialogRef');
-const action = ref();
-const originalFile = ref(null); // Track original file to detect changes
+const dialogRef = inject<DialogRef>('dialogRef');
+const action = ref<string>('');
+const originalFile = ref<ShopFile | null>(null); // Track original file to detect changes
 
-const syncStatusFromActive = () => {
+const syncStatusFromActive = (): void => {
     if (!record.value) return;
 };
 
 const schema = shopSchema;
 
-const validateForm = () => {
+const validateForm = (): boolean => {
     const { ok, errors } = validate(schema, record.value);
     authStore.errors = ok ? {} : errors;
     return ok;
 };
 
-const onBlurField = (path) => {
+const onBlurField = (path: string): void => {
     const { ok, errors } = validateField(schema, record.value, path);
     if (ok) authStore.clearErrors([path]);
     else authStore.errors = { ...authStore.errors, ...errors };
 };
 
-const prepareFormData = () => {
-    const data = { ...record.value };
+interface PreparedFormData extends Partial<ShopFormData> {
+    file?: File;
+    remove_file?: boolean;
+    addresses?: Address[];
+    contactMethods?: any;
+}
+
+const prepareFormData = (): PreparedFormData => {
+    const data: PreparedFormData = { ...record.value };
 
     // Normalize addresses: extract IDs from region/city objects
     if (Array.isArray(data.addresses)) {
-        data.addresses = data.addresses.map((addr) => ({
+        data.addresses = data.addresses.map((addr: Address) => ({
             ...addr,
             region: addr.region && typeof addr.region === 'object' ? addr.region.id : addr.region,
             city: addr.city && typeof addr.city === 'object' ? addr.city.id : addr.city
         }));
     }
 
+    // Filter out contact methods with null/empty values to prevent NOT NULL violations
+    if (data.contactMethods && typeof data.contactMethods === 'object') {
+        const filteredContacts: Record<string, any> = {};
+        for (const [key, contact] of Object.entries(data.contactMethods)) {
+            // Only include contact methods that have a non-null, non-empty value
+            if (contact && typeof contact === 'object' && 'value' in contact) {
+                const value = (contact as { value: string | null }).value;
+                if (value !== null && value !== undefined && value !== '') {
+                    filteredContacts[key] = contact;
+                }
+            }
+        }
+        data.contactMethods = filteredContacts;
+    }
+
     // Handle file changes with best practice detection
-    const currentFile = data.files;
+    const currentFile = record.value.files;
     const hadOriginalFile = originalFile.value !== null;
 
     if (currentFile instanceof File) {
@@ -81,25 +116,25 @@ const prepareFormData = () => {
     // If currentFile is an object with url (existing unchanged) - don't send anything
     // Backend keeps existing file when no file/remove_file is sent
 
-    delete data.files;
+    delete (data as any).files;
 
     return data;
 };
 
-const onFormSubmit = () => {
+const onFormSubmit = (): void => {
     syncStatusFromActive();
 
     if (!validateForm()) return;
     loading.startFormSending();
 
     const formData = prepareFormData();
-    const serviceAction = action.value === ACTIONS.CREATE ? useShopService.storeShop : (data) => useShopService.updateShop(record.value.id, data);
+    const serviceAction = action.value === ACTIONS.CREATE ? useShopService.storeShop : (data: Partial<ShopFormData>) => useShopService.updateShop((record.value as ShopFormData & { id: number }).id, data);
 
-    serviceAction(formData)
+    serviceAction(formData as ShopFormData)
         .then((response) => {
-            dialogRef.value.close({ record: response.data, action: action.value });
+            dialogRef?.value.close({ record: response.data, action: action.value });
         })
-        .catch((error) => {
+        .catch((error: any) => {
             authStore.processError && authStore.processError(error, t('common.messages.error'));
             showToast('error', action.value, 'shop', 'tr');
         })
@@ -108,15 +143,23 @@ const onFormSubmit = () => {
         });
 };
 
-const closeDialog = () => dialogRef.value.close();
+const closeDialog = (): void => dialogRef?.value.close();
+
+interface ContactMethodInput {
+    id?: number;
+    type?: string;
+    value?: string | null;
+}
 
 onMounted(() => {
-    const incoming = dialogRef.value.data.record || {};
+    if (!dialogRef?.value) return;
+
+    const incoming = dialogRef.value.data.record || ({} as ShopFormData);
 
     // Transform array to keyed object if needed (backend returns array, form expects object)
-    let incomingContacts = incoming.contactMethods || {};
+    let incomingContacts: any = (incoming as ShopData).contactMethods || {};
     if (Array.isArray(incomingContacts)) {
-        const contactObj = {};
+        const contactObj: Record<string, ContactMethodInput> = {};
         for (const contact of incomingContacts) {
             if (contact.type) {
                 contactObj[contact.type] = contact;
@@ -125,7 +168,7 @@ onMounted(() => {
         incomingContacts = contactObj;
     }
 
-    const normalizedContacts = { ...record.value.contactMethods };
+    const normalizedContacts = { ...record.value.contactMethods } as Record<string, ContactMethodInput>;
     for (const key of Object.keys(normalizedContacts)) {
         const val = incomingContacts[key];
         if (val && typeof val === 'object' && (val.type || val.value)) {
@@ -139,9 +182,9 @@ onMounted(() => {
     const normalizedAddresses = Array.isArray(incoming.addresses) && incoming.addresses.length > 0 ? incoming.addresses : record.value.addresses;
 
     // Extract first file from files array for FileUploadField (expects object, not array)
-    let existingFile = null;
-    if (Array.isArray(incoming.files) && incoming.files.length > 0) {
-        existingFile = incoming.files[0];
+    let existingFile: ShopFile | null = null;
+    if (Array.isArray((incoming as ShopData).files) && (incoming as ShopData).files!.length > 0) {
+        existingFile = (incoming as ShopData).files![0];
     }
 
     // Store original file for change detection
@@ -151,8 +194,8 @@ onMounted(() => {
         ...record.value, // keeps defaults
         ...incoming,
         addresses: normalizedAddresses,
-        contactMethods: normalizedContacts,
-        files: existingFile
+        contactMethods: normalizedContacts as ContactMethods,
+        files: existingFile as any
     };
     action.value = dialogRef.value.data.action;
     syncStatusFromActive();

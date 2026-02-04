@@ -1,5 +1,5 @@
 ---
-description: Jarvis Start - Start all backend services and open Admin in browser
+description: Start all backend services and open Admin in browser
 ---
 
 # Jarvis Start 🤖

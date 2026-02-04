@@ -1,18 +1,20 @@
+// src/validations/shop.ts
 import { z } from 'zod';
 
-export const requiredString = z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }));
+export const requiredString = z.preprocess((v: unknown) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }));
+
 export const optionalString = z.string().nullable().optional();
 
-const requiredStringMax = (max) => z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }).max(max, { message: 'common.messages.max_length', length: max }));
+const requiredStringMax = (max: number) => z.preprocess((v: unknown) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }).max(max, { message: 'common.messages.max_length' }));
 
-const optionalStringMax = (max) =>
+const optionalStringMax = (max: number) =>
     z
-        .preprocess((v) => (v === null || v === undefined ? undefined : String(v)), z.string().max(max, { message: 'common.messages.max_length', length: max }))
+        .preprocess((v: unknown) => (v === null || v === undefined ? undefined : String(v)), z.string().max(max, { message: 'common.messages.max_length' }))
         .optional()
         .nullable();
 
 // Helper to extract ID from object or pass through number
-const idOrObject = z.preprocess((v) => (v && typeof v === 'object' && 'id' in v ? v.id : v), z.number().int().nullable().optional());
+const idOrObject = z.preprocess((v: unknown) => (v && typeof v === 'object' && 'id' in v ? (v as { id: number }).id : v), z.number().int().nullable().optional());
 
 const addressSchema = z.object({
     street: optionalStringMax(255),
@@ -43,3 +45,6 @@ export const shopSchema = z.object({
         .optional(),
     file: z.any().optional().nullable()
 });
+
+// Export the inferred type from the schema
+export type ShopSchemaType = z.infer<typeof shopSchema>;

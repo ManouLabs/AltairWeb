@@ -1,11 +1,21 @@
-// src/validations/user.js
+// src/validations/user.ts
 import { z } from 'zod';
 
-export const requiredString = z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }).max(255, { message: 'common.messages.max_length', length: 255 }));
+export const requiredString = z.preprocess(
+    (v) => (v === null || v === undefined ? '' : v),
+    z
+        .string()
+        .min(1, { message: 'common.messages.is_required' })
+        .max(255, { message: 'common.messages.max_length', length: 255 } as { message: string })
+);
 
 export const requiredEmail = z.preprocess(
     (v) => (v === null || v === undefined ? '' : v),
-    z.string().min(1, { message: 'common.messages.is_required' }).max(255, { message: 'common.messages.max_length', length: 255 }).email({ message: 'common.messages.invalid_email' })
+    z
+        .string()
+        .min(1, { message: 'common.messages.is_required' })
+        .max(255, { message: 'common.messages.max_length', length: 255 } as { message: string })
+        .email({ message: 'common.messages.invalid_email' })
 );
 
 const passwordStrength = z.preprocess(
@@ -46,3 +56,6 @@ export const userSchema = z
         },
         { message: 'common.messages.password_strength', path: ['password'] }
     );
+
+// Export the inferred type from the schema
+export type UserSchemaType = z.infer<typeof userSchema>;
