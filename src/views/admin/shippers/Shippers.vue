@@ -6,6 +6,7 @@ import { useRowEffects } from '@/composables/useRowEffects';
 import dayjs from '@/plugins/dayjs';
 import { useShipperService } from '@/services/useShipperService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
@@ -19,13 +20,14 @@ const { t } = useI18n();
 const authStore = useAuthStore();
 const confirm = useConfirm();
 const { showToast } = useShowToast();
+const loading = useLoading();
+const loadingActiveId = ref(null);
 
 // Filters configuration
 const defaultFiltersConfig = {
     name: FilterMatchMode.CONTAINS,
     type: FilterMatchMode.CONTAINS,
-    active: FilterMatchMode.EQUALS,
-    created_at: FilterMatchMode.DATE_IS
+    active: FilterMatchMode.EQUALS
 };
 
 // Initialize DataTable
@@ -42,7 +44,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
 // Column locking
-const defaultFields = ['name', 'type', 'api', 'active', 'created_at'];
+const defaultFields = ['name', 'type', 'shops', 'api', 'active'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const defaultColumns = computed(() =>
@@ -98,6 +100,8 @@ function editRecord(row) {
 }
 
 function toggleActive(shipperId) {
+    loadingActiveId.value = shipperId;
+    loading.startPageLoading();
     useShipperService
         .toggleActiveShipper(shipperId)
         .then((result) => {
@@ -111,6 +115,10 @@ function toggleActive(shipperId) {
                 console.error('Session expired, redirecting to login');
             }
             console.error('Error updating shipper status');
+        })
+        .finally(() => {
+            loadingActiveId.value = null;
+            loading.stopPageLoading();
         });
 }
 
@@ -187,7 +195,7 @@ onUnmounted(() => {
                 columnResizeMode="fit"
                 reorderableColumns
                 :frozenValue="lockedRow"
-                sortField="created_at"
+                sortField="id"
                 :sortOrder="-1"
                 @sort="onSort($event)"
                 removableSort
@@ -230,7 +238,7 @@ onUnmounted(() => {
                             </template>
                             <template #center>
                                 <FloatLabel class="w-full" variant="on">
-                                    <MultiSelect id="selected_columns" :modelValue="selectedColumns" display="chip" :maxSelectedLabels="4" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
+                                    <MultiSelect id="selected_columns" :modelValue="selectedColumns" display="chip" :maxSelectedLabels="0" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
                                     <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
                                 </FloatLabel>
                             </template>
@@ -329,7 +337,7 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <Tag :value="data.type_label" :severity="data.type === 'company' ? 'info' : 'secondary'" :class="{ 'font-bold': frozenColumns.type }" />
+                            <Tag :value="data.type_label" :severity="data.type === 'company' ? 'info' : 'secondary'" :icon="data.type === 'company' ? 'pi pi-building' : 'pi pi-user'" :class="{ 'font-bold': frozenColumns.type }" />
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
@@ -354,6 +362,28 @@ onUnmounted(() => {
                     </template>
                 </Column>
 
+                <!-- Shops Column -->
+                <Column columnKey="shops" field="shops" :frozen="frozenColumns.shops" v-if="selectedColumns.some((column) => column.field === 'shops')" class="min-w-40">
+                    <template #header>
+                        <HeaderCell
+                            :text="t('shipper.columns.shops')"
+                            :frozen="frozenColumns.shops"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('shops')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div v-if="data.shops && data.shops.length" class="flex flex-wrap gap-1">
+                                <Tag v-for="shop in data.shops" :key="shop.id" :value="shop.name" severity="secondary" size="small" />
+                            </div>
+                            <span v-else class="text-muted-color">—</span>
+                        </DataCell>
+                    </template>
+                </Column>
+
                 <!-- API Column -->
                 <Column columnKey="api" field="api" :frozen="frozenColumns.api" v-if="selectedColumns.some((column) => column.field === 'api')" class="min-w-32">
                     <template #header>
@@ -369,13 +399,15 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <Tag
+                                v-if="data.type === 'company'"
                                 :value="data.api_configured ? t('shipper.labels.connected') : t('shipper.labels.not_configured')"
                                 :severity="data.api_configured ? 'success' : 'warn'"
-                                icon="pi pi-plug"
+                                icon="pi pi-sync"
                                 rounded
                                 size="small"
                                 :class="{ 'font-bold': frozenColumns.api }"
                             />
+                            <span v-else class="text-muted-color">—</span>
                         </DataCell>
                     </template>
                 </Column>
@@ -406,15 +438,7 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.active }">
-                                <Tag
-                                    :value="data.active ? t('common.labels.active') : t('common.labels.inactive')"
-                                    :severity="data.active ? 'success' : 'danger'"
-                                    :icon="data.active ? 'pi pi-check-circle' : 'pi pi-times-circle'"
-                                    rounded
-                                    size="small"
-                                    :pt="{ root: { class: 'cursor-pointer' } }"
-                                    @click="toggleActive(data.id)"
-                                />
+                                <ActiveToggleButton :active="data.active" entity="shipper" variant="button" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
                             </div>
                         </DataCell>
                     </template>
@@ -437,76 +461,6 @@ onUnmounted(() => {
                                 <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
-                    </template>
-                </Column>
-
-                <!-- Created At Column -->
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    dataType="date"
-                    columnKey="created_at"
-                    field="created_at"
-                    :frozen="frozenColumns.created_at"
-                    v-if="selectedColumns.some((column) => column.field === 'created_at')"
-                    sortable
-                    class="min-w-40"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('shipper.columns.created_at')"
-                            :frozen="frozenColumns.created_at"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('created_at')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.created_at }">{{ dayjs(data.created_at).format('l') }}</div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <div class="flex flex-col gap-2">
-                            <!-- Match Mode Selector -->
-                            <Select
-                                v-model="filterModel.matchMode"
-                                :options="[
-                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
-                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
-                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
-                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
-                                ]"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-full"
-                                placeholder="Filter Mode"
-                            />
-
-                            <!-- Date Input + Apply/Clear -->
-                            <InputGroup>
-                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
-                                <InputGroupAddon>
-                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                    <Button
-                                        size="small"
-                                        icon="pi pi-times"
-                                        severity="danger"
-                                        outlined
-                                        :disabled="!filterModel.value"
-                                        @click="
-                                            (() => {
-                                                filterModel.value = null;
-                                                applyFilter();
-                                            })()
-                                        "
-                                    />
-                                </InputGroupAddon>
-                            </InputGroup>
-                        </div>
                     </template>
                 </Column>
 

@@ -55,6 +55,15 @@ const onBlurField = (path) => {
 const prepareFormData = () => {
     const data = { ...record.value };
 
+    // Normalize addresses: extract IDs from region/city objects
+    if (Array.isArray(data.addresses)) {
+        data.addresses = data.addresses.map((addr) => ({
+            ...addr,
+            region: addr.region && typeof addr.region === 'object' ? addr.region.id : addr.region,
+            city: addr.city && typeof addr.city === 'object' ? addr.city.id : addr.city
+        }));
+    }
+
     // Handle file changes with best practice detection
     const currentFile = data.files;
     const hadOriginalFile = originalFile.value !== null;
@@ -126,15 +135,8 @@ onMounted(() => {
         }
     }
 
-    // Normalize addresses: extract region/city IDs from objects (backend returns {id, name}, form expects just ID)
-    let normalizedAddresses = record.value.addresses;
-    if (Array.isArray(incoming.addresses)) {
-        normalizedAddresses = incoming.addresses.map((addr) => ({
-            ...addr,
-            region: addr.region?.id ?? addr.region ?? null,
-            city: addr.city?.id ?? addr.city ?? null
-        }));
-    }
+    // Pass addresses as-is - Address component will normalize and extract cities from region
+    const normalizedAddresses = Array.isArray(incoming.addresses) && incoming.addresses.length > 0 ? incoming.addresses : record.value.addresses;
 
     // Extract first file from files array for FileUploadField (expects object, not array)
     let existingFile = null;

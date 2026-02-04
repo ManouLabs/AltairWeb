@@ -25,7 +25,25 @@ Hello sir! I am **Jarvis**, your personal AI assistant. When you say "Jarvis Sta
 
 // turbo-all
 
-### Step 1: Start PolarisAPI Backend
+### Step 1: Prepare PolarisAPI Backend
+
+Run the following commands from `c:\Projects\PolarisAPI` to optimize and reset the database:
+
+1. Optimize Laravel (cache config, routes, views):
+
+```bash
+cd c:\Projects\PolarisAPI && php artisan optimize
+```
+
+2. Refresh database and seed with test data:
+
+```bash
+cd c:\Projects\PolarisAPI && php artisan migrate:refresh --seed
+```
+
+---
+
+### Step 2: Start PolarisAPI Backend
 
 Run the following commands in separate terminals from `c:\Projects\PolarisAPI`:
 
@@ -49,7 +67,7 @@ cd c:\Projects\PolarisAPI && php artisan queue:work --queue=default,data-stream
 
 ---
 
-### Step 2: Start AltairWeb Frontend
+### Step 3: Start AltairWeb Frontend
 
 Run from `c:\Projects\AltairWeb`:
 
@@ -59,7 +77,7 @@ cd c:\Projects\AltairWeb && npm run dev
 
 ---
 
-### Step 3: Open Admin in Browser
+### Step 4: Open Admin in Browser
 
 1. Navigate to: **http://localhost:5173**
 2. **If already logged in**: Click the **"Admin"** button to access the Admin panel

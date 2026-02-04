@@ -13,7 +13,7 @@ const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
 const loadingStore = useLoading();
-const loading = ref(false);
+const loadingActiveId = ref(null);
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
@@ -163,21 +163,24 @@ function confirmDeleteRecord(event, shopIds) {
     });
 }
 function toggleActive(shopId) {
-    loading.value = true;
+    loadingActiveId.value = shopId;
+    loadingStore.startPageLoading();
     useShopService
         .toggleActiveShop(shopId)
         .then((result) => {
             const index = findRecordIndex(records, shopId);
             records.value[index].active = !records.value[index].active;
             showToast('success', ACTIONS.EDIT, 'shop', 'tc');
-            loading.value = false;
         })
         .catch((error) => {
             if (error?.response?.status === 419 || error?.response?.status === 401) {
                 console.error('Session expired, redirecting to login');
             }
             console.error('Error updating shop status');
-            loading.value = false;
+        })
+        .finally(() => {
+            loadingActiveId.value = null;
+            loadingStore.stopPageLoading();
         });
 }
 
@@ -338,16 +341,7 @@ onUnmounted(() => {
                     </div>
                 </template>
                 <template #icons>
-                    <Button
-                        :label="record.active ? t('common.labels.active') : t('common.labels.inactive')"
-                        :icon="record.active ? 'pi pi-check-circle' : 'pi pi-times-circle'"
-                        :severity="record.active ? 'success' : 'danger'"
-                        size="small"
-                        rounded
-                        :loading="loading"
-                        @click="toggleActive(record.id)"
-                        v-tooltip.top="record.active ? t('common.tooltips.deactivate', { entity: t('entity.shop') }) : t('common.tooltips.activate', { entity: t('entity.shop') })"
-                    />
+                    <ActiveToggleButton :active="record.active" entity="shop" :loading="loadingActiveId === record.id" @toggle="toggleActive(record.id)" />
                 </template>
 
                 <div class="mt-2 relative">

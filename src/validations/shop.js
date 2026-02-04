@@ -11,10 +11,13 @@ const optionalStringMax = (max) =>
         .optional()
         .nullable();
 
+// Helper to extract ID from object or pass through number
+const idOrObject = z.preprocess((v) => (v && typeof v === 'object' && 'id' in v ? v.id : v), z.number().int().nullable().optional());
+
 const addressSchema = z.object({
     street: optionalStringMax(255),
-    region: z.number().int().nullable().optional(),
-    city: z.number().int().nullable().optional(),
+    region: idOrObject,
+    city: idOrObject,
     main: z.boolean().optional()
 });
 

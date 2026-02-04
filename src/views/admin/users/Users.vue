@@ -327,7 +327,7 @@ onUnmounted(() => {
                             </template>
                             <template #center>
                                 <FloatLabel class="w-full" variant="on">
-                                    <MultiSelect id="selected_columns" :modelValue="selectedColumns" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" display="chip" :maxSelectedLabels="4" />
+                                    <MultiSelect id="selected_columns" :modelValue="selectedColumns" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" display="chip" :maxSelectedLabels="0" />
                                     <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
                                 </FloatLabel>
                             </template>

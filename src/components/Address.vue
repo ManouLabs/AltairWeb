@@ -101,11 +101,22 @@ watch(
     () => props.modelValue,
     async (newVal) => {
         suppressEmit.value = true;
+        const incoming = Array.isArray(newVal) ? newVal : [];
+
+        // Pre-populate cache with cities from incoming data (if included)
+        for (const addr of incoming) {
+            const region = addr?.region;
+            if (region && typeof region === 'object' && region.id && Array.isArray(region.cities)) {
+                citiesCache.value.set(region.id, region.cities);
+            }
+        }
+
         localAddresses.value = normalizeIn(newVal);
 
-        // warm cache for existing regions
+        // Only fetch cities for regions not already in cache
         const regions = [...new Set(localAddresses.value.map((a) => a.region).filter(Boolean))];
-        await Promise.all(regions.map((rid) => getCitiesForRegion(rid)));
+        const uncachedRegions = regions.filter((rid) => !citiesCache.value.has(rid));
+        await Promise.all(uncachedRegions.map((rid) => getCitiesForRegion(rid)));
 
         suppressEmit.value = false;
 

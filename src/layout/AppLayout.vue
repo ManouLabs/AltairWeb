@@ -1,12 +1,12 @@
 <script setup>
 import { useLayoutStore } from '@/stores/useLayoutStore';
-//import { useLoading } from '@/stores/useLoadingStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { computed, onMounted, ref, watch } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
 
-//const loading = useLoading();
+const loading = useLoading();
 const layoutStore = useLayoutStore();
 
 onMounted(() => {
@@ -69,16 +69,9 @@ function isOutsideClicked(event) {
 
 <template>
     <div class="layout-wrapper" :class="containerClass">
-        <Toast position="center" group="center" />
-        <Toast position="top-left" group="tl" />
-        <Toast position="top-center" group="tc" />
-        <Toast position="top-right" group="tr" />
-        <Toast position="bottom-left" group="bl" />
-        <Toast position="bottom-center" group="bc" />
-        <Toast position="bottom-right" group="br" />
         <DynamicDialog />
         <ConfirmPopup></ConfirmPopup>
-        <!-- <ProgressBar v-if="loading.isPageLoading" mode="indeterminate" style="height: 4px; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%" /> -->
+        <ProgressBar v-if="loading.isPageLoading" mode="indeterminate" style="height: 4px; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%" />
 
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
@@ -90,5 +83,4 @@ function isOutsideClicked(event) {
         </div>
         <div class="layout-mask animate-fadein"></div>
     </div>
-    <Toast />
 </template>

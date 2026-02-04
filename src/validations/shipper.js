@@ -12,7 +12,9 @@ const optionalStringMax = (max) =>
 
 const regionPricingSchema = z.object({
     region_id: z.number().int().positive(),
-    price: z.preprocess((v) => (v === '' || v === null || v === undefined ? 0 : Number(v)), z.number().min(0))
+    home_delivery_price: z.preprocess((v) => (v === '' || v === null || v === undefined ? 0 : Number(v)), z.number().min(0)),
+    stop_desk_price: z.preprocess((v) => (v === '' || v === null || v === undefined ? 0 : Number(v)), z.number().min(0)),
+    return_price: z.preprocess((v) => (v === '' || v === null || v === undefined ? 0 : Number(v)), z.number().min(0))
 });
 
 export const shipperSchema = z.object({

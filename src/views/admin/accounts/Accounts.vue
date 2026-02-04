@@ -6,6 +6,7 @@ import { useRowEffects } from '@/composables/useRowEffects';
 import dayjs from '@/plugins/dayjs';
 import { useAccountService } from '@/services/useAccountService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
@@ -54,6 +55,8 @@ const dialog = useDialog();
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
+const loading = useLoading();
+const loadingActiveId = ref(null);
 
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
@@ -181,6 +184,8 @@ const openDialog = () => {
     });
 };
 function toggleActive(accountId) {
+    loadingActiveId.value = accountId;
+    loading.startPageLoading();
     useAccountService
         .toggleActiveAccount(accountId)
         .then((result) => {
@@ -194,6 +199,10 @@ function toggleActive(accountId) {
                 console.error('Session expired, redirecting to login');
             }
             console.error('Error updating account status');
+        })
+        .finally(() => {
+            loadingActiveId.value = null;
+            loading.stopPageLoading();
         });
 }
 
@@ -313,7 +322,7 @@ onUnmounted(() => {
                             </template>
                             <template #center>
                                 <FloatLabel class="w-full" variant="on">
-                                    <MultiSelect id="selected_columns" :modelValue="selectedColumns" display="chip" :maxSelectedLabels="4" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
+                                    <MultiSelect id="selected_columns" :modelValue="selectedColumns" display="chip" :maxSelectedLabels="0" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
                                     <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
                                 </FloatLabel>
                             </template>
@@ -635,15 +644,7 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.active }">
-                                <Tag
-                                    :value="data.active ? t('common.labels.active') : t('common.labels.inactive')"
-                                    :severity="data.active ? 'success' : 'danger'"
-                                    :icon="data.active ? 'pi pi-check-circle' : 'pi pi-times-circle'"
-                                    rounded
-                                    size="small"
-                                    :pt="{ root: { class: 'cursor-pointer' } }"
-                                    @click="toggleActive(data.id)"
-                                />
+                                <ActiveToggleButton :active="data.active" entity="account" variant="button" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
                             </div>
                         </DataCell>
                     </template>

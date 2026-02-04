@@ -307,30 +307,39 @@
             "api": "API",
             "api_configured": "API Status",
             "active": "Active",
+            "shops": "Shops",
             "region_code": "Code",
             "region_name": "Region",
             "enabled": "Enabled",
-            "price": "Price",
+            "home_delivery_price": "Home Delivery (DA)",
+            "stop_desk_price": "Stop Desk (DA)",
+            "return_price": "Return (DA)",
             "created_at": "Created At",
             "updated_at": "Updated At"
         },
         "labels": {
             "no_shippers": "No shippers available. Please add a new shipper...",
             "basic_info": "Basic Information",
+            "api_and_shops": "API & Shops Configuration",
             "api_config": "API Configuration",
             "api_key": "API Key",
             "api_hint": "Leave empty to keep the current API key unchanged.",
+            "shops": "Shops Assignment",
+            "shops_hint": "Select the shops this shipper can deliver for.",
             "region_pricing": "Region Pricing",
+            "quick_fill": "Quick Fill - Apply Same Price to All Regions",
+            "apply_to_all": "Apply to All Regions",
             "connected": "Connected",
             "not_configured": "Not Configured"
+        },
+        "placeholders": {
+            "select_shops": "Select shops...",
+            "api_key": "Enter API key...",
+            "api_unchanged": "Leave empty to keep current API key"
         },
         "types": {
             "company": "Company",
             "individual": "Individual"
-        },
-        "placeholders": {
-            "api_key": "Enter API key...",
-            "api_unchanged": "Leave empty to keep current API key"
         }
     },
     "plan": {
