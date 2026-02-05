@@ -33,7 +33,8 @@ const permissionsOptions = ref<Permission[][]>([]);
 
 onMounted(() => {
     if (dialogRef?.value) {
-        record.value = dialogRef.value.data.record;
+        // Clone record to prevent mutating parent data while editing
+        record.value = { ...dialogRef.value.data.record };
         permissionsOptions.value = dialogRef.value.data.permissionsOptions;
         action.value = dialogRef.value.data.action;
     }

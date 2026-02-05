@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useLoading } from '@/stores/useLoadingStore';
@@ -11,11 +11,17 @@ import { z } from 'zod';
 
 const { t } = useI18n();
 
+interface ThemeOption {
+    label: string;
+    value: string;
+    image: string;
+}
+
 const authStore = useAuthStore();
 const settingsStore = useSettingStore();
 const layoutStore = useLayoutStore();
 const { showToast } = useShowToast();
-const options = [
+const options: ThemeOption[] = [
     {
         label: 'Dark',
         value: 'dark',
@@ -35,15 +41,20 @@ const options = [
 const loading = useLoading();
 
 // Locale options & flags
-const supportedLocales = ref(import.meta.env.VITE_SUPPORTED_LOCALES ? import.meta.env.VITE_SUPPORTED_LOCALES.split(',') : ['fr', 'en', 'ar']);
+const supportedLocales = ref<string[]>(import.meta.env.VITE_SUPPORTED_LOCALES ? import.meta.env.VITE_SUPPORTED_LOCALES.split(',') : ['fr', 'en', 'ar']);
 
-const localeFlags = ref(Object.fromEntries(import.meta.env.VITE_LOCALE_FLAGS.split(',').map((item) => item.split(':'))));
-const setLocale = (locale) => {
+const localeFlags = ref<Record<string, string>>(Object.fromEntries(import.meta.env.VITE_LOCALE_FLAGS.split(',').map((item: string) => item.split(':'))));
+const setLocale = (locale: string): void => {
     layoutStore.setLocale(locale);
 };
 
-const flagClass = (locale) => `flag flag-${localeFlags.value[locale]} ${layoutStore.locale === 'ar' ? 'ml-2' : 'mr-2'}`;
-const initialValues = reactive({
+const flagClass = (locale: string): string => `flag flag-${localeFlags.value[locale]} ${layoutStore.locale === 'ar' ? 'ml-2' : 'mr-2'}`;
+
+interface PreferencesFormData {
+    theme: string;
+}
+
+const initialValues = reactive<PreferencesFormData>({
     theme: settingsStore.settings?.theme ?? 'light'
 });
 const resolver = zodResolver(
@@ -51,20 +62,16 @@ const resolver = zodResolver(
         theme: z.string().nonempty({ message: 'common.messages.is_required' })
     })
 );
-const onFormSubmit = ({ valid, values }) => {
+
+interface FormSubmitEvent {
+    valid: boolean;
+    values: PreferencesFormData;
+}
+
+const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
     if (valid) {
-        loading.startDataLoading();
-        useMyAccountService
-            .updatePassword(values)
-            .then((response) => {
-                showToast('success', ACTIONS.EDIT, 'password', 'br');
-            })
-            .catch((error) => {
-                authStore.processError(error, t('common.messages.error_occurred'));
-            })
-            .finally(() => {
-                loading.stopDataLoading();
-            });
+        // Theme is already updated via onChange in the SelectButton
+        showToast('success', ACTIONS.EDIT, 'preferences', 'br');
     }
 };
 </script>

@@ -69,6 +69,7 @@ export interface ShopFormData {
 
 export interface ShopsResponse {
     data: ShopData[];
+    regions?: Region[];
 }
 
 export interface ShopApiResponse {

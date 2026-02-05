@@ -12,6 +12,7 @@ import { useI18n } from 'vue-i18n';
 interface DialogData {
     record: ShopData | ShopFormData;
     action: string;
+    regions?: any[];
 }
 
 interface DialogRef {
@@ -46,6 +47,8 @@ const record: Ref<ShopFormData> = ref({
 const dialogRef = inject<DialogRef>('dialogRef');
 const action = ref<string>('');
 const originalFile = ref<ShopFile | null>(null); // Track original file to detect changes
+// Initialize regions directly from dialog data (before template renders)
+const regions = ref<any[]>(dialogRef?.value?.data?.regions || []);
 
 const syncStatusFromActive = (): void => {
     if (!record.value) return;
@@ -198,6 +201,7 @@ onMounted(() => {
         files: existingFile as any
     };
     action.value = dialogRef.value.data.action;
+    // Regions are already initialized from dialogRef.value.data.regions
     syncStatusFromActive();
 });
 </script>
@@ -307,7 +311,7 @@ onMounted(() => {
             </div>
             <div class="col-span-1 border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
                 <h3 class="text-lg font-semibold mb-4">{{ t('common.labels.address') }}</h3>
-                <Address v-model="record.addresses" :multiple="false" />
+                <Address v-model="record.addresses" :multiple="false" :regions="regions" />
             </div>
             <div class="col-span-1 border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
                 <h3 class="text-lg font-semibold mb-4">{{ t('common.labels.online_presence') }}</h3>

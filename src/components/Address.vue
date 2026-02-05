@@ -9,7 +9,8 @@ const authStore = useAuthStore();
 const loading = ref(false);
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },
-    multiple: { type: Boolean, default: true }
+    multiple: { type: Boolean, default: true },
+    regions: { type: Array, default: null }
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
@@ -149,6 +150,11 @@ watch(
 
 // ---------- lifecycle ----------
 onMounted(async () => {
+    // Use regions from prop if provided, otherwise fetch
+    if (props.regions && props.regions.length > 0) {
+        regionOptions.value = props.regions;
+        return;
+    }
     loading.value = true;
     try {
         const data = await useRegionService.getAllRegions();

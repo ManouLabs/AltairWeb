@@ -14,7 +14,7 @@ const loading = useLoading();
     <Toast position="bottom-center" group="bc" />
     <Toast position="bottom-right" group="br" />
 
-    <ProgressBar v-if="loading.isPageLoading" mode="indeterminate" style="height: 4px" />
+    <ProgressBar v-if="loading.isPageLoading" mode="indeterminate" style="height: 4px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999" />
     <router-view />
 </template>
 <style scoped></style>

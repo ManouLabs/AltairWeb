@@ -1,7 +1,9 @@
-<script setup>
+<script setup lang="ts">
 import { useMyAccountService } from '@/services/useMyAccountService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { DeleteAccountData, DeleteAccountResponse } from '@/types/myaccount';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -9,10 +11,12 @@ import { z } from 'zod';
 
 const { t } = useI18n();
 const loading = useLoading();
-const visible = ref(false);
+const visible = ref<boolean>(false);
 const authStore = useAuthStore();
+const { showToast } = useShowToast();
+const isSubmitting = ref<boolean>(false);
 
-const initialValues = reactive({
+const initialValues = reactive<DeleteAccountData>({
     email: '',
     confirmation_phrase: ''
 });
@@ -27,20 +31,28 @@ const resolver = zodResolver(
         confirmation_phrase: z.string().refine((val) => val === 'delete my account', { message: 'myaccount.messages.confirmation_phrase_incorrect' })
     })
 );
-const onFormSubmit = ({ valid, values }) => {
+
+interface FormSubmitEvent {
+    valid: boolean;
+    values: DeleteAccountData;
+}
+
+const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
     if (valid) {
-        loading.startDataLoading();
+        isSubmitting.value = true;
+        loading.startPageLoading();
         useMyAccountService
             .deleteMyAccount(values)
-            .then(() => {
+            .then((response: DeleteAccountResponse) => {
                 authStore.handleSessionExpired();
-                showToast('success', 'delete', 'my_account', 'br');
+                showToast('success', ACTIONS.DELETE, 'my_account', 'tc');
             })
-            .catch((error) => {
+            .catch((error: any) => {
                 authStore.processError(error, t('common.messages.error_occurred'));
             })
             .finally(() => {
-                loading.stopDataLoading();
+                isSubmitting.value = false;
+                loading.stopPageLoading();
             });
     }
 };
@@ -54,10 +66,10 @@ const onFormSubmit = ({ valid, values }) => {
             <p class="text-red-600 font-semibold">
                 {{ t('myaccount.labels.delete_account_warning') }}
             </p>
-            <Button :label="t('myaccount.labels.delete_account')" severity="danger" :loading="loading.isDataLoading" v-tooltip.top="t('myaccount.labels.delete_account_warning')" @click="visible = true" />
+            <Button :label="t('myaccount.labels.delete_account')" severity="danger" v-tooltip.top="t('myaccount.labels.delete_account_warning')" @click="visible = true" />
         </div>
 
-        <Dialog v-model:visible="visible" modal header="Edit Profile" :style="{ width: '35rem' }">
+        <Dialog v-model:visible="visible" modal header="Edit Profile" :style="{ width: '35rem' }" :closable="!isSubmitting">
             <template #header>
                 <span class="font-bold"> {{ t('myaccount.labels.are_you_sure') }}</span>
             </template>
@@ -71,7 +83,7 @@ const onFormSubmit = ({ valid, values }) => {
                         <FloatLabel variant="on" class="w-full">
                             <IconField class="w-full">
                                 <InputIcon><i class="pi pi-envelope" /></InputIcon>
-                                <InputText id="email" name="email" type="email" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" class="w-full" :autocomplete="false" />
+                                <InputText id="email" name="email" type="email" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" class="w-full" :autocomplete="false" :disabled="isSubmitting" />
                             </IconField>
                             <label for="email">{{ t('user.columns.email') }}</label>
                         </FloatLabel>
@@ -83,7 +95,7 @@ const onFormSubmit = ({ valid, values }) => {
                         <FloatLabel variant="on" class="w-full">
                             <IconField class="w-full">
                                 <InputIcon><i class="pi pi-lock" /></InputIcon>
-                                <InputText id="confirmation_phrase" name="confirmation_phrase" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" class="w-full" />
+                                <InputText id="confirmation_phrase" name="confirmation_phrase" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" class="w-full" :disabled="isSubmitting" />
                             </IconField>
                             <label for="confirmation_phrase">{{ t('myaccount.labels.confirmation_phrase_description', { confirmation_phrase: t('myaccount.labels.confirmation_phrase') }) }}</label>
                         </FloatLabel>
@@ -94,7 +106,7 @@ const onFormSubmit = ({ valid, values }) => {
 
                     <!-- Submit button (left aligned) -->
                     <div class="col-span-1 md:col-span-2 flex justify-end pt-2">
-                        <Button :label="t('myaccount.labels.delete_account')" icon="pi pi-check" type="submit" :loading="loading.isDataLoading" severity="danger" />
+                        <Button :label="t('myaccount.labels.delete_account')" icon="pi pi-check" type="submit" :loading="isSubmitting" :disabled="isSubmitting" severity="danger" />
                     </div>
                 </Form>
             </div>

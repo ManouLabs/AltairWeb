@@ -25,6 +25,8 @@ const record = ref<ShopData | ShopFormData | null>(null);
 const records = ref<ShopData[]>([]);
 const subscription = ref<any>(null);
 const searchQuery = ref<string>('');
+const dataLoaded = ref<boolean>(false);
+const regions = ref<any[]>([]);
 
 const filteredRecords = computed<ShopData[]>(() => {
     if (!searchQuery.value) return records.value;
@@ -128,7 +130,7 @@ const openDialog = (): void => {
             modal: true,
             maximizable: true
         },
-        data: { record: record.value, action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE },
+        data: { record: record.value, action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE, regions: regions.value },
         onClose: (result: any) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
@@ -158,6 +160,7 @@ function confirmDeleteRecord(event: MouseEvent, shopIds: number[]): void {
         acceptProps: { label: t('common.labels.delete'), icon: 'pi pi-trash', severity: 'danger' },
         accept: () => {
             loading.value = true;
+            loadingStore.startPageLoading();
             useShopService
                 .deleteShops(shopIds)
                 .then(() => {
@@ -166,11 +169,13 @@ function confirmDeleteRecord(event: MouseEvent, shopIds: number[]): void {
                         if (index !== -1) records.value.splice(index, 1);
                     });
                     showToast('success', ACTIONS.DELETE, 'shop', 'tc');
-                    loading.value = false;
                 })
                 .catch((error: any) => {
                     console.error('Error deleting shops', error);
+                })
+                .finally(() => {
                     loading.value = false;
+                    loadingStore.stopPageLoading();
                 });
         }
     });
@@ -204,12 +209,14 @@ const fetchRecords = (): void => {
         .getShops()
         .then((response) => {
             records.value = response.data;
+            regions.value = response.regions || [];
         })
         .catch((error: any) => {
             console.error('Error fetching shops', error);
         })
         .finally(() => {
             loadingStore.stopDataLoading();
+            dataLoaded.value = true;
         });
 };
 
@@ -336,7 +343,7 @@ onUnmounted(() => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                <Button :icon="getSocialIcon(contact.type)" text rounded severity="secondary" size="small" v-tooltip.top="contact.type.charAt(0).toUpperCase() + contact.type.slice(1)" />
+                                <Button :icon="getSocialIcon(contact.type)" text rounded severity="secondary" v-tooltip.top="contact.type.charAt(0).toUpperCase() + contact.type.slice(1)" />
                             </a>
                         </div>
                         <div class="flex items-center gap-2">
@@ -380,10 +387,10 @@ onUnmounted(() => {
             </Panel>
         </div>
     </div>
-    <div class="card flex items-center justify-center shadow-glow" v-else-if="searchQuery && filteredRecords.length === 0">
+    <div class="card flex items-center justify-center shadow-glow" v-else-if="dataLoaded && searchQuery && filteredRecords.length === 0">
         <p class="text-surface-700 dark:text-surface-300">{{ t('shop.labels.no_shop_found') }}</p>
     </div>
-    <div class="card flex items-center justify-center shadow-glow" v-else>
+    <div class="card flex items-center justify-center shadow-glow" v-else-if="dataLoaded && filteredRecords.length === 0">
         <p class="text-surface-700 dark:text-surface-300">{{ t('shop.labels.no_shops') }}</p>
     </div>
 </template>

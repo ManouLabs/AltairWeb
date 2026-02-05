@@ -1,10 +1,11 @@
-<script setup>
+<script setup lang="ts">
 import { useMyAccountService } from '@/services/useMyAccountService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { UpdatePasswordData, UpdatePasswordResponse } from '@/types/myaccount';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { z } from 'zod';
 
@@ -13,10 +14,12 @@ const authStore = useAuthStore();
 const { t } = useI18n();
 const { showToast } = useShowToast();
 const loading = useLoading();
-const initialValues = reactive({
+const isSubmitting = ref<boolean>(false);
+
+const initialValues = reactive<UpdatePasswordData>({
     current_password: '',
     password: '',
-    confirm_new_password: ''
+    password_confirmation: ''
 });
 
 const resolver = zodResolver(
@@ -57,19 +60,26 @@ const resolver = zodResolver(
         })
 );
 
-const onFormSubmit = ({ valid, values }) => {
+interface FormSubmitEvent {
+    valid: boolean;
+    values: UpdatePasswordData;
+}
+
+const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
     if (valid) {
-        loading.startDataLoading();
+        isSubmitting.value = true;
+        loading.startPageLoading();
         useMyAccountService
             .updatePassword(values)
-            .then((response) => {
-                showToast('success', ACTIONS.EDIT, 'password', 'br');
+            .then((response: UpdatePasswordResponse) => {
+                showToast('success', ACTIONS.EDIT, 'password', 'tc');
             })
-            .catch((error) => {
+            .catch((error: any) => {
                 authStore.processError(error, t('common.messages.error_occurred'));
             })
             .finally(() => {
-                loading.stopDataLoading();
+                isSubmitting.value = false;
+                loading.stopPageLoading();
             });
     }
 };
@@ -83,7 +93,7 @@ const onFormSubmit = ({ valid, values }) => {
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon class="pi pi-key" />
-                        <Password id="current_password" name="current_password" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" :toggleMask="true" class="mb-4" fluid :feedback="false" autofocus toggleMask />
+                        <Password id="current_password" name="current_password" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" :toggleMask="true" class="mb-4" fluid :feedback="false" :disabled="isSubmitting" />
                     </IconField>
                     <label for="current_password">{{ t('user.columns.current_password') }}</label>
                 </FloatLabel>
@@ -106,8 +116,7 @@ const onFormSubmit = ({ valid, values }) => {
                                 class="mb-4"
                                 fluid
                                 :feedback="true"
-                                autofocus
-                                toggleMask
+                                :disabled="isSubmitting"
                             >
                                 <template #header>
                                     <div class="font-semibold text-xm mb-4">{{ $t('user.columns.new_password') }}</div>
@@ -134,7 +143,7 @@ const onFormSubmit = ({ valid, values }) => {
                     <FloatLabel variant="on" class="w-full">
                         <IconField class="w-full">
                             <InputIcon class="pi pi-key" />
-                            <Password id="password_confirmation" name="password_confirmation" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" :toggleMask="true" class="mb-4" fluid :feedback="false" autofocus toggleMask />
+                            <Password id="password_confirmation" name="password_confirmation" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" :toggleMask="true" class="mb-4" fluid :feedback="false" :disabled="isSubmitting" />
                         </IconField>
                         <label for="password_confirmation">{{ t('user.columns.confirm_new_password') }}</label>
                     </FloatLabel>
@@ -144,7 +153,7 @@ const onFormSubmit = ({ valid, values }) => {
                 </FormField>
             </div>
             <div class="col-span-1 md:col-span-2 flex justify-start">
-                <Button :label="$t('myaccount.labels.change_password')" icon="pi pi-check" type="submit" :loading="loading.isDataLoading" />
+                <Button :label="$t('myaccount.labels.change_password')" icon="pi pi-check" type="submit" :loading="isSubmitting" :disabled="isSubmitting" />
             </div>
         </Form>
     </div>

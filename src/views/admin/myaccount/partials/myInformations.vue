@@ -1,23 +1,22 @@
-<script setup>
+<script setup lang="ts">
 import { useMyAccountService } from '@/services/useMyAccountService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { UpdateMyInformationData, UpdateMyInformationResponse } from '@/types/myaccount';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { z } from 'zod';
-
-const props = defineProps({
-    user: Object
-});
 
 const authStore = useAuthStore();
 
 const { t } = useI18n();
 const { showToast } = useShowToast();
 const loading = useLoading();
-const initialValues = reactive({
+const isSubmitting = ref<boolean>(false);
+
+const initialValues = reactive<UpdateMyInformationData>({
     name: authStore.user.name,
     email: authStore.user.email
 });
@@ -33,21 +32,28 @@ const resolver = zodResolver(
     })
 );
 
-const onFormSubmit = ({ valid, values }) => {
+interface FormSubmitEvent {
+    valid: boolean;
+    values: UpdateMyInformationData;
+}
+
+const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
     if (valid) {
-        loading.startDataLoading();
+        isSubmitting.value = true;
+        loading.startPageLoading();
         useMyAccountService
             .updateMyInformation(values)
-            .then((response) => {
+            .then((response: UpdateMyInformationResponse) => {
                 authStore.user.name = response.user.name;
                 authStore.user.email = response.user.email;
-                showToast('success', ACTIONS.EDIT, 'my_informations', 'br');
+                showToast('success', ACTIONS.EDIT, 'my_informations', 'tc');
             })
-            .catch((error) => {
+            .catch((error: any) => {
                 authStore.processError(error, t('common.messages.error_occurred'));
             })
             .finally(() => {
-                loading.stopDataLoading();
+                isSubmitting.value = false;
+                loading.stopPageLoading();
             });
     }
 };
@@ -61,7 +67,7 @@ const onFormSubmit = ({ valid, values }) => {
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon><i class="pi pi-user" /></InputIcon>
-                        <InputText id="name" name="name" @input="() => authStore.clearErrors([$field.name])" v-bind="$field" class="w-full" />
+                        <InputText id="name" name="name" @input="() => authStore.clearErrors([$field.name])" v-bind="$field" class="w-full" :disabled="isSubmitting" />
                     </IconField>
                     <label for="name">{{ t('user.columns.name') }}</label>
                 </FloatLabel>
@@ -73,7 +79,7 @@ const onFormSubmit = ({ valid, values }) => {
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon><i class="pi pi-envelope" /></InputIcon>
-                        <InputText id="email" name="email" type="email" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" class="w-full" :autocomplete="false" />
+                        <InputText id="email" name="email" type="email" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" class="w-full" :autocomplete="false" :disabled="isSubmitting" />
                     </IconField>
                     <label for="email">{{ t('user.columns.email') }}</label>
                 </FloatLabel>
@@ -84,7 +90,7 @@ const onFormSubmit = ({ valid, values }) => {
 
             <!-- Submit button (left aligned) -->
             <div class="col-span-1 md:col-span-2 flex justify-start pt-2">
-                <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isDataLoading" />
+                <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="isSubmitting" :disabled="isSubmitting" />
             </div>
         </Form>
     </div>

@@ -1,14 +1,17 @@
-<script setup>
+<script setup lang="ts">
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
 import { useLock } from '@/composables/useLock';
 import { useRowEffects } from '@/composables/useRowEffects';
 import dayjs from '@/plugins/dayjs';
 import { useShipperService } from '@/services/useShipperService';
+import { useShopService } from '@/services/useShopService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { ShipperData } from '@/types/shipper';
+import type { Shop } from '@/types/shop';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
@@ -21,18 +24,22 @@ const authStore = useAuthStore();
 const confirm = useConfirm();
 const { showToast } = useShowToast();
 const loading = useLoading();
-const loadingActiveId = ref(null);
+const loadingActiveId = ref<number | null>(null);
 
 // Filters configuration
 const defaultFiltersConfig = {
     name: FilterMatchMode.CONTAINS,
     type: FilterMatchMode.CONTAINS,
-    active: FilterMatchMode.EQUALS
+    active: FilterMatchMode.EQUALS,
+    shops: { matchMode: FilterMatchMode.IN, relation: { name: 'shops', column: 'shops.id' } }
 };
+
+// Shops options for filter
+const shopsOptions = ref<Shop[]>([]);
 
 // Initialize DataTable
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
-    (params) =>
+    (params: any) =>
         useShipperService.getShippers(params).then((data) => ({
             data: data.data,
             meta: data.meta
@@ -47,7 +54,12 @@ const { highlights, markHighlight, getRowClass } = useRowEffects();
 const defaultFields = ['name', 'type', 'shops', 'api', 'active'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
-const defaultColumns = computed(() =>
+interface Column {
+    field: string;
+    header: string;
+}
+
+const defaultColumns = computed<Column[]>(() =>
     defaultFields.map((field) => ({
         field,
         header: t(`shipper.columns.${field}`)
@@ -55,62 +67,69 @@ const defaultColumns = computed(() =>
 );
 
 const { selectedColumns, columnChanged } = useDynamicColumns('shippersColumns', defaultFields, 'shipper.columns');
-const subscription = ref(null);
+const subscription = ref<any>(null);
+
+interface EchoEvent {
+    action: string;
+    data: ShipperData | number[];
+}
 
 // Echo subscription
-function subscribeToEcho() {
-    subscription.value = Echo.private(`data-stream.shippers${authStore.user.account_id}`).listen('DataStream', (event) => {
+function subscribeToEcho(): void {
+    subscription.value = Echo.private(`data-stream.shippers${authStore.user.account_id}`).listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: EchoEvent): void {
     switch (event.action) {
         case ACTIONS.DELETE:
-            event.data.forEach((id) => {
+            (event.data as number[]).forEach((id: number) => {
                 const index = findRecordIndex(records, id);
                 if (index !== -1) records.value.splice(index, 1);
             });
             break;
         case ACTIONS.UPDATE: {
-            const index = findRecordIndex(records, event.data.id);
+            const data = event.data as ShipperData;
+            const index = findRecordIndex(records, data.id);
             if (index !== -1) {
-                records.value[index] = event.data;
-                markHighlight(event.data.id, 'updated');
+                records.value[index] = data;
+                markHighlight(data.id, 'updated');
             }
             break;
         }
         case ACTIONS.STORE: {
-            const exists = records.value.some((r) => r.id === event.data.id);
+            const data = event.data as ShipperData;
+            const exists = records.value.some((r: ShipperData) => r.id === data.id);
             if (!exists) {
-                records.value.unshift(event.data);
-                markHighlight(event.data.id, 'new');
+                records.value.unshift(data);
+                markHighlight(data.id, 'new');
             }
             break;
         }
     }
 }
 
-function addRecord() {
+function addRecord(): void {
     router.push({ name: 'shipper-create' });
 }
 
-function editRecord(row) {
+function editRecord(row: ShipperData): void {
     router.push({ name: 'shipper-edit', params: { id: row.id } });
 }
 
-function toggleActive(shipperId) {
+function toggleActive(shipperId: number): void {
     loadingActiveId.value = shipperId;
     loading.startPageLoading();
     useShipperService
         .toggleActiveShipper(shipperId)
-        .then((result) => {
+        .then((result: any) => {
             const index = findRecordIndex(records, shipperId);
             records.value[index].active = !records.value[index].active;
             markHighlight(shipperId, 'updated');
             showToast('success', ACTIONS.EDIT, 'shipper', 'tc');
         })
-        .catch((error) => {
+        .catch((error: any) => {
             if (error?.response?.status === 419 || error?.response?.status === 401) {
                 console.error('Session expired, redirecting to login');
             }
@@ -122,10 +141,10 @@ function toggleActive(shipperId) {
         });
 }
 
-function confirmDeleteRecord(event, shipperIds) {
+function confirmDeleteRecord(event: MouseEvent, shipperIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget,
+        target: event.currentTarget as HTMLElement,
         message: shipperIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.shippers') }) : t('common.confirmations.delete.message', { entity: t('entity.shipper') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -144,13 +163,13 @@ function confirmDeleteRecord(event, shipperIds) {
             useShipperService
                 .deleteShippers(shipperIds)
                 .then(() => {
-                    shipperIds.forEach((id) => {
+                    shipperIds.forEach((id: number) => {
                         const index = findRecordIndex(records, id);
                         if (index !== -1) records.value.splice(index, 1);
                     });
                     showToast('success', ACTIONS.DELETE, 'shipper', 'tc');
                 })
-                .catch((error) => {
+                .catch((error: any) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
                         console.error('Session expired, redirecting to login');
                     }
@@ -163,6 +182,10 @@ function confirmDeleteRecord(event, shipperIds) {
 onMounted(() => {
     initialize();
     subscribeToEcho();
+    // Fetch shops for filter
+    useShopService.getShops().then((response: any) => {
+        shopsOptions.value = response.data;
+    });
 });
 
 onUnmounted(() => {
@@ -363,7 +386,17 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- Shops Column -->
-                <Column columnKey="shops" field="shops" :frozen="frozenColumns.shops" v-if="selectedColumns.some((column) => column.field === 'shops')" class="min-w-40">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="shops"
+                    field="shops"
+                    :frozen="frozenColumns.shops"
+                    v-if="selectedColumns.some((column) => column.field === 'shops')"
+                    class="min-w-40"
+                >
                     <template #header>
                         <HeaderCell
                             :text="t('shipper.columns.shops')"
@@ -381,6 +414,23 @@ onUnmounted(() => {
                             </div>
                             <span v-else class="text-muted-color">—</span>
                         </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <MultiSelect v-model="filterModel.value" :options="shopsOptions" optionLabel="name" optionValue="id" :placeholder="t('common.labels.select_shops')" class="w-full" size="small" display="chip" :maxSelectedLabels="2" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button
+                                    :disabled="!filterModel.value || filterModel.value.length === 0"
+                                    size="small"
+                                    v-tooltip.top="t('common.labels.clear')"
+                                    outlined
+                                    icon="pi pi-times"
+                                    severity="danger"
+                                    @click="((filterModel.value = null), applyFilter())"
+                                />
+                            </InputGroupAddon>
+                        </InputGroup>
                     </template>
                 </Column>
 

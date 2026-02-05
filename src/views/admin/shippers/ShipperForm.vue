@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { useRegionService } from '@/services/useRegionService';
 import { useShipperService } from '@/services/useShipperService';
 import { useShopService } from '@/services/useShopService';
@@ -6,8 +6,11 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { shipperSchema } from '@/validations/shipper';
+import type { ShipperData, RegionPricing as RegionPricingType } from '@/types/shipper';
+import type { Region, Shop } from '@/types/shop';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
 import { computed, onMounted, reactive, ref } from 'vue';
+import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -18,40 +21,67 @@ const authStore = useAuthStore();
 const loading = useLoading();
 const { showToast } = useShowToast();
 
-const isEdit = computed(() => !!route.params.id);
-const isLoading = ref(true);
-const regions = ref([]);
-const shops = ref([]);
-const selectedShopIds = ref([]);
-const formKey = ref(0);
+const isEdit = computed<boolean>(() => !!route.params.id);
+const isLoading = ref<boolean>(true);
+const regions = ref<Region[]>([]);
+const shops = ref<Shop[]>([]);
+const selectedShopIds = ref<number[]>([]);
+const formKey = ref<number>(0);
 
-const shipperTypes = [
+interface ShipperType {
+    label: string;
+    value: 'company' | 'individual';
+    icon: string;
+}
+
+const shipperTypes: ShipperType[] = [
     { label: t('shipper.types.company'), value: 'company', icon: 'pi pi-building' },
     { label: t('shipper.types.individual'), value: 'individual', icon: 'pi pi-user' }
 ];
 
+interface InitialValues {
+    name: string;
+    type: 'company' | 'individual';
+    api: string;
+    active: boolean;
+}
+
 // Initial values for the form
-const initialValues = reactive({
+const initialValues = reactive<InitialValues>({
     name: '',
     type: 'company',
     api: '',
     active: true
 });
 
+interface RegionPricingEntry {
+    region_id: number;
+    home_delivery_price: number;
+    stop_desk_price: number;
+    return_price: number;
+    enabled: boolean;
+}
+
 // Region pricing state (managed separately from form)
-const regionPricing = ref([]);
+const regionPricing = ref<RegionPricingEntry[]>([]);
+
+interface QuickFill {
+    home_delivery_price: number;
+    stop_desk_price: number;
+    return_price: number;
+}
 
 // Quick Fill state for bulk region pricing
-const quickFill = reactive({
+const quickFill = reactive<QuickFill>({
     home_delivery_price: 0,
     stop_desk_price: 0,
     return_price: 0
 });
 
 // Apply quick fill prices to all regions
-function applyToAllRegions() {
-    regions.value.forEach((region) => {
-        const idx = regionPricing.value.findIndex((p) => p.region_id === region.id);
+function applyToAllRegions(): void {
+    regions.value.forEach((region: Region) => {
+        const idx = regionPricing.value.findIndex((p: RegionPricingEntry) => p.region_id === region.id);
         if (idx === -1) {
             regionPricing.value.push({
                 region_id: region.id,
@@ -72,7 +102,7 @@ function applyToAllRegions() {
 // Zod schema with zodResolver
 const resolver = zodResolver(shipperSchema);
 
-async function loadRegions() {
+async function loadRegions(): Promise<void> {
     try {
         const response = await useRegionService.getAllRegions();
         regions.value = response.regions || [];
@@ -81,26 +111,26 @@ async function loadRegions() {
     }
 }
 
-async function loadShops() {
+async function loadShops(): Promise<void> {
     try {
         const response = await useShopService.getShops();
         shops.value = response.data || [];
         // Auto-select all shops for new shippers
         if (!isEdit.value) {
-            selectedShopIds.value = shops.value.map((shop) => shop.id);
+            selectedShopIds.value = shops.value.map((shop: Shop) => shop.id);
         }
     } catch (error) {
         console.error('Error loading shops:', error);
     }
 }
 
-async function loadShipper() {
+async function loadShipper(): Promise<void> {
     if (!isEdit.value) return;
 
     try {
         loading.startDataLoading();
-        const response = await useShipperService.getShipper(route.params.id);
-        const shipper = response.data;
+        const response = await useShipperService.getShipper(route.params.id as string);
+        const shipper: ShipperData = response.data;
 
         // Update initial values
         initialValues.name = shipper.name;
@@ -110,7 +140,7 @@ async function loadShipper() {
 
         // Set region pricing
         if (shipper.region_pricing) {
-            regionPricing.value = shipper.region_pricing.map((p) => ({
+            regionPricing.value = shipper.region_pricing.map((p: RegionPricingType) => ({
                 region_id: p.region_id,
                 home_delivery_price: p.home_delivery_price,
                 stop_desk_price: p.stop_desk_price,
@@ -134,10 +164,20 @@ async function loadShipper() {
     }
 }
 
+interface RegionPricingGridEntry {
+    region_id: number;
+    region_name: string;
+    region_code: string;
+    home_delivery_price: number;
+    stop_desk_price: number;
+    return_price: number;
+    enabled: boolean;
+}
+
 // Build region pricing grid with all regions
-const regionPricingGrid = computed(() => {
-    return regions.value.map((region) => {
-        const existing = regionPricing.value.find((p) => p.region_id === region.id);
+const regionPricingGrid = computed<RegionPricingGridEntry[]>(() => {
+    return regions.value.map((region: Region) => {
+        const existing = regionPricing.value.find((p: RegionPricingEntry) => p.region_id === region.id);
         return {
             region_id: region.id,
             region_name: region.name,
@@ -150,15 +190,15 @@ const regionPricingGrid = computed(() => {
     });
 });
 
-function updateRegionPrice(regionId, field, value) {
-    const idx = regionPricing.value.findIndex((p) => p.region_id === regionId);
+function updateRegionPrice(regionId: number, field: keyof Pick<RegionPricingEntry, 'home_delivery_price' | 'stop_desk_price' | 'return_price'>, value: number): void {
+    const idx = regionPricing.value.findIndex((p: RegionPricingEntry) => p.region_id === regionId);
     if (idx !== -1) {
         regionPricing.value[idx][field] = value;
     }
 }
 
-function toggleRegion(regionId, enabled) {
-    const idx = regionPricing.value.findIndex((p) => p.region_id === regionId);
+function toggleRegion(regionId: number, enabled: boolean): void {
+    const idx = regionPricing.value.findIndex((p: RegionPricingEntry) => p.region_id === regionId);
     if (enabled) {
         if (idx === -1) {
             regionPricing.value.push({
@@ -178,7 +218,26 @@ function toggleRegion(regionId, enabled) {
     }
 }
 
-const onFormSubmit = async ({ valid, values }) => {
+interface FormSubmitEvent {
+    valid: boolean;
+    values: {
+        name: string;
+        type: 'company' | 'individual';
+        api?: string;
+        active: boolean;
+    };
+}
+
+interface ShipperPayload {
+    name: string;
+    type: 'company' | 'individual';
+    active: boolean;
+    region_pricing: Omit<RegionPricingEntry, 'enabled'>[];
+    shop_ids: number[];
+    api?: string;
+}
+
+const onFormSubmit = async ({ valid, values }: FormSubmitEvent): Promise<void> => {
     if (!valid) return;
 
     try {
@@ -187,15 +246,15 @@ const onFormSubmit = async ({ valid, values }) => {
 
         // Build region_pricing array from enabled regions
         const region_pricing = regionPricing.value
-            .filter((p) => p.enabled)
-            .map((p) => ({
+            .filter((p: RegionPricingEntry) => p.enabled)
+            .map((p: RegionPricingEntry) => ({
                 region_id: p.region_id,
                 home_delivery_price: p.home_delivery_price || 0,
                 stop_desk_price: p.stop_desk_price || 0,
                 return_price: p.return_price || 0
             }));
 
-        const payload = {
+        const payload: ShipperPayload = {
             name: values.name,
             type: values.type,
             active: values.active,
@@ -203,13 +262,13 @@ const onFormSubmit = async ({ valid, values }) => {
             shop_ids: selectedShopIds.value
         };
 
-        // Only include api if provided
-        if (values.api) {
+        // Only include api if provided AND type is company
+        if (values.type === 'company' && values.api) {
             payload.api = values.api;
         }
 
         if (isEdit.value) {
-            await useShipperService.updateShipper(route.params.id, payload);
+            await useShipperService.updateShipper(route.params.id as string, payload);
             showToast('success', ACTIONS.EDIT, 'shipper', 'tc');
         } else {
             await useShipperService.storeShipper(payload);
@@ -217,7 +276,7 @@ const onFormSubmit = async ({ valid, values }) => {
         }
 
         router.push({ name: 'shippers' });
-    } catch (error) {
+    } catch (error: any) {
         if (error?.response?.status === 422 && error?.response?.data?.errors) {
             // Validation error - display inline errors, no toast needed
             authStore.errors = error.response.data.errors;
@@ -230,12 +289,16 @@ const onFormSubmit = async ({ valid, values }) => {
     }
 };
 
-function goBack() {
+function goBack(): void {
     router.push({ name: 'shippers' });
 }
 
+interface TypeChangeEvent {
+    value: 'company' | 'individual';
+}
+
 // Clear API field when switching to individual type
-function handleTypeChange(event) {
+function handleTypeChange(event: TypeChangeEvent): void {
     authStore.clearErrors(['type']);
     if (event.value === 'individual') {
         initialValues.api = '';

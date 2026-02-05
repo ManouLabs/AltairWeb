@@ -1,8 +1,9 @@
-<script setup>
+<script setup lang="ts">
 import { useFileableService } from '@/services/useFileableService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { UploadProfilePictureResponse } from '@/types/myaccount';
 
 import { zodResolver } from '@primevue/forms/resolvers/zod';
 import { computed, onMounted, reactive, ref } from 'vue';
@@ -16,19 +17,22 @@ import Security from './partials/Security.vue';
 
 const { t } = useI18n();
 
-const formRef = ref(null);
+const formRef = ref<any>(null);
 const authStore = useAuthStore();
 
 const loading = useLoading();
 const user = computed(() => authStore.user);
 const { showToast } = useShowToast();
-const initialValues = reactive({
+const isUploading = ref<boolean>(false);
+
+const initialValues = reactive<{ file: File | null }>({
     file: null
 });
 
-function onFileChange(event) {
-    const file = event.target.files?.[0];
-    if (file) {
+function onFileChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (file && !isUploading.value) {
         formRef.value.setFieldValue('file', file);
         formRef.value.submit();
     }
@@ -43,21 +47,29 @@ const resolver = zodResolver(
             .refine((file) => file instanceof File && ACCEPTED_IMAGE_TYPES.includes(file.type), { message: 'common.messages.image_type', path: ['file'] })
     })
 );
-const onFormSubmit = ({ valid, values }) => {
+
+interface FormSubmitEvent {
+    valid: boolean;
+    values: { file: File };
+}
+
+const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
     if (valid) {
-        loading.startDataLoading();
+        isUploading.value = true;
+        loading.startPageLoading();
         useFileableService
             .uploadProfilePicture(values.file)
-            .then((response) => {
+            .then((response: UploadProfilePictureResponse) => {
                 authStore.user.profile_image = response.profile_image;
 
-                showToast('success', ACTIONS.EDIT, 'profile_image', 'br');
+                showToast('success', ACTIONS.EDIT, 'profile_image', 'tc');
             })
-            .catch((error) => {
+            .catch((error: any) => {
                 authStore.processError(error, t('common.messages.error_occurred'));
             })
             .finally(() => {
-                loading.stopDataLoading();
+                isUploading.value = false;
+                loading.stopPageLoading();
             });
     }
 };
@@ -75,11 +87,15 @@ onMounted(() => {
                     <div class="flex flex-col items-center">
                         <Form ref="formRef" :validateOnBlur="true" :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit">
                             <FormField v-slot="$field" name="file" class="relative w-28 h-28 rounded-s-full">
+                                <!-- Loading overlay -->
+                                <div v-if="isUploading" class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center z-10">
+                                    <ProgressSpinner style="width: 30px; height: 30px" strokeWidth="4" />
+                                </div>
                                 <img v-if="user.profile_image" :src="user.profile_image" alt="Profile" class="w-full h-full object-cover rounded-full border-4 border-white shadow" />
                                 <i v-else class="pi pi-user rounded-full border-4 border-white shadow bg-gray-200 flex items-center justify-center h-full text-gray-400"></i>
-                                <label class="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer">
+                                <label class="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer" :class="{ 'pointer-events-none opacity-50': isUploading }">
                                     <i class="pi pi-camera text-black text-sm"></i>
-                                    <input type="file" accept="image/*" class="hidden" @change="onFileChange" />
+                                    <input type="file" accept="image/*" class="hidden" @change="onFileChange" :disabled="isUploading" />
                                 </label>
                                 <Message v-if="$field.invalid || authStore.errors.file" severity="error" size="small">
                                     {{ $field.error?.message ? t($field.error.message) : authStore.errors?.file?.[0] }}
