@@ -59,6 +59,7 @@
         "titles": {
             "manage": "Manage {entity}",
             "add": "Add new {entity}",
+            "edit": "Edit {entity}",
             "dashboard": "Dashboard",
             "my_informations": "My informations"
         },
@@ -102,6 +103,7 @@
             "inactive": "Inactive",
             "select_plans": "Select Plans",
             "select_status": "Select Status",
+            "select_type": "Select Type",
             "not_verified": "Not Verified",
             "address": "Address",
             "addresses": "Addresses",

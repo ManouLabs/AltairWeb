@@ -133,15 +133,17 @@ function addRecord(): void {
     openDialog();
 }
 function editRecord(row: RoleData): void {
+    authStore.errors = {};
     record.value = row;
     permissionsOptions.value[1] = row.permissions;
     permissionsOptions.value[0] = allPermissions.value?.[0]?.filter((permission: Permission) => !permissionsOptions.value[1]?.some((sp: Permission) => sp.id === permission.id)) || [];
     openDialog();
 }
 const openDialog = (): void => {
+    const isEdit = !!(record.value as RoleData)?.id;
     dialog.open(formComponent, {
         props: {
-            header: t('common.titles.add', { entity: t('entity.role') }),
+            header: isEdit ? t('common.titles.edit', { entity: t('entity.role') }) : t('common.titles.add', { entity: t('entity.role') }),
             style: {
                 width: '30vw'
             },
@@ -318,7 +320,7 @@ onUnmounted(() => {
                                             <InputIcon>
                                                 <i class="pi pi-search" />
                                             </InputIcon>
-                                            <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" />
+                                            <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" @input="searchDone" />
                                             <label for="global_search">{{ t('common.placeholders.search') }}</label>
                                         </IconField>
                                     </FloatLabel>

@@ -272,7 +272,7 @@ onUnmounted(() => {
                                             <InputIcon>
                                                 <i class="pi pi-search" />
                                             </InputIcon>
-                                            <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" />
+                                            <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" @input="searchDone" />
                                             <label for="global_search">{{ t('common.placeholders.search') }}</label>
                                         </IconField>
                                     </FloatLabel>
