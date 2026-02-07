@@ -74,6 +74,12 @@ const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
     }
 };
 
+// Helper to calculate usage percentage
+function getUsagePercent(current: number | undefined, max: number | undefined): number {
+    if (!current || !max) return 0;
+    return Math.min(Math.round((current / max) * 100), 100);
+}
+
 onMounted(() => {
     authStore.fetchUser();
 });
@@ -81,43 +87,122 @@ onMounted(() => {
 <template>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Profile Panel -->
-        <div>
-            <Card class="h-auto max-h-none">
-                <template #content>
-                    <div class="flex flex-col items-center">
-                        <Form ref="formRef" :validateOnBlur="true" :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit">
-                            <FormField v-slot="$field" name="file" class="relative w-28 h-28 rounded-s-full">
+        <div class="space-y-6">
+            <!-- Profile Card -->
+            <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
+                <div class="flex flex-col items-center">
+                    <!-- Avatar -->
+                    <Form ref="formRef" :validateOnBlur="true" :initialValues="initialValues" :resolver="resolver" @submit="onFormSubmit">
+                        <FormField v-slot="$field" name="file" class="relative">
+                            <div class="w-24 h-24 relative">
                                 <!-- Loading overlay -->
                                 <div v-if="isUploading" class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center z-10">
                                     <ProgressSpinner style="width: 30px; height: 30px" strokeWidth="4" />
                                 </div>
-                                <img v-if="user.profile_image" :src="user.profile_image" alt="Profile" class="w-full h-full object-cover rounded-full border-4 border-white shadow" />
-                                <i v-else class="pi pi-user rounded-full border-4 border-white shadow bg-gray-200 flex items-center justify-center h-full text-gray-400"></i>
-                                <label class="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow cursor-pointer" :class="{ 'pointer-events-none opacity-50': isUploading }">
-                                    <i class="pi pi-camera text-black text-sm"></i>
+                                <img v-if="user.profile_image" :src="user.profile_image" alt="Profile" class="w-full h-full object-cover rounded-full border-4 border-white shadow-lg" />
+                                <div v-else class="w-full h-full rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center">
+                                    <i class="pi pi-user text-3xl text-slate-600"></i>
+                                </div>
+                                <label
+                                    class="absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+                                    :class="{ 'pointer-events-none opacity-50': isUploading }"
+                                >
+                                    <i class="pi pi-camera text-slate-600 text-xs"></i>
                                     <input type="file" accept="image/*" class="hidden" @change="onFileChange" :disabled="isUploading" />
                                 </label>
-                                <Message v-if="$field.invalid || authStore.errors.file" severity="error" size="small">
-                                    {{ $field.error?.message ? t($field.error.message) : authStore.errors?.file?.[0] }}
-                                </Message>
-                            </FormField>
-                        </Form>
-                        <h2 class="text-xl font-semibold mt-4">{{ user.name }}</h2>
-                        <p class="flex flex-wrap gap-2 mt-2">
-                            <Tag v-for="role in user.roles" :key="role" :value="role" rounded></Tag>
-                        </p>
+                            </div>
+                            <Message v-if="$field.invalid || authStore.errors.file" severity="error" size="small" class="mt-2">
+                                {{ $field.error?.message ? t($field.error.message) : authStore.errors?.file?.[0] }}
+                            </Message>
+                        </FormField>
+                    </Form>
 
-                        <div class="mt-4 w-full text-sm space-y-1">
-                            <p>
-                                <strong>{{ t('myaccount.labels.name') }}:</strong> {{ user.name }}
-                            </p>
-                            <p>
-                                <strong>{{ t('myaccount.labels.email') }}:</strong> {{ user.email }}
-                            </p>
+                    <!-- Name & Role -->
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white mt-4">{{ user.name }}</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">{{ user.account?.plan?.name || 'Administrator' }}</p>
+
+                    <!-- Role Tags -->
+                    <div class="flex flex-wrap justify-center gap-2 mt-3">
+                        <span v-for="role in user.roles" :key="role" class="px-3 py-1 text-xs font-medium rounded-full bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300 border border-violet-200 dark:border-violet-700">
+                            {{ role }}
+                        </span>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="w-full h-px bg-slate-200 dark:bg-slate-700 my-5"></div>
+
+                    <!-- Contact Info -->
+                    <div class="w-full space-y-3">
+                        <div class="flex items-center gap-3 text-sm">
+                            <i class="pi pi-user text-slate-400 text-sm"></i>
+                            <span class="text-slate-500 dark:text-slate-400">{{ t('myaccount.labels.name') }}:</span>
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">{{ user.name }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm">
+                            <i class="pi pi-envelope text-slate-400 text-sm"></i>
+                            <span class="text-slate-500 dark:text-slate-400">{{ t('myaccount.labels.email') }}:</span>
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">{{ user.email }}</span>
                         </div>
                     </div>
-                </template>
-            </Card>
+                </div>
+            </div>
+
+            <!-- Plan Usage Card -->
+            <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-4">{{ t('myaccount.labels.plan_usage') }}</h3>
+                <div class="space-y-4">
+                    <!-- Orders -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.orders') }}</span>
+                            <span class="text-xs text-slate-500">{{ user.account?.usage?.orders || 0 }} / {{ user.account?.plan?.limits?.orders || '∞' }}</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.orders, user.account?.plan?.limits?.orders) + '%' }"></div>
+                        </div>
+                    </div>
+                    <!-- Users -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.users') }}</span>
+                            <span class="text-xs text-slate-500">{{ user.account?.usage?.users || 0 }} / {{ user.account?.plan?.limits?.users || '∞' }}</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.users, user.account?.plan?.limits?.users) + '%' }"></div>
+                        </div>
+                    </div>
+                    <!-- Shops -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.shops') }}</span>
+                            <span class="text-xs text-slate-500">{{ user.account?.usage?.shops || 0 }} / {{ user.account?.plan?.limits?.shops || '∞' }}</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.shops, user.account?.plan?.limits?.shops) + '%' }"></div>
+                        </div>
+                    </div>
+                    <!-- Products -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.products') }}</span>
+                            <span class="text-xs text-slate-500">{{ user.account?.usage?.products || 0 }} / {{ user.account?.plan?.limits?.products || '∞' }}</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.products, user.account?.plan?.limits?.products) + '%' }"></div>
+                        </div>
+                    </div>
+                    <!-- Shippers -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.shippers') }}</span>
+                            <span class="text-xs text-slate-500">{{ user.account?.usage?.shippers || 0 }} / {{ user.account?.plan?.limits?.shippers || '∞' }}</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.shippers, user.account?.plan?.limits?.shippers) + '%' }"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- Right Panel: Tabs & Info -->
         <div class="lg:col-span-2 space-y-6">
@@ -153,6 +238,41 @@ onMounted(() => {
                     </Tabs>
                 </template>
             </Card>
+
+            <!-- Status Cards Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Account Status Card -->
+                <div class="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-200 dark:border-surface-700">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                            <i class="pi pi-verified text-emerald-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-800 dark:text-white">{{ t('myaccount.labels.account_status') }}</h4>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                {{ t('myaccount.labels.verified_since') }} {{ user.email_verified_at ? new Date(user.email_verified_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A' }}
+                            </p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">{{ t('myaccount.labels.account_status_description') }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Last Login Card -->
+                <div class="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-200 dark:border-surface-700">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                            <i class="pi pi-clock text-amber-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-800 dark:text-white">{{ t('myaccount.labels.last_login') }}</h4>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{{ user.last_login_at ? new Date(user.last_login_at).toLocaleString() : t('myaccount.labels.never') }}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                                <span v-if="user.last_login_ip">{{ t('myaccount.labels.logged_from_ip') }}: {{ user.last_login_ip }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>

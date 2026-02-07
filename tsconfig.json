@@ -27,8 +27,7 @@
         },
 
         /* Types */
-        "types": ["node", "vite/client"],
-        "typeRoots": ["./node_modules/@types", "./src/types"]
+        "types": ["node", "vite/client"]
     },
     "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts"],
     "exclude": ["node_modules"]

@@ -17,7 +17,11 @@
         "shop": "Shop",
         "shops": "Shops",
         "shipper": "Shipper",
-        "shippers": "Shippers"
+        "shippers": "Shippers",
+        "order": "Order",
+        "orders": "Orders",
+        "product": "Product",
+        "products": "Products"
     },
     "common": {
         "contents": {
@@ -63,7 +67,12 @@
             "dashboard": "Dashboard",
             "my_informations": "My informations"
         },
+        "subtitles": {
+            "manage": "Add, edit and monitor all {entity} across the platform."
+        },
         "labels": {
+            "all_filters": "All Filters",
+            "columns_selected": "COLUMNS: {count} selected",
             "free": "Free",
             "paid": "Paid",
             "updated": "Updated",
@@ -199,11 +208,15 @@
     },
     "login": {
         "welcome": "Welcome",
-        "sign_in_message": "Please sign in",
+        "sign_in_message": "Enter your credentials to access your dashboard",
         "email": "Email address",
         "password": "Password",
         "sign_in": "Sign in",
-        "forgot_password": "Forgot password",
+        "forgot_password": "Forgot password?",
+        "remember_me": "Remember this device",
+        "or_continue_with": "or continue with",
+        "no_account": "Don't have an account?",
+        "sign_up": "Sign up for a new account",
         "error": "Login error"
     },
     "logout": {
@@ -297,6 +310,7 @@
             "updated_at": "Updated At"
         },
         "labels": {
+            "since": "Since",
             "no_shops": "No shops available. Please add a new shop...",
             "no_shop_found": "No shop found matching your search.",
             "manage_subtitle": "Manage your shops and their configurations"
@@ -310,12 +324,20 @@
             "api_configured": "API Status",
             "active": "Active",
             "shops": "Shops",
+            "code": "Code",
+            "region": "Region",
             "region_code": "Code",
             "region_name": "Region",
             "enabled": "Enabled",
             "home_delivery_price": "Home Delivery (DA)",
             "stop_desk_price": "Stop Desk (DA)",
             "return_price": "Return (DA)",
+            "home_delivery_da": "Home Delivery (DA)",
+            "stop_desk_da": "Stop Desk (DA)",
+            "return_da": "Return (DA)",
+            "home_delivery_short": "Home (DA)",
+            "stop_desk_short": "Stop Desk (DA)",
+            "return_short": "Return (DA)",
             "created_at": "Created At",
             "updated_at": "Updated At"
         },
@@ -325,19 +347,22 @@
             "api_and_shops": "API & Shops Configuration",
             "api_config": "API Configuration",
             "api_key": "API Key",
-            "api_hint": "Leave empty to keep the current API key unchanged.",
+            "api_hint": "Leave empty to keep the current API key unchanged if editing.",
             "shops": "Shops Assignment",
             "shops_hint": "Select the shops this shipper can deliver for.",
             "region_pricing": "Region Pricing",
             "quick_fill": "Quick Fill - Apply Same Price to All Regions",
+            "quick_fill_hint": "Fast way to set unified pricing across all listed regions.",
             "apply_to_all": "Apply to All Regions",
+            "save_shipper": "Save Shipper",
             "connected": "Connected",
             "not_configured": "Not Configured"
         },
         "placeholders": {
             "select_shops": "Select shops...",
             "api_key": "Enter API key...",
-            "api_unchanged": "Leave empty to keep current API key"
+            "api_unchanged": "Leave empty to keep current API key",
+            "enter_name": "Enter shipper name"
         },
         "types": {
             "company": "Company",
@@ -477,6 +502,13 @@
             "activity_description": "View your recent activities",
             "danger_zone": "Danger Zone",
             "danger_zone_description": "Manage your account's critical settings",
+            "plan_usage": "Plan Usage",
+            "account_status": "Account Status",
+            "account_status_description": "Your account is in good standing and all premium features are active.",
+            "verified_since": "Verified since",
+            "last_login": "Last Login",
+            "logged_from_ip": "Logged from IP",
+            "never": "Never",
             "delete_account_warning": "Deleting your account is irreversible. All your data will be permanently removed.",
             "are_you_sure": "Are you sure you want to proceed?",
             "extremely_important": "This action is extremely important and cannot be undone.",

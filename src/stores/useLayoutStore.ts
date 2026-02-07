@@ -29,8 +29,8 @@ interface MenuItem {
 
 export const useLayoutStore = defineStore('layout', {
     state: (): LayoutState => ({
-        preset: 'Lara',
-        primary: 'emerald',
+        preset: 'Aura',
+        primary: 'violet',
         surface: null,
         theme: 'light',
         menuMode: 'static',
@@ -128,6 +128,21 @@ export const useLayoutStore = defineStore('layout', {
             this.overlayMenuActive = false;
             this.staticMenuMobileActive = false;
             this.menuHoverActive = false;
+        },
+
+        setPrimary(value: string): void {
+            this.primary = value;
+            useSettingStore().updateSetting('primary', value);
+        },
+
+        setSurface(value: string): void {
+            this.surface = value;
+            useSettingStore().updateSetting('surface', value);
+        },
+
+        setPreset(value: string): void {
+            this.preset = value;
+            useSettingStore().updateSetting('preset', value);
         }
     },
 

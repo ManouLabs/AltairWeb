@@ -2,7 +2,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem 0 1rem 0;
+    padding: 2rem 0 1.5rem 0;
     gap: 0.5rem;
-    border-top: 1px solid var(--surface-border);
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+
+    .footer-brand {
+        font-weight: 700;
+        background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 }

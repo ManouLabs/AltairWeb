@@ -315,262 +315,265 @@ onMounted(async () => {
 
 <template>
     <div>
-        <div class="card shadow-glow">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-bold">
-                    {{ isEdit ? t('common.titles.edit', { entity: t('entity.shipper') }) : t('common.titles.add', { entity: t('entity.shipper') }) }}
-                </h2>
-                <Button :label="t('common.labels.back')" icon="pi pi-arrow-left" severity="secondary" outlined @click="goBack" />
-            </div>
+        <!-- Page Header (outside card) -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-surface-900 dark:text-white">
+                {{ isEdit ? t('common.titles.edit', { entity: t('entity.shipper') }) : t('common.titles.add', { entity: t('entity.shipper') }) }}
+            </h1>
+            <Button :label="t('common.labels.back')" icon="pi pi-arrow-left" severity="secondary" outlined @click="goBack" />
+        </div>
 
-            <!-- Loading Skeleton -->
-            <div v-if="isLoading" class="flex flex-col gap-6">
-                <!-- Basic Info Skeleton -->
-                <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
-                    <Skeleton width="150px" height="24px" class="mb-4" />
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Skeleton height="48px" class="w-full" />
-                        <Skeleton height="48px" class="w-full" />
-                        <Skeleton height="48px" class="w-full" />
-                    </div>
-                    <div class="mt-6 flex items-center gap-3">
-                        <Skeleton width="40px" height="24px" borderRadius="16px" />
-                        <Skeleton width="60px" height="20px" />
-                    </div>
+        <!-- Loading Skeleton -->
+        <div v-if="isLoading" class="flex flex-col gap-6">
+            <!-- Basic Info Skeleton -->
+            <div class="card">
+                <Skeleton width="150px" height="16px" class="mb-6" />
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Skeleton height="48px" class="w-full" />
+                    <Skeleton height="48px" class="w-full" />
+                    <Skeleton height="48px" class="w-full" />
                 </div>
-
-                <!-- API Config Skeleton -->
-                <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
-                    <Skeleton width="180px" height="24px" class="mb-4" />
-                    <Skeleton height="48px" class="w-full md:w-1/2" />
-                </div>
-
-                <!-- Region Pricing Skeleton -->
-                <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
-                    <Skeleton width="200px" height="24px" class="mb-4" />
-                    <div class="bg-surface-100 dark:bg-surface-800 rounded-lg p-4 mb-4">
-                        <div class="flex flex-wrap items-end gap-4">
-                            <Skeleton width="120px" height="48px" />
-                            <Skeleton width="120px" height="48px" />
-                            <Skeleton width="120px" height="48px" />
-                            <Skeleton width="100px" height="36px" />
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <Skeleton height="40px" class="w-full" />
-                        <Skeleton height="40px" class="w-full" />
-                        <Skeleton height="40px" class="w-full" />
-                        <Skeleton height="40px" class="w-full" />
-                        <Skeleton height="40px" class="w-full" />
-                    </div>
-                </div>
-
-                <!-- Actions Skeleton -->
-                <div class="flex justify-end gap-3">
-                    <Skeleton width="100px" height="40px" />
-                    <Skeleton width="100px" height="40px" />
+                <div class="mt-6 flex items-center gap-3">
+                    <Skeleton width="44px" height="24px" borderRadius="16px" />
+                    <Skeleton width="60px" height="20px" />
                 </div>
             </div>
 
-            <!-- Actual Form -->
-            <Form v-else :key="formKey" v-slot="$form" :initialValues="initialValues" :resolver="resolver" :validateOnBlur="true" @submit="onFormSubmit" class="flex flex-col gap-6">
-                <!-- Basic Info Section -->
-                <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
-                    <h3 class="text-lg font-semibold mb-4">{{ t('shipper.labels.basic_info') }}</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Type field -->
-                        <FormField v-slot="$field" name="type" class="flex flex-col gap-2">
-                            <FloatLabel variant="on" class="w-full">
-                                <Select id="type" name="type" :options="shipperTypes" optionLabel="label" optionValue="value" :disabled="loading.isFormSending" class="w-full" v-bind="$field" @change="handleTypeChange">
-                                    <template #value="{ value }">
-                                        <div v-if="value" class="flex items-center gap-2">
-                                            <i :class="shipperTypes.find((t) => t.value === value)?.icon" />
-                                            <span>{{ shipperTypes.find((t) => t.value === value)?.label }}</span>
-                                        </div>
-                                    </template>
-                                    <template #option="{ option }">
-                                        <div class="flex items-center gap-2">
-                                            <i :class="option.icon" />
-                                            <span>{{ option.label }}</span>
-                                        </div>
-                                    </template>
-                                </Select>
-                                <label for="type">{{ t('shipper.columns.type') }} *</label>
-                            </FloatLabel>
-                            <Message v-if="$field.invalid || authStore.errors.type" severity="error" size="small">
-                                {{ $field.error?.message ? t($field.error.message) : authStore.errors?.type?.[0] }}
-                            </Message>
-                        </FormField>
+            <!-- API Config Skeleton -->
+            <div class="card">
+                <Skeleton width="150px" height="16px" class="mb-6" />
+                <Skeleton height="48px" class="w-full md:w-1/3" />
+                <Skeleton width="280px" height="14px" class="mt-2" />
+            </div>
 
-                        <!-- Name field -->
-                        <FormField v-slot="$field" name="name" class="flex flex-col gap-2">
-                            <FloatLabel variant="on" class="w-full">
-                                <IconField>
-                                    <InputIcon><i class="pi pi-truck" /></InputIcon>
-                                    <InputText id="name" name="name" :disabled="loading.isFormSending" class="w-full" maxlength="255" v-bind="$field" @input="() => authStore.clearErrors(['name'])" autofocus />
-                                </IconField>
-                                <label for="name">{{ t('shipper.columns.name') }} *</label>
-                            </FloatLabel>
-                            <Message v-if="$field.invalid || authStore.errors.name" severity="error" size="small">
-                                {{ $field.error?.message ? t($field.error.message) : authStore.errors?.name?.[0] }}
-                            </Message>
-                        </FormField>
-
-                        <!-- Shops field -->
-                        <div class="flex flex-col gap-2">
-                            <FloatLabel variant="on" class="w-full">
-                                <MultiSelect
-                                    id="shops"
-                                    v-model="selectedShopIds"
-                                    :options="shops"
-                                    optionLabel="name"
-                                    optionValue="id"
-                                    :disabled="loading.isFormSending"
-                                    class="w-full"
-                                    display="chip"
-                                    filter
-                                    :placeholder="t('shipper.placeholders.select_shops')"
-                                />
-                                <label for="shops">{{ t('shipper.columns.shops') }} *</label>
-                            </FloatLabel>
-                            <Message v-if="authStore.errors.shop_ids" severity="error" size="small">
-                                {{ authStore.errors?.shop_ids?.[0] }}
-                            </Message>
-                        </div>
-                    </div>
-
-                    <!-- Active toggle -->
-                    <div class="mt-6">
-                        <FormField v-slot="$field" name="active" class="flex flex-col gap-2">
-                            <div class="flex items-center gap-3">
-                                <ToggleSwitch id="active" name="active" :disabled="loading.isFormSending" v-bind="$field" @change="() => authStore.clearErrors(['active'])" />
-                                <label for="active" class="font-medium">{{ t('shipper.columns.active') }}</label>
+            <!-- Region Pricing Skeleton -->
+            <div class="card">
+                <Skeleton width="150px" height="16px" class="mb-6" />
+                <div class="bg-surface-50 dark:bg-surface-800 rounded-xl p-4 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <Skeleton width="24px" height="24px" shape="circle" />
+                            <div>
+                                <Skeleton width="220px" height="16px" class="mb-1" />
+                                <Skeleton width="280px" height="12px" />
                             </div>
-                            <Message v-if="$field.invalid || authStore.errors.active" severity="error" size="small">
-                                {{ $field.error?.message ? t($field.error.message) : authStore.errors?.active?.[0] }}
-                            </Message>
-                        </FormField>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <Skeleton width="100px" height="36px" />
+                            <Skeleton width="100px" height="36px" />
+                            <Skeleton width="100px" height="36px" />
+                            <Skeleton width="140px" height="36px" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-0">
+                    <Skeleton height="44px" class="w-full" />
+                    <Skeleton height="44px" class="w-full" />
+                    <Skeleton height="44px" class="w-full" />
+                    <Skeleton height="44px" class="w-full" />
+                </div>
+            </div>
+
+            <!-- Actions Skeleton -->
+            <div class="flex justify-end gap-3">
+                <Skeleton width="100px" height="42px" />
+                <Skeleton width="120px" height="42px" />
+            </div>
+        </div>
+
+        <!-- Actual Form -->
+        <Form v-else :key="formKey" v-slot="$form" :initialValues="initialValues" :resolver="resolver" :validateOnBlur="true" @submit="onFormSubmit" class="flex flex-col gap-6">
+            <!-- Basic Info Section -->
+            <div class="card">
+                <h2 class="text-xs font-bold text-surface-900 dark:text-white uppercase tracking-wider mb-6">{{ t('shipper.labels.basic_info') }}</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Type field -->
+                    <FormField v-slot="$field" name="type" class="flex flex-col gap-1.5">
+                        <label for="type" class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">{{ t('shipper.columns.type') }} *</label>
+                        <Select id="type" name="type" :options="shipperTypes" optionLabel="label" optionValue="value" :disabled="loading.isFormSending" class="w-full" v-bind="$field" @change="handleTypeChange">
+                            <template #value="{ value }">
+                                <div v-if="value" class="flex items-center gap-2">
+                                    <i :class="shipperTypes.find((t) => t.value === value)?.icon" />
+                                    <span>{{ shipperTypes.find((t) => t.value === value)?.label }}</span>
+                                </div>
+                            </template>
+                            <template #option="{ option }">
+                                <div class="flex items-center gap-2">
+                                    <i :class="option.icon" />
+                                    <span>{{ option.label }}</span>
+                                </div>
+                            </template>
+                        </Select>
+                        <Message v-if="$field.invalid || authStore.errors.type" severity="error" size="small">
+                            {{ $field.error?.message ? t($field.error.message) : authStore.errors?.type?.[0] }}
+                        </Message>
+                    </FormField>
+
+                    <!-- Name field -->
+                    <FormField v-slot="$field" name="name" class="flex flex-col gap-1.5">
+                        <label for="name" class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">{{ t('shipper.columns.name') }} *</label>
+                        <IconField>
+                            <InputIcon><i class="pi pi-user" /></InputIcon>
+                            <InputText
+                                id="name"
+                                name="name"
+                                :disabled="loading.isFormSending"
+                                class="w-full"
+                                :placeholder="t('shipper.placeholders.enter_name')"
+                                maxlength="255"
+                                v-bind="$field"
+                                @input="() => authStore.clearErrors(['name'])"
+                                autofocus
+                            />
+                        </IconField>
+                        <Message v-if="$field.invalid || authStore.errors.name" severity="error" size="small">
+                            {{ $field.error?.message ? t($field.error.message) : authStore.errors?.name?.[0] }}
+                        </Message>
+                    </FormField>
+
+                    <!-- Shops field -->
+                    <div class="flex flex-col gap-1.5">
+                        <label for="shops" class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">{{ t('shipper.columns.shops') }} *</label>
+                        <MultiSelect
+                            id="shops"
+                            v-model="selectedShopIds"
+                            :options="shops"
+                            optionLabel="name"
+                            optionValue="id"
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            display="chip"
+                            filter
+                            :placeholder="t('shipper.placeholders.select_shops')"
+                        />
+                        <Message v-if="authStore.errors.shop_ids" severity="error" size="small">
+                            {{ authStore.errors?.shop_ids?.[0] }}
+                        </Message>
                     </div>
                 </div>
 
-                <!-- API Configuration Section (only for company type) -->
-                <div v-if="$form.type?.value === 'company'" class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
-                    <h3 class="text-lg font-semibold mb-4">{{ t('shipper.labels.api_config') }}</h3>
-                    <FormField v-slot="$field" name="api" class="flex flex-col gap-2">
-                        <FloatLabel variant="on" class="w-full md:w-1/2">
-                            <IconField>
-                                <InputIcon><i class="pi pi-key" /></InputIcon>
-                                <InputText
-                                    id="api"
-                                    name="api"
-                                    type="password"
-                                    :disabled="loading.isFormSending"
-                                    class="w-full"
-                                    maxlength="500"
-                                    :placeholder="isEdit ? t('shipper.placeholders.api_unchanged') : ''"
-                                    v-bind="$field"
-                                    @input="() => authStore.clearErrors(['api'])"
-                                />
-                            </IconField>
-                            <label for="api">{{ t('shipper.labels.api_key') }}</label>
-                        </FloatLabel>
-                        <small class="text-surface-500">{{ t('shipper.labels.api_hint') }}</small>
-                        <Message v-if="$field.invalid || authStore.errors.api" severity="error" size="small">
-                            {{ $field.error?.message ? t($field.error.message) : authStore.errors?.api?.[0] }}
+                <!-- Active toggle -->
+                <div class="mt-6">
+                    <FormField v-slot="$field" name="active" class="flex flex-col gap-2">
+                        <div class="flex items-center gap-3">
+                            <ToggleSwitch id="active" name="active" :disabled="loading.isFormSending" v-bind="$field" @change="() => authStore.clearErrors(['active'])" />
+                            <label for="active" class="text-sm font-medium text-surface-700 dark:text-surface-300">{{ t('shipper.columns.active') }}</label>
+                        </div>
+                        <Message v-if="$field.invalid || authStore.errors.active" severity="error" size="small">
+                            {{ $field.error?.message ? t($field.error.message) : authStore.errors?.active?.[0] }}
                         </Message>
                     </FormField>
                 </div>
+            </div>
 
-                <!-- Region Pricing Section -->
-                <div class="border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900">
-                    <h3 class="text-lg font-semibold mb-4">{{ t('shipper.labels.region_pricing') }}</h3>
+            <!-- API Configuration Section (only for company type) -->
+            <div v-if="$form.type?.value === 'company'" class="card">
+                <h2 class="text-xs font-bold text-surface-900 dark:text-white uppercase tracking-wider mb-6">{{ t('shipper.labels.api_config') }}</h2>
+                <FormField v-slot="$field" name="api" class="flex flex-col gap-1.5 max-w-md">
+                    <label for="api" class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">{{ t('shipper.labels.api_key') }}</label>
+                    <IconField>
+                        <InputIcon><i class="pi pi-key" /></InputIcon>
+                        <InputText id="api" name="api" type="password" :disabled="loading.isFormSending" class="w-full" maxlength="500" placeholder="••••••••••••••••" v-bind="$field" @input="() => authStore.clearErrors(['api'])" />
+                    </IconField>
+                    <small class="text-[11px] text-surface-400">{{ t('shipper.labels.api_hint') }}</small>
+                    <Message v-if="$field.invalid || authStore.errors.api" severity="error" size="small">
+                        {{ $field.error?.message ? t($field.error.message) : authStore.errors?.api?.[0] }}
+                    </Message>
+                </FormField>
+            </div>
 
-                    <!-- Quick Fill Section -->
-                    <div class="bg-surface-100 dark:bg-surface-800 rounded-lg p-4 mb-4">
-                        <div class="flex items-center gap-2 mb-3">
-                            <i class="pi pi-bolt text-primary" />
-                            <span class="font-medium">{{ t('shipper.labels.quick_fill') }}</span>
+            <!-- Region Pricing Section -->
+            <div class="card">
+                <h2 class="text-xs font-bold text-surface-900 dark:text-white uppercase tracking-wider mb-6">{{ t('shipper.labels.region_pricing') }}</h2>
+
+                <!-- Quick Fill Section -->
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-xl p-4 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <i class="pi pi-bolt text-primary text-lg" />
+                            <div>
+                                <p class="text-sm font-bold text-surface-900 dark:text-white">{{ t('shipper.labels.quick_fill') }}</p>
+                                <p class="text-xs text-surface-500">{{ t('shipper.labels.quick_fill_hint') }}</p>
+                            </div>
                         </div>
-                        <div class="flex flex-wrap items-end gap-4">
-                            <div class="flex flex-col gap-1">
-                                <label class="text-sm text-surface-500">{{ t('shipper.columns.home_delivery_price') }}</label>
-                                <InputNumber v-model="quickFill.home_delivery_price" :min="0" mode="decimal" :disabled="loading.isFormSending" inputClass="w-28" size="small" />
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <label class="text-sm text-surface-500">{{ t('shipper.columns.stop_desk_price') }}</label>
-                                <InputNumber v-model="quickFill.stop_desk_price" :min="0" mode="decimal" :disabled="loading.isFormSending" inputClass="w-28" size="small" />
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <label class="text-sm text-surface-500">{{ t('shipper.columns.return_price') }}</label>
-                                <InputNumber v-model="quickFill.return_price" :min="0" mode="decimal" :disabled="loading.isFormSending" inputClass="w-28" size="small" />
-                            </div>
-                            <Button :label="t('shipper.labels.apply_to_all')" icon="pi pi-check-circle" severity="success" size="small" @click="applyToAllRegions" :disabled="loading.isFormSending" />
+                        <div class="flex flex-wrap items-center gap-3">
+                            <InputNumber v-model="quickFill.home_delivery_price" :min="0" mode="decimal" :disabled="loading.isFormSending" inputClass="w-24" size="small" :placeholder="t('shipper.columns.home_delivery_short')" />
+                            <InputNumber v-model="quickFill.stop_desk_price" :min="0" mode="decimal" :disabled="loading.isFormSending" inputClass="w-24" size="small" :placeholder="t('shipper.columns.stop_desk_short')" />
+                            <InputNumber v-model="quickFill.return_price" :min="0" mode="decimal" :disabled="loading.isFormSending" inputClass="w-24" size="small" :placeholder="t('shipper.columns.return_short')" />
+                            <Button :label="t('shipper.labels.apply_to_all')" icon="pi pi-check-circle" size="small" @click="applyToAllRegions" :disabled="loading.isFormSending" />
                         </div>
                     </div>
-
-                    <DataTable :value="regionPricingGrid" scrollable scrollHeight="400px" size="small" stripedRows>
-                        <Column field="region_code" :header="t('shipper.columns.region_code')" style="width: 80px">
-                            <template #body="{ data }">
-                                <Tag :value="data.region_code" severity="secondary" />
-                            </template>
-                        </Column>
-                        <Column field="region_name" :header="t('shipper.columns.region_name')" style="min-width: 150px" />
-                        <Column :header="t('shipper.columns.enabled')" style="width: 100px">
-                            <template #body="{ data }">
-                                <Checkbox :modelValue="regionPricing.some((p) => p.region_id === data.region_id && p.enabled)" @update:modelValue="toggleRegion(data.region_id, $event)" binary :disabled="loading.isFormSending" />
-                            </template>
-                        </Column>
-                        <Column :header="t('shipper.columns.home_delivery_price')" style="width: 150px">
-                            <template #body="{ data }">
-                                <InputNumber
-                                    :modelValue="regionPricing.find((p) => p.region_id === data.region_id)?.home_delivery_price ?? 0"
-                                    @update:modelValue="updateRegionPrice(data.region_id, 'home_delivery_price', $event)"
-                                    :disabled="!regionPricing.some((p) => p.region_id === data.region_id && p.enabled) || loading.isFormSending"
-                                    mode="currency"
-                                    currency="DZD"
-                                    locale="fr-DZ"
-                                    size="small"
-                                    class="w-full"
-                                />
-                            </template>
-                        </Column>
-                        <Column :header="t('shipper.columns.stop_desk_price')" style="width: 150px">
-                            <template #body="{ data }">
-                                <InputNumber
-                                    :modelValue="regionPricing.find((p) => p.region_id === data.region_id)?.stop_desk_price ?? 0"
-                                    @update:modelValue="updateRegionPrice(data.region_id, 'stop_desk_price', $event)"
-                                    :disabled="!regionPricing.some((p) => p.region_id === data.region_id && p.enabled) || loading.isFormSending"
-                                    mode="currency"
-                                    currency="DZD"
-                                    locale="fr-DZ"
-                                    size="small"
-                                    class="w-full"
-                                />
-                            </template>
-                        </Column>
-                        <Column :header="t('shipper.columns.return_price')" style="width: 150px">
-                            <template #body="{ data }">
-                                <InputNumber
-                                    :modelValue="regionPricing.find((p) => p.region_id === data.region_id)?.return_price ?? 0"
-                                    @update:modelValue="updateRegionPrice(data.region_id, 'return_price', $event)"
-                                    :disabled="!regionPricing.some((p) => p.region_id === data.region_id && p.enabled) || loading.isFormSending"
-                                    mode="currency"
-                                    currency="DZD"
-                                    locale="fr-DZ"
-                                    size="small"
-                                    class="w-full"
-                                />
-                            </template>
-                        </Column>
-                    </DataTable>
                 </div>
 
-                <!-- Actions -->
-                <div class="flex justify-end gap-3">
-                    <Button :label="t('common.labels.cancel')" icon="pi pi-times" severity="secondary" outlined @click="goBack" :disabled="loading.isFormSending" />
-                    <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
-                </div>
-            </Form>
-        </div>
+                <DataTable :value="regionPricingGrid" scrollable scrollHeight="400px" size="small">
+                    <Column field="region_code" :header="t('shipper.columns.code')" style="width: 80px">
+                        <template #body="{ data }">
+                            <span class="font-medium">{{ data.region_code }}</span>
+                        </template>
+                    </Column>
+                    <Column field="region_name" :header="t('shipper.columns.region')" style="min-width: 150px">
+                        <template #body="{ data }">
+                            <span class="font-medium text-surface-900 dark:text-white">{{ data.region_name }}</span>
+                        </template>
+                    </Column>
+                    <Column :header="t('shipper.columns.enabled')" style="width: 100px">
+                        <template #body="{ data }">
+                            <Checkbox :modelValue="regionPricing.some((p) => p.region_id === data.region_id && p.enabled)" @update:modelValue="toggleRegion(data.region_id, $event)" binary :disabled="loading.isFormSending" />
+                        </template>
+                    </Column>
+                    <Column :header="t('shipper.columns.home_delivery_da')" style="width: 160px">
+                        <template #body="{ data }">
+                            <InputNumber
+                                :modelValue="regionPricing.find((p) => p.region_id === data.region_id)?.home_delivery_price ?? 0"
+                                @update:modelValue="updateRegionPrice(data.region_id, 'home_delivery_price', $event)"
+                                :disabled="!regionPricing.some((p) => p.region_id === data.region_id && p.enabled) || loading.isFormSending"
+                                mode="decimal"
+                                :minFractionDigits="2"
+                                :maxFractionDigits="2"
+                                suffix=" DA"
+                                size="small"
+                                inputClass="w-full"
+                            />
+                        </template>
+                    </Column>
+                    <Column :header="t('shipper.columns.stop_desk_da')" style="width: 160px">
+                        <template #body="{ data }">
+                            <InputNumber
+                                :modelValue="regionPricing.find((p) => p.region_id === data.region_id)?.stop_desk_price ?? 0"
+                                @update:modelValue="updateRegionPrice(data.region_id, 'stop_desk_price', $event)"
+                                :disabled="!regionPricing.some((p) => p.region_id === data.region_id && p.enabled) || loading.isFormSending"
+                                mode="decimal"
+                                :minFractionDigits="2"
+                                :maxFractionDigits="2"
+                                suffix=" DA"
+                                size="small"
+                                inputClass="w-full"
+                            />
+                        </template>
+                    </Column>
+                    <Column :header="t('shipper.columns.return_da')" style="width: 160px">
+                        <template #body="{ data }">
+                            <InputNumber
+                                :modelValue="regionPricing.find((p) => p.region_id === data.region_id)?.return_price ?? 0"
+                                @update:modelValue="updateRegionPrice(data.region_id, 'return_price', $event)"
+                                :disabled="!regionPricing.some((p) => p.region_id === data.region_id && p.enabled) || loading.isFormSending"
+                                mode="decimal"
+                                :minFractionDigits="2"
+                                :maxFractionDigits="2"
+                                suffix=" DA"
+                                size="small"
+                                inputClass="w-full"
+                            />
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end gap-3">
+                <Button :label="t('common.labels.cancel')" severity="secondary" outlined @click="goBack" :disabled="loading.isFormSending" />
+                <Button :label="t('shipper.labels.save_shipper')" type="submit" :loading="loading.isFormSending" />
+            </div>
+        </Form>
     </div>
 </template>

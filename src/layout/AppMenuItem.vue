@@ -29,7 +29,9 @@ const isActiveMenu = ref(false);
 const itemKey = ref(null);
 
 const updateItemKey = () => {
-    itemKey.value = props.parentItemKey ? `${props.parentItemKey}-${props.index}` : `${props.index}`;
+    // Use to path or label as unique identifier to prevent key collisions
+    const uniqueId = props.item.to || props.item.label || props.index;
+    itemKey.value = props.parentItemKey ? `${props.parentItemKey}-${uniqueId}` : `${uniqueId}`;
 };
 
 const checkActiveMenu = () => {

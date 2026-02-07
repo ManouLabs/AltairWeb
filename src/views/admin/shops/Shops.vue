@@ -267,130 +267,161 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="card shadow-glow">
-        <div class="flex items-center">
-            <Toolbar class="w-full" :pt="{ root: { style: 'border:none !important; padding:0 !important;' } }">
-                <template #start>
-                    <div>
-                        <h2 class="text-xl font-bold">{{ t('common.titles.manage', { entity: t('entity.shop') }) }}</h2>
-                        <span class="text-gray-500">{{ t('shop.labels.manage_subtitle') }}</span>
-                    </div>
-                </template>
+    <!-- Page Header (same as other pages) -->
+    <div class="datatable-page-header">
+        <div>
+            <h2>{{ t('common.titles.manage', { entity: t('entity.shop') }) }}</h2>
+            <p>{{ t('shop.labels.manage_subtitle') }}</p>
+        </div>
+        <div class="header-actions">
+            <IconField>
+                <InputIcon>
+                    <i class="pi pi-search" />
+                </InputIcon>
+                <InputText v-model="searchQuery" :placeholder="t('common.placeholders.search')" class="w-80" />
+            </IconField>
+            <Button v-if="authStore.hasPermission('create_shops')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shop') })" :label="`${t('common.labels.new')} ${t('entity.shop')}`" icon="pi pi-plus" @click="addRecord" />
+        </div>
+    </div>
 
-                <template #end>
-                    <div class="flex gap-2">
-                        <IconField>
-                            <InputIcon>
-                                <i class="pi pi-search" />
-                            </InputIcon>
-                            <InputText v-model="searchQuery" :placeholder="t('common.placeholders.search')" />
-                        </IconField>
-                        <Button v-if="authStore.hasPermission('create_shops')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shop') })" :label="t('common.labels.new')" icon="pi pi-plus" severity="primary" @click="addRecord" outlined />
-                    </div>
-                </template>
-            </Toolbar>
-        </div>
-    </div>
-    <div v-if="loadingStore.isDataLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="n in 3" :key="n">
-            <Panel class="border-none h-full">
-                <template #header>
-                    <div class="flex items-center gap-2">
-                        <Skeleton shape="circle" width="80px" height="80px" class="mr-2" />
-                        <Skeleton width="120px" height="32px" />
-                    </div>
-                </template>
-                <template #footer>
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <div class="flex items-center gap-2">
-                            <Skeleton width="32px" height="32px" borderRadius="50%" />
-                            <Skeleton width="32px" height="32px" borderRadius="50%" />
-                            <Skeleton width="32px" height="32px" borderRadius="50%" />
+    <!-- Loading State -->
+    <div v-if="loadingStore.isDataLoading" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+        <div v-for="n in 6" :key="n" class="shop-card shop-card-loading">
+            <div class="shop-card-body">
+                <!-- Header: Icon + Name/Date inline, Toggle on right -->
+                <div class="shop-card-header">
+                    <div class="flex items-center gap-3">
+                        <Skeleton width="56px" height="56px" borderRadius="16px" />
+                        <div class="flex flex-col gap-2">
+                            <Skeleton width="140px" height="20px" />
+                            <Skeleton width="100px" height="14px" />
                         </div>
-                        <Skeleton width="100px" height="20px" />
                     </div>
-                </template>
-                <template #icons>
-                    <Skeleton width="90px" height="32px" borderRadius="16px" />
-                </template>
-                <div class="mt-2">
-                    <Skeleton width="100%" height="24px" class="mb-2" />
-                    <Skeleton width="60%" height="20px" class="mb-2" />
-                    <Skeleton width="80%" height="20px" />
+                    <Skeleton width="80px" height="32px" borderRadius="20px" />
                 </div>
-            </Panel>
+                <!-- Description -->
+                <Skeleton width="100%" height="40px" class="mt-4" borderRadius="8px" />
+                <!-- Contacts -->
+                <div class="mt-4 space-y-2">
+                    <Skeleton width="75%" height="16px" />
+                    <Skeleton width="55%" height="16px" />
+                    <Skeleton width="45%" height="16px" />
+                </div>
+            </div>
+            <div class="shop-card-footer">
+                <div class="flex gap-2">
+                    <Skeleton width="28px" height="28px" borderRadius="50%" />
+                    <Skeleton width="28px" height="28px" borderRadius="50%" />
+                </div>
+                <div class="flex gap-1">
+                    <Skeleton width="32px" height="32px" borderRadius="8px" />
+                    <Skeleton width="32px" height="32px" borderRadius="8px" />
+                    <Skeleton width="32px" height="32px" borderRadius="8px" />
+                </div>
+            </div>
         </div>
     </div>
-    <div v-else-if="filteredRecords.length > 0" class="card grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 shadow-glow">
-        <div v-for="record in filteredRecords" :key="record.id">
-            <Panel :class="['border-none h-full', record.active ? 'bg-emerald-50 dark:bg-emerald-900' : 'bg-red-50 dark:bg-red-900']">
-                <template #header>
-                    <div class="flex items-center gap-2">
-                        <Image :src="record.files && record.files.length > 0 ? record.files[0].url : '/themes/shop-place-holder.svg'" alt="shop logo" width="80" preview />
+
+    <!-- Shops Grid -->
+    <div v-else-if="filteredRecords.length > 0" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+        <div v-for="shop in filteredRecords" :key="shop.id" :class="['shop-card group', shop.active ? 'shop-card-active' : 'shop-card-inactive']">
+            <!-- Card Body -->
+            <div class="shop-card-body">
+                <!-- Header: Logo + Name/Date on same line, Toggle on right -->
+                <div class="shop-card-header">
+                    <div class="flex items-center gap-3">
+                        <div :class="['shop-icon', shop.active ? 'shop-icon-active' : 'shop-icon-inactive']">
+                            <Image v-if="shop.files && shop.files.length > 0" :src="shop.files[0].url" alt="shop logo" width="40" preview class="rounded-lg" />
+                            <i v-else class="pi pi-shopping-bag text-2xl"></i>
+                        </div>
                         <div class="flex flex-col">
-                            <span class="font-bold text-lg text-surface-700 dark:text-surface-400">{{ record.name }}</span>
-                            <span class="text-sm text-surface-500 dark:text-surface-400">{{ humanizeDate(record.created_at, t) }}</span>
+                            <h3 class="shop-name">{{ shop.name }}</h3>
+                            <p class="shop-date">
+                                <i class="pi pi-calendar text-xs"></i>
+                                {{ t('shop.labels.since') }} {{ humanizeDate(shop.created_at, t) }}
+                            </p>
                         </div>
                     </div>
-                </template>
-                <template #footer>
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <div class="flex items-center gap-1">
-                            <a
-                                v-for="(contact, key) in record.contactMethods.filter((c) => ['whatsapp', 'website', 'linkedin', 'tiktok', 'facebook', 'instagram'].includes(c.type))"
-                                :key="key"
-                                :href="getSocialLink(contact)"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <Button :icon="getSocialIcon(contact.type)" text rounded severity="secondary" v-tooltip.top="contact.type.charAt(0).toUpperCase() + contact.type.slice(1)" />
-                            </a>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <Button v-if="authStore.hasPermission('view_shops')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.shop') })" icon="pi pi-eye" text @click="editRecord(record)" severity="secondary" :disabled="loading" />
-                            <Button v-if="authStore.hasPermission('update_shops')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.shop') })" icon="pi pi-pencil" text @click="editRecord(record)" :disabled="loading" />
-                            <Button
-                                v-if="authStore.hasPermission('delete_shops')"
-                                v-tooltip.top="t('common.tooltips.delete', { entity: t('entity.shop') })"
-                                icon="pi pi-trash"
-                                text
-                                severity="danger"
-                                @click="confirmDeleteRecord($event, [record.id])"
-                                :disabled="loading"
-                            />
-                        </div>
-                    </div>
-                </template>
-                <template #icons>
-                    <ActiveToggleButton :active="record.active" entity="shop" :loading="loadingActiveId === record.id" @toggle="toggleActive(record.id)" />
-                </template>
+                    <ActiveToggleButton :active="shop.active" entity="shop" :loading="loadingActiveId === shop.id" @toggle="toggleActive(shop.id)" />
+                </div>
 
-                <div class="mt-2 relative">
-                    <div v-if="record.description" class="text-surface-600 dark:text-surface-300">
-                        {{ record.description }}
+                <!-- Description -->
+                <p v-if="shop.description" class="shop-description">"{{ shop.description }}"</p>
+
+                <!-- Contact Details -->
+                <div class="shop-contacts">
+                    <!-- Address -->
+                    <div v-if="shop.addresses && shop.addresses.length > 0 && shop.addresses[0]" class="shop-contact-item">
+                        <i class="pi pi-map-marker"></i>
+                        <span
+                            >{{ shop.addresses[0].street }}<template v-if="shop.addresses[0].city">, {{ shop.addresses[0].city.name }}</template
+                            ><template v-if="shop.addresses[0].region">, {{ shop.addresses[0].region.name }}</template></span
+                        >
                     </div>
-                    <div v-if="record.addresses[0] && record.addresses.length > 0" class="flex space-x-2 items-start mt-4">
-                        <i class="pi pi-map-marker text-primary-700 dark:bg-primary-700 dark:text-primary-100 mt-1"></i>
-                        <span>{{ record.addresses[0].street }} {{ record.addresses[0].city?.name }} {{ record.addresses[0].region?.name }}</span>
-                    </div>
-                    <div v-for="(contact, key) in record.contactMethods.filter((c) => ['phone', 'email'].includes(c.type))" :key="key" class="flex space-x-2 items-start mt-2">
-                        <i
-                            :class="{
-                                'pi-phone': contact.type === 'phone',
-                                'pi-envelope': contact.type === 'email'
-                            }"
-                            class="pi text-primary-700 dark:bg-primary-700 dark:text-primary-100 mt-1"
-                        />
-                        <span class="text-surface-700 dark:text-surface-300">{{ contact.value }}</span>
+                    <!-- Email -->
+                    <template v-for="(contact, key) in shop.contactMethods?.filter((c: ContactMethod) => c.type === 'email')" :key="'email-' + key">
+                        <div class="shop-contact-item">
+                            <i class="pi pi-envelope"></i>
+                            <span>{{ contact.value }}</span>
+                        </div>
+                    </template>
+                    <!-- Phone -->
+                    <template v-for="(contact, key) in shop.contactMethods?.filter((c: ContactMethod) => c.type === 'phone')" :key="'phone-' + key">
+                        <div class="shop-contact-item shop-contact-phone">
+                            <i class="pi pi-phone"></i>
+                            <span>{{ contact.value }}</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="shop-card-footer">
+                <!-- Left: Social Links -->
+                <div class="shop-footer-left">
+                    <div class="shop-social-links">
+                        <a
+                            v-for="(contact, key) in shop.contactMethods?.filter((c: ContactMethod) => ['whatsapp', 'website', 'linkedin', 'tiktok', 'facebook', 'instagram'].includes(c.type))"
+                            :key="key"
+                            :href="getSocialLink(contact)"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="shop-social-link"
+                            v-tooltip.top="contact.type.charAt(0).toUpperCase() + contact.type.slice(1)"
+                        >
+                            <i :class="getSocialIcon(contact.type)"></i>
+                        </a>
                     </div>
                 </div>
-            </Panel>
+
+                <!-- Right: Action Buttons -->
+                <div class="shop-footer-actions">
+                    <Button v-if="authStore.hasPermission('view_shops')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.shop') })" icon="pi pi-eye" text rounded severity="secondary" @click="editRecord(shop)" :disabled="loading" />
+                    <Button v-if="authStore.hasPermission('update_shops')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.shop') })" icon="pi pi-pencil" text rounded @click="editRecord(shop)" :disabled="loading" />
+                    <Button
+                        v-if="authStore.hasPermission('delete_shops')"
+                        v-tooltip.top="t('common.tooltips.delete', { entity: t('entity.shop') })"
+                        icon="pi pi-trash"
+                        text
+                        rounded
+                        severity="danger"
+                        @click="confirmDeleteRecord($event, [shop.id])"
+                        :disabled="loading"
+                    />
+                </div>
+            </div>
         </div>
     </div>
-    <div class="card flex items-center justify-center shadow-glow" v-else-if="dataLoaded && searchQuery && filteredRecords.length === 0">
-        <p class="text-surface-700 dark:text-surface-300">{{ t('shop.labels.no_shop_found') }}</p>
+
+    <!-- No Results (Search) -->
+    <div v-else-if="dataLoaded && searchQuery && filteredRecords.length === 0" class="shop-empty-state">
+        <i class="pi pi-search text-4xl text-surface-300 mb-4"></i>
+        <p>{{ t('shop.labels.no_shop_found') }}</p>
     </div>
-    <div class="card flex items-center justify-center shadow-glow" v-else-if="dataLoaded && filteredRecords.length === 0">
-        <p class="text-surface-700 dark:text-surface-300">{{ t('shop.labels.no_shops') }}</p>
+
+    <!-- No Shops -->
+    <div v-else-if="dataLoaded && filteredRecords.length === 0" class="shop-empty-state">
+        <i class="pi pi-shopping-bag text-4xl text-surface-300 mb-4"></i>
+        <p>{{ t('shop.labels.no_shops') }}</p>
     </div>
 </template>

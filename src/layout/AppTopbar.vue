@@ -15,7 +15,6 @@ const { t } = useI18n();
 // Locale options & flags
 const supportedLocales = ref(import.meta.env.VITE_SUPPORTED_LOCALES ? import.meta.env.VITE_SUPPORTED_LOCALES.split(',') : ['fr', 'en', 'ar']);
 
-const localeFlags = ref(Object.fromEntries(import.meta.env.VITE_LOCALE_FLAGS.split(',').map((item) => item.split(':'))));
 const setLocale = (locale) => {
     layoutStore.setLocale(locale);
 };
@@ -101,8 +100,6 @@ const onLogoClick = () => {
 
 const directionClass = computed(() => (layoutStore.locale === 'ar' ? 'mr-auto' : 'ml-auto'));
 
-const flagClass = (locale) => `flag flag-${localeFlags.value[locale]} ${layoutStore.locale === 'ar' ? 'ml-2' : 'mr-2'}`;
-
 const userMenu = ref();
 
 const menuItems = computed(() => [
@@ -125,7 +122,7 @@ const menuItems = computed(() => [
 </script>
 
 <template>
-    <div class="layout-topbar shadow-glow">
+    <div class="layout-topbar">
         <!-- Logo + toggle -->
         <div class="layout-topbar-logo-container">
             <button class="layout-menu-button layout-topbar-action" @click="layoutStore.onMenuToggle">
@@ -133,23 +130,27 @@ const menuItems = computed(() => [
             </button>
 
             <router-link @click="onLogoClick" to="/" class="layout-topbar-logo">
-                <svg viewBox="0 0 54 40" xmlns="http://www.w3.org/2000/svg" fill="none">
-                    <!-- Your SVG logo here -->
-                </svg>
-                <span>ALTAIR</span>
+                <div class="logo-icon">
+                    <i class="pi pi-box"></i>
+                </div>
+                <span class="logo-text">Codly</span>
             </router-link>
         </div>
 
-        <!-- Locale + dark mode + user menu -->
-        <div class="layout-topbar-actions space-x-2" :class="directionClass">
-            <SelectButton v-model="layoutStore.locale" :options="supportedLocales" :allowEmpty="false" @change="setLocale(layoutStore.locale)">
-                <template #option="slotProps">
-                    <div class="flex items-center">
-                        <img :alt="slotProps.option" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="flagClass(slotProps.option)" style="width: 18px" />
-                        <span class="uppercase">{{ slotProps.option }}</span>
-                    </div>
-                </template>
-            </SelectButton>
+        <!-- Search bar -->
+        <div class="layout-topbar-search">
+            <i class="pi pi-search search-icon"></i>
+            <input type="text" placeholder="Search for anything..." />
+        </div>
+
+        <!-- Actions -->
+        <div class="layout-topbar-actions" :class="directionClass">
+            <!-- Locale pill switcher -->
+            <div class="locale-switcher">
+                <button v-for="locale in supportedLocales" :key="locale" class="locale-btn" :class="{ active: layoutStore.locale === locale }" @click="setLocale(locale)">
+                    {{ locale }}
+                </button>
+            </div>
 
             <!-- Dark mode toggle -->
             <div class="layout-config-menu">
@@ -160,74 +161,99 @@ const menuItems = computed(() => [
 
             <!-- User menu -->
             <div class="layout-topbar-menu block">
-                <div class="layout-topbar-menu-content space-x-4">
+                <div class="layout-topbar-menu-content">
                     <div>
                         <OverlayBadge value="2" severity="danger" size="small">
                             <Button icon="pi pi-bell" variant="text" rounded aria-label="Notification" @click="toggle" />
                         </OverlayBadge>
                         <Popover
                             ref="popNotifications"
-                            :showCloseIcon="true"
+                            :showCloseIcon="false"
                             :dismissable="true"
                             :position="'bottom'"
-                            :style="{ width: '350px' }"
+                            :style="{ width: '320px' }"
                             :pt="{
                                 content: { style: 'padding:0 !important' }
                             }"
                             @show="getNotifications()"
                         >
-                            <div class="flex flex-col">
+                            <div class="notification-popover">
                                 <!-- Header -->
-                                <div class="flex items-center justify-between px-4 py-2 border-b border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900">
-                                    <div class="font-semibold text-lg text-surface-900 dark:text-surface-200">{{ t('navigation.top_bar.notifications') }}</div>
-                                    <div class="flex items-center gap-2">
-                                        <Badge v-if="!loading.isDataLoading" value="8 New" severity="info" />
-                                        <Button icon="pi pi-envelope" rounded text aria-label="Mark all as unread" />
-                                    </div>
+                                <div class="notification-header">
+                                    <span class="notification-title">Notifications</span>
+                                    <button class="mark-read-btn">MARK ALL AS READ</button>
                                 </div>
-                                <div v-if="loading.isDataLoading">
-                                    <div v-for="i in 6" :key="i" class="flex items-center gap-3 px-4 py-4 relative group border-b border-surface-200 dark:border-surface-700">
-                                        <Skeleton shape="rectangle" size="30px" class="mr-2" />
-                                        <div class="flex-1 space-y-1">
-                                            <Skeleton width="160px" height="18px" />
-                                            <Skeleton width="200px" height="14px" />
-                                            <Skeleton width="50px" height="12px" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <VirtualScroller v-else :items="notifications" :itemSize="50" :delay="1000" class="border border-surface-200 dark:border-surface-700 rounded" style="height: 400px">
-                                    <template v-slot:item="{ notification, options, index }">
-                                        <div
-                                            class="flex items-center gap-3 px-4 py-2 relative group transition-colors cursor-pointer"
-                                            :class="['hover:bg-surface-100 dark:hover:bg-surface-800', !options.last ? 'border-b border-surface dark:border-surface-600' : '']"
-                                        >
-                                            <Badge severity="danger" class="absolute right-5 top-10" />
-                                            <Avatar icon="pi pi-user" class="mr-2" size="small" />
-                                            <div class="flex-1 space-y-1">
-                                                <div class="font-semibold text-surface-900 dark:text-surface-200 transition-colors">Congratulation Lettie 🎉</div>
-                                                <div class="text-md text-surface-500 dark:text-surface-400 transition-colors">Won the monthly best seller gold badge</div>
-                                                <div class="text-sm text-surface-400 dark:text-surface-500 transition-colors">1h ago</div>
-                                            </div>
-                                            <!-- Delete button under dot -->
-                                            <div class="absolute right-2 top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button size="small" icon="pi pi-times" rounded text aria-label="Delete notification" severity="contrast" />
-                                            </div>
-                                        </div>
-                                    </template>
-                                </VirtualScroller>
 
-                                <div class="px-4 py-2 border-t"><Button label="View all notifications" class="w-full" /></div>
+                                <!-- Notification List -->
+                                <div v-if="loading.isDataLoading" class="notification-list">
+                                    <div v-for="i in 3" :key="i" class="notification-item">
+                                        <Skeleton shape="circle" size="2.5rem" />
+                                        <div class="notification-content">
+                                            <Skeleton width="120px" height="14px" />
+                                            <Skeleton width="180px" height="12px" class="mt-1" />
+                                            <Skeleton width="60px" height="10px" class="mt-1" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="notification-list">
+                                    <!-- New Shop Added -->
+                                    <div class="notification-item">
+                                        <div class="notification-icon notification-icon--purple">
+                                            <i class="pi pi-shopping-bag"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-item-title">New Shop added</div>
+                                            <div class="notification-item-desc">Fashion Hub has joined the platform.</div>
+                                            <div class="notification-item-time">2 mins ago</div>
+                                        </div>
+                                    </div>
+                                    <!-- Payment Received -->
+                                    <div class="notification-item">
+                                        <div class="notification-icon notification-icon--blue">
+                                            <i class="pi pi-dollar"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-item-title">Payment received</div>
+                                            <div class="notification-item-desc">Withdrawal for Nexus Logistics approved.</div>
+                                            <div class="notification-item-time">45 mins ago</div>
+                                        </div>
+                                    </div>
+                                    <!-- Low Credits Warning -->
+                                    <div class="notification-item">
+                                        <div class="notification-icon notification-icon--orange">
+                                            <i class="pi pi-exclamation-triangle"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-item-title">Low Credits Warning</div>
+                                            <div class="notification-item-desc">Swift Freight balance is below threshold.</div>
+                                            <div class="notification-item-time">2 hours ago</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="notification-footer">
+                                    <button class="view-all-btn">View all notifications</button>
+                                </div>
                             </div>
                         </Popover>
                     </div>
-                    <template v-if="user?.profile_image">
-                        <OverlayBadge severity="success">
-                            <Avatar class="p-overlay-badge cursor-pointer hover:shadow" :image="user.profile_image" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
-                        </OverlayBadge>
-                    </template>
-                    <template v-else>
-                        <Button icon="pi pi-user" @click="toggleMenu" rounded aria-haspopup="true" aria-controls="overlay_menu" />
-                    </template>
+
+                    <!-- User info + avatar -->
+                    <div class="user-info">
+                        <div class="user-details" v-if="user">
+                            <p class="user-name">{{ user.name || 'User' }}</p>
+                            <p class="user-role">{{ user.roles?.[0] || 'Account' }}</p>
+                        </div>
+                        <template v-if="user?.profile_image">
+                            <OverlayBadge severity="success">
+                                <Avatar class="p-overlay-badge cursor-pointer hover:shadow" :image="user.profile_image" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
+                            </OverlayBadge>
+                        </template>
+                        <template v-else>
+                            <Button icon="pi pi-user" @click="toggleMenu" rounded aria-haspopup="true" aria-controls="overlay_menu" />
+                        </template>
+                    </div>
                     <Menu ref="userMenu" id="overlay_menu" :model="menuItems" :popup="true" />
                 </div>
             </div>

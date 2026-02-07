@@ -12,6 +12,16 @@ interface User {
     email: string;
     roles?: string[];
     profile_image?: string | null;
+    email_verified_at?: string | null;
+    last_login_at?: string | null;
+    last_login_ip?: string | null;
+    account?: {
+        plan?: {
+            name?: string;
+            limits?: Record<string, number>;
+        };
+        usage?: Record<string, number>;
+    };
     [key: string]: unknown;
 }
 
