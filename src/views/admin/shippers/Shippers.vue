@@ -353,7 +353,10 @@ onUnmounted(() => {
                 </template>
                 <template #body="{ data }">
                     <DataCell>
-                        <Tag :value="data.type_label" :severity="data.type === 'company' ? 'info' : 'secondary'" :icon="data.type === 'company' ? 'pi pi-building' : 'pi pi-user'" :class="{ 'font-bold': frozenColumns.type }" />
+                        <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.type }">
+                            <i :class="data.type === 'company' ? 'pi pi-building' : 'pi pi-user'" class="text-color-secondary"></i>
+                            <span>{{ data.type_label }}</span>
+                        </div>
                     </DataCell>
                 </template>
                 <template #filter="{ filterModel, applyFilter }">

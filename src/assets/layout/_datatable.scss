@@ -357,99 +357,13 @@
 
 /* ============================
    7 · PAGINATOR
+   (Custom styles removed - user will add their own)
    ============================ */
-.p-datatable .p-paginator {
-    border: none;
-    border-top: 1px solid var(--surface-border);
-    padding: 1rem 0 0 0;
-    margin-top: 0;
-    background: transparent;
-    font-size: 0.8125rem;
-    justify-content: space-between;
-}
 
-/* "Showing X to Y of Z" text */
-.p-datatable .p-paginator .p-paginator-current {
-    color: var(--text-color-secondary);
-    font-size: 0.8125rem;
-    font-weight: 400;
-    order: 2;
-    margin-left: auto;
-}
-
-/* Page navigation wrapper */
-.p-paginator .p-paginator-pages {
-    display: flex;
-    align-items: center;
-    gap: 0.125rem;
-}
-
-/* Page number buttons */
-.p-paginator .p-paginator-page {
-    min-width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 0.375rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--text-color-secondary);
-    border: none;
-    background: transparent;
-    transition: all 0.15s ease;
-    padding: 0;
-}
-
-.p-paginator .p-paginator-page:hover:not(.p-highlight) {
-    background: var(--surface-hover);
-    color: var(--text-color);
-}
-
-/* Active page — solid primary rounded */
-.p-paginator .p-paginator-page.p-highlight {
-    background: var(--p-primary-color) !important;
-    color: #ffffff !important;
-    border: none !important;
-    font-weight: 600;
-    border-radius: 0.375rem;
-    box-shadow: none;
-}
-
-/* Nav arrows */
-.p-paginator .p-paginator-first,
-.p-paginator .p-paginator-prev,
-.p-paginator .p-paginator-next,
-.p-paginator .p-paginator-last {
-    min-width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 0.375rem;
-    color: var(--text-color-secondary);
-    transition: all 0.15s;
-    background: transparent;
-    padding: 0;
-}
-
-.p-paginator .p-paginator-first:hover,
-.p-paginator .p-paginator-prev:hover,
-.p-paginator .p-paginator-next:hover,
-.p-paginator .p-paginator-last:hover {
-    background: var(--surface-hover);
-    color: var(--text-color);
-}
-
-/* Rows-per-page dropdown */
-.p-paginator .p-select {
-    min-width: 3.5rem;
-    height: 1.75rem;
-    border-radius: 0.375rem;
-    font-size: 0.8125rem;
-    border: 1px solid var(--surface-border);
-    order: 3;
-    margin-left: 0.5rem;
-
-    .p-select-label {
-        padding: 0.25rem 0.5rem;
-        font-weight: 500;
-    }
-}
+/* ============================
+   7.5 · TAGS
+   (Custom styles removed - user will add their own)
+   ============================ */
 
 /* ============================
    8 · BUTTONS — Gradient Primary

@@ -9,7 +9,9 @@
         "city": "Ville",
         "cities": "Villes",
         "shop": "Boutique",
-        "shops": "Boutiques"
+        "shops": "Boutiques",
+        "customer": "Client",
+        "customers": "Clients"
     },
     "common": {
         "contents": {
@@ -159,6 +161,7 @@
             "user": "Utilisateur",
             "users": "Utilisateurs",
             "roles": "Rôles",
+            "customers": "Clients",
             "profile": "Profil",
             "logout": "Déconnexion"
         },
@@ -228,6 +231,26 @@
             "status": "Statut",
             "created_at": "Créé le",
             "updated_at": "Mis à jour le"
+        }
+    },
+    "customer": {
+        "columns": {
+            "name": "Nom",
+            "phone": "Téléphone",
+            "email": "Email",
+            "status": "Statut",
+            "blocking_reason": "Raison de blocage",
+            "created_at": "Créé le",
+            "updated_at": "Mis à jour le"
+        },
+        "labels": {
+            "since": "Depuis",
+            "no_customers": "Aucun client disponible. Veuillez ajouter un nouveau client...",
+            "no_customer_found": "Aucun client trouvé correspondant à votre recherche.",
+            "manage_subtitle": "Gérer vos clients et leurs configurations",
+            "block_customer": "Bloquer ce client",
+            "block_warning": "Le blocage de ce client l'empêchera de passer de nouvelles commandes. Une raison est requise.",
+            "blocking_reason_min": "La raison de blocage doit comporter au moins 10 caractères."
         }
     },
     "primevue": {

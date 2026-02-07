@@ -21,7 +21,9 @@
         "order": "Order",
         "orders": "Orders",
         "product": "Product",
-        "products": "Products"
+        "products": "Products",
+        "customer": "Customer",
+        "customers": "Customers"
     },
     "common": {
         "contents": {
@@ -234,14 +236,19 @@
             "cities": "Cities",
             "user": "User",
             "users": "Users",
-            "roles": "Roles"
+            "roles": "Roles",
+            "customers": "Customers"
         },
         "top_bar": {
             "search": "Search...",
             "notifications": "Notifications",
             "settings": "Settings",
             "myaccount": "My Account",
-            "logout": "Logout"
+            "logout": "Logout",
+            "account_info": "Account Info",
+            "my_profile": "My Profile",
+            "account_settings": "Account Settings",
+            "billing": "Billing"
         }
     },
     "role": {
@@ -314,6 +321,49 @@
             "no_shops": "No shops available. Please add a new shop...",
             "no_shop_found": "No shop found matching your search.",
             "manage_subtitle": "Manage your shops and their configurations"
+        }
+    },
+    "customer": {
+        "columns": {
+            "name": "Name",
+            "phone": "Phone",
+            "email": "Email",
+            "address": "Address",
+            "reputation": "Reputation",
+            "status": "Status",
+            "blocking_reason": "Blocking Reason",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
+        },
+        "labels": {
+            "since": "Since",
+            "no_customers": "No customers available. Please add a new customer...",
+            "no_customer_found": "No customer found matching your search.",
+            "manage_subtitle": "Manage your customers and their configurations",
+            "block_customer": "Block this customer",
+            "block_warning": "Blocking this customer will prevent them from placing new orders. A reason is required.",
+            "blocking_reason_min": "Blocking reason must be at least 10 characters.",
+            "active": "Active",
+            "blocked": "Blocked"
+        },
+        "reputation": {
+            "title": "Reputation System",
+            "description": "Based on the success rate of delivered orders",
+            "orders_abbrev": "orders",
+            "levels": {
+                "excellent": "Excellent",
+                "good": "Good",
+                "medium": "Medium",
+                "low": "Low",
+                "new": "New"
+            },
+            "labels": {
+                "very_reliable": "Very reliable customer",
+                "reliable": "Reliable customer",
+                "attention_required": "Attention required",
+                "at_risk": "At risk customer",
+                "no_history": "No order history"
+            }
         }
     },
     "shipper": {

@@ -247,16 +247,127 @@ const menuItems = computed(() => [
                         </div>
                         <template v-if="user?.profile_image">
                             <OverlayBadge severity="success">
-                                <Avatar class="p-overlay-badge cursor-pointer hover:shadow" :image="user.profile_image" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu" />
+                                <Avatar class="p-overlay-badge cursor-pointer hover:shadow" :image="user.profile_image" @click="toggleMenu" aria-haspopup="true" aria-controls="user_menu_popover" />
                             </OverlayBadge>
                         </template>
                         <template v-else>
-                            <Button icon="pi pi-user" @click="toggleMenu" rounded aria-haspopup="true" aria-controls="overlay_menu" />
+                            <Button icon="pi pi-user" @click="toggleMenu" rounded aria-haspopup="true" aria-controls="user_menu_popover" />
                         </template>
                     </div>
-                    <Menu ref="userMenu" id="overlay_menu" :model="menuItems" :popup="true" />
+
+                    <!-- User Profile Menu Popover -->
+                    <Popover
+                        ref="userMenu"
+                        id="user_menu_popover"
+                        :showCloseIcon="false"
+                        :dismissable="true"
+                        :pt="{
+                            content: { style: 'padding: 0 !important' }
+                        }"
+                    >
+                        <div class="profile-menu-popover">
+                            <!-- Header -->
+                            <div class="profile-menu-header">
+                                <span class="profile-menu-label">{{ t('navigation.top_bar.account_info') }}</span>
+                            </div>
+
+                            <!-- Menu Items -->
+                            <div class="profile-menu-items">
+                                <a href="#" class="profile-menu-item" @click="authStore.myaccount()">
+                                    <i class="pi pi-user"></i>
+                                    <span>{{ t('navigation.top_bar.my_profile') }}</span>
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class="pi pi-cog"></i>
+                                    <span>{{ t('navigation.top_bar.account_settings') }}</span>
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class="pi pi-credit-card"></i>
+                                    <span>{{ t('navigation.top_bar.billing') }}</span>
+                                </a>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="profile-menu-divider"></div>
+
+                            <!-- Logout -->
+                            <div class="profile-menu-items">
+                                <a href="#" class="profile-menu-item profile-menu-item--danger" @click="logoutUser">
+                                    <i class="pi pi-power-off"></i>
+                                    <span>{{ t('navigation.top_bar.logout') }}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </Popover>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
+<style lang="scss" scoped>
+.profile-menu-popover {
+    width: 14rem;
+    background: var(--surface-card);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.profile-menu-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--surface-border);
+
+    .profile-menu-label {
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-color-secondary);
+    }
+}
+
+.profile-menu-items {
+    padding: 0.25rem 0;
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color-secondary);
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+
+    i {
+        font-size: 1rem;
+        color: var(--text-color-secondary);
+        opacity: 0.7;
+    }
+
+    &:hover {
+        background-color: var(--surface-hover);
+    }
+
+    &--danger {
+        color: var(--red-500);
+
+        i {
+            color: var(--red-500);
+            opacity: 1;
+        }
+
+        &:hover {
+            background-color: rgba(239, 68, 68, 0.08);
+        }
+    }
+}
+
+.profile-menu-divider {
+    height: 1px;
+    background: var(--surface-border);
+    margin: 0.25rem 0.5rem;
+}
+</style>

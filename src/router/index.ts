@@ -31,6 +31,12 @@ const adminRoutes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPermission: 'view_shops' }
     },
     {
+        path: 'customers',
+        name: 'customers',
+        component: () => import('@/views/admin/customers/Customers.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_customers' }
+    },
+    {
         path: 'shippers',
         name: 'shippers',
         component: () => import('@/views/admin/shippers/Shippers.vue'),

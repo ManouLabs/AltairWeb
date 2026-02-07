@@ -1,0 +1,167 @@
+/* ============================================
+   Customer DataTable Styling
+   ============================================ */
+
+/* Blocked Row Styling - applies red tint to blocked customers */
+.customer-row-blocked {
+    background: rgba(244, 63, 94, 0.04) !important;
+    border-left: 3px solid #f43f5e;
+
+    .app-dark & {
+        background: rgba(244, 63, 94, 0.08) !important;
+    }
+
+    &:hover {
+        background: rgba(244, 63, 94, 0.08) !important;
+
+        .app-dark & {
+            background: rgba(244, 63, 94, 0.12) !important;
+        }
+    }
+
+    /* Striped row variation */
+    &.p-datatable-row-even {
+        background: rgba(244, 63, 94, 0.06) !important;
+
+        .app-dark & {
+            background: rgba(244, 63, 94, 0.1) !important;
+        }
+    }
+}
+
+/* Override for PrimeVue DataTable body rows with blocked class */
+.p-datatable .p-datatable-tbody > tr.customer-row-blocked {
+    background: rgba(244, 63, 94, 0.04);
+    border-left: 3px solid #f43f5e;
+
+    .app-dark & {
+        background: rgba(244, 63, 94, 0.08);
+    }
+
+    &:hover {
+        background: rgba(244, 63, 94, 0.08);
+
+        .app-dark & {
+            background: rgba(244, 63, 94, 0.12);
+        }
+    }
+
+    > td {
+        border-color: rgba(244, 63, 94, 0.15);
+    }
+}
+
+/* Status Tag in DataTable */
+.p-datatable .p-tag {
+    &.p-tag-success {
+        background: #dcfce7;
+        color: #15803d;
+
+        .app-dark & {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+        }
+    }
+
+    &.p-tag-danger {
+        background: #ffe4e6;
+        color: #be123c;
+
+        .app-dark & {
+            background: rgba(244, 63, 94, 0.2);
+            color: #fda4af;
+        }
+    }
+}
+
+/* Contact icons styling in cells */
+.p-datatable-tbody {
+    .pi-map-marker,
+    .pi-phone,
+    .pi-envelope {
+        color: var(--text-color-secondary);
+        font-size: 0.875rem;
+    }
+}
+
+/* Customer name cell styling */
+.p-datatable-tbody {
+    .pi-user {
+        color: var(--p-primary-color);
+        font-size: 1rem;
+    }
+}
+
+/* ============================================
+   Reputation Column Styling
+   ============================================ */
+
+.reputation-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 120px;
+}
+
+.reputation-header {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.reputation-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.reputation-bar {
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.reputation-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.reputation-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 500;
+    margin-top: 0.125rem;
+
+    .stat-delivered {
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        gap: 0.125rem;
+
+        i {
+            font-size: 0.625rem;
+        }
+    }
+
+    .stat-returned {
+        color: #f43f5e;
+        display: flex;
+        align-items: center;
+        gap: 0.125rem;
+
+        i {
+            font-size: 0.625rem;
+        }
+    }
+}
+
+.reputation-no-history {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    font-style: italic;
+}

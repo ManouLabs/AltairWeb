@@ -9,7 +9,9 @@
         "city": "مدينة",
         "cities": "المدن",
         "shop": "متجر",
-        "shops": "المتاجر"
+        "shops": "المتاجر",
+        "customer": "عميل",
+        "customers": "العملاء"
     },
     "common": {
         "contents": {
@@ -166,6 +168,7 @@
             "user": "مستخدم",
             "users": "المستخدمون",
             "roles": "الأدوار",
+            "customers": "العملاء",
             "profile": "الملف الشخصي",
             "logout": "تسجيل الخروج"
         },
@@ -235,6 +238,26 @@
             "status": "الحالة",
             "created_at": "تاريخ الإنشاء",
             "updated_at": "تاريخ التحديث"
+        }
+    },
+    "customer": {
+        "columns": {
+            "name": "الاسم",
+            "phone": "الهاتف",
+            "email": "البريد الإلكتروني",
+            "status": "الحالة",
+            "blocking_reason": "سبب الحظر",
+            "created_at": "تاريخ الإنشاء",
+            "updated_at": "تاريخ التحديث"
+        },
+        "labels": {
+            "since": "منذ",
+            "no_customers": "لا يوجد عملاء. يرجى إضافة عميل جديد...",
+            "no_customer_found": "لم يتم العثور على عميل يطابق بحثك.",
+            "manage_subtitle": "إدارة العملاء وإعداداتهم",
+            "block_customer": "حظر هذا العميل",
+            "block_warning": "حظر هذا العميل سيمنعه من تقديم طلبات جديدة. السبب مطلوب.",
+            "blocking_reason_min": "يجب أن يكون سبب الحظر 10 أحرف على الأقل."
         }
     },
     "primevue": {
