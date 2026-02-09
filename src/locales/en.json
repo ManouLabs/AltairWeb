@@ -23,7 +23,9 @@
         "product": "Product",
         "products": "Products",
         "customer": "Customer",
-        "customers": "Customers"
+        "customers": "Customers",
+        "category": "Category",
+        "categories": "Categories"
     },
     "common": {
         "contents": {
@@ -119,7 +121,10 @@
             "address": "Address",
             "addresses": "Addresses",
             "logo": "Logo",
-            "online_presence": "Online Presence"
+            "online_presence": "Online Presence",
+            "published": "Published",
+            "draft": "Draft",
+            "select": "Select..."
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -237,7 +242,8 @@
             "user": "User",
             "users": "Users",
             "roles": "Roles",
-            "customers": "Customers"
+            "customers": "Customers",
+            "categories": "Categories"
         },
         "top_bar": {
             "search": "Search...",
@@ -455,6 +461,56 @@
             "latitude": "Latitude",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        }
+    },
+    "category": {
+        "titles": {
+            "explorative_management": "Explorative Category Management",
+            "subtitle": "Drill down into your category hierarchy and manage sub-entities.",
+            "category_tree": "Category Tree",
+            "subcategories_in": "Sub-categories in {name}"
+        },
+        "columns": {
+            "name": "Name",
+            "parent_id": "Parent Category",
+            "slug": "Slug",
+            "description": "Description",
+            "icon": "Icon",
+            "icon_color": "Icon Color",
+            "sort_order": "Sort Order",
+            "active": "Active",
+            "publish": "Publish",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
+        },
+        "labels": {
+            "add_root_category": "Add Root Category",
+            "add_subcategory": "Add Sub-category",
+            "new_subcategory": "New Sub-Category",
+            "total_products": "Total Products",
+            "subcategories": "Sub-categories",
+            "sales_impact": "Sales Impact",
+            "avg_price": "Avg. Price",
+            "visibility_status": "Visibility Status",
+            "visibility_description": "Make category visible immediately",
+            "active_status": "Active Status",
+            "active_description": "Activate category for use in the system",
+            "icon_and_color": "Icon & Color",
+            "accent": "Accent",
+            "none_root": "None (Root Category)",
+            "products": "Products",
+            "id_ref": "ID",
+            "select_category": "Select a category",
+            "select_category_hint": "Choose a category from the tree to view details"
+        },
+        "placeholders": {
+            "select_parent": "Select parent category...",
+            "category_name": "Ex: Electronics, Clothing..."
+        },
+        "form": {
+            "title_new": "New Category",
+            "title_edit": "Edit Category",
+            "subtitle": "Configure details and appearance"
         }
     },
     "address": {

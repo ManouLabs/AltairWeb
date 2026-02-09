@@ -381,7 +381,6 @@ onUnmounted(() => {
             @sort="onSort($event)"
             removableSort
             scrollable
-            stripedRows
             rowHover
             size="small"
             :pt="{
@@ -502,7 +501,12 @@ onUnmounted(() => {
                 </template>
                 <template #body="{ data }">
                     <DataCell>
-                        <Tag :value="data.status_label" :severity="data.status === 'active' ? 'success' : 'danger'" :icon="data.status === 'active' ? 'pi pi-check' : 'pi pi-ban'" />
+                        <div class="inline-flex flex-col items-start gap-0.5">
+                            <Tag :value="data.status_label" :severity="data.status === 'active' ? 'success' : 'danger'" :icon="data.status === 'active' ? 'pi pi-check' : 'pi pi-ban'" />
+                            <span v-if="data.status === 'blocked' && data.blocking_reason" class="text-[10px] text-red-500 max-w-32 truncate" :title="data.blocking_reason">
+                                {{ data.blocking_reason }}
+                            </span>
+                        </div>
                     </DataCell>
                 </template>
                 <template #filter="{ filterModel, applyFilter }">
@@ -573,7 +577,7 @@ onUnmounted(() => {
             </Column>
 
             <!-- Address Column -->
-            <Column columnKey="address" field="address" :frozen="frozenColumns.address" v-if="selectedColumns.some((column) => column.field === 'address')" class="min-w-48">
+            <Column columnKey="address" field="address" :frozen="frozenColumns.address" v-if="selectedColumns.some((column) => column.field === 'address')">
                 <template #header>
                     <HeaderCell
                         :text="t('customer.columns.address')"
@@ -586,16 +590,16 @@ onUnmounted(() => {
                 </template>
                 <template #body="{ data }">
                     <DataCell>
-                        <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.address }">
-                            <i class="pi pi-map-marker text-surface-400"></i>
-                            <span>{{ getAddressText(data.addresses) || '-' }}</span>
+                        <div class="flex items-center gap-2 max-w-40" :class="{ 'font-bold': frozenColumns.address }" :title="getAddressText(data.addresses)">
+                            <i class="pi pi-map-marker text-surface-400 flex-shrink-0"></i>
+                            <span class="truncate">{{ getAddressText(data.addresses) || '-' }}</span>
                         </div>
                     </DataCell>
                 </template>
             </Column>
 
             <!-- Phone Column -->
-            <Column columnKey="phone" field="phone" :frozen="frozenColumns.phone" v-if="selectedColumns.some((column) => column.field === 'phone')" class="min-w-32">
+            <Column columnKey="phone" field="phone" :frozen="frozenColumns.phone" v-if="selectedColumns.some((column) => column.field === 'phone')" class="min-w-24">
                 <template #header>
                     <HeaderCell
                         :text="t('customer.columns.phone')"
@@ -617,7 +621,7 @@ onUnmounted(() => {
             </Column>
 
             <!-- Email Column -->
-            <Column columnKey="email" field="email" :frozen="frozenColumns.email" v-if="selectedColumns.some((column) => column.field === 'email')" class="min-w-40">
+            <Column columnKey="email" field="email" :frozen="frozenColumns.email" v-if="selectedColumns.some((column) => column.field === 'email')" class="min-w-28">
                 <template #header>
                     <HeaderCell
                         :text="t('customer.columns.email')"
@@ -665,7 +669,7 @@ onUnmounted(() => {
                 <template #body="{ data }">
                     <DataCell>
                         <div :class="{ 'font-bold': frozenColumns.created_at }">
-                            {{ dayjs(data.created_at).format('l') }}
+                            {{ dayjs(data.created_at).format('L LT') }}
                         </div>
                     </DataCell>
                 </template>

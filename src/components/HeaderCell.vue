@@ -12,7 +12,7 @@ const onToggle = () => emit('toggle');
 </script>
 
 <template>
-    <div class="flex justify-between w-full items-center">
+    <div class="flex justify-between w-full items-center px-4">
         <div v-tooltip.top="reorderTooltip" :class="{ 'font-bold': props.frozen }">{{ props.text }}</div>
         <Button v-tooltip.top="props.frozen ? props.unlockTooltip : props.lockTooltip" :icon="props.frozen ? 'pi pi-lock' : 'pi pi-lock-open'" text @click="onToggle" severity="contrast" />
     </div>

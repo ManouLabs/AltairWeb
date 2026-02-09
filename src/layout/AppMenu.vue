@@ -48,6 +48,15 @@ const mainMenu = computed(() => [
     }
 ]);
 
+const productsMenu = computed(() => [
+    {
+        label: t('navigation.side_bar.categories'),
+        icon: 'pi pi-fw pi-th-large',
+        to: '/admin/categories',
+        visible: can('view_categories')
+    }
+]);
+
 const settingsMenu = computed(() => [
     {
         label: t('navigation.side_bar.regions'),
@@ -89,6 +98,14 @@ const settingsMenu = computed(() => [
         <p class="menu-section-label">Main Menu</p>
         <ul class="layout-menu">
             <template v-for="(item, i) in mainMenu" :key="'main-' + i">
+                <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
+            </template>
+        </ul>
+
+        <!-- Products section -->
+        <p class="menu-section-label">Products</p>
+        <ul class="layout-menu">
+            <template v-for="(item, i) in productsMenu" :key="'products-' + i">
                 <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
             </template>
         </ul>

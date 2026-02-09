@@ -72,15 +72,4 @@ declare module '@/validations/validate' {
     export function validateField(schema: any, data: any, path: string): { ok: boolean; errors: Record<string, string[]> };
 }
 
-// Global types for Laravel Echo
-interface Window {
-    Echo: {
-        private(channel: string): {
-            listen(event: string, callback: (data: any) => void): any;
-            stopListening(event: string): void;
-        };
-        socketId?: () => string;
-    };
-}
-
-declare const Echo: Window['Echo'];
+// Note: Window.Echo is declared in EchoService.ts using the proper Echo<'reverb'> type

@@ -2,14 +2,6 @@
 import { useAuthStore } from '@/stores/useAuthStore';
 import axios, { type AxiosError, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 
-declare global {
-    interface Window {
-        Echo?: {
-            socketId?: () => string;
-        };
-    }
-}
-
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL as string,
     headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },

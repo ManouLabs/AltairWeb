@@ -64,6 +64,7 @@ declare module 'vue' {
     Timeline: typeof import('primevue/timeline')['default']
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     Toolbar: typeof import('primevue/toolbar')['default']
+    Tree: typeof import('primevue/tree')['default']
     VirtualScroller: typeof import('primevue/virtualscroller')['default']
   }
   export interface ComponentCustomProperties {

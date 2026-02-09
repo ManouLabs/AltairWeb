@@ -67,7 +67,7 @@
 }
 
 .menu-section-label {
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--text-color-secondary);
     text-transform: uppercase;
@@ -88,7 +88,7 @@
 
     .layout-root-menuitem {
         > .layout-menuitem-root-text {
-            font-size: 0.625rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             font-weight: 700;
             color: var(--text-color-secondary);
@@ -135,9 +135,9 @@
         outline: 0 none;
         color: var(--text-color-secondary);
         cursor: pointer;
-        padding: 0.625rem 0.75rem;
+        padding: 0.75rem 1rem;
         border-radius: 0.75rem;
-        font-size: 0.875rem;
+        font-size: 0.9375rem;
         font-weight: 500;
         gap: 0.75rem;
         transition:
@@ -147,8 +147,8 @@
 
         .layout-menuitem-icon {
             margin-right: 0;
-            font-size: 1.1rem;
-            width: 1.25rem;
+            font-size: 1.25rem;
+            width: 1.5rem;
             text-align: center;
         }
 

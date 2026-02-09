@@ -89,6 +89,12 @@ const adminRoutes: RouteRecordRaw[] = [
         name: 'myaccount',
         component: () => import('@/views/admin/myaccount/MyAccount.vue'),
         meta: { requiresAuth: true }
+    },
+    {
+        path: 'categories',
+        name: 'categories',
+        component: () => import('@/views/admin/categories/Categories.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_categories' }
     }
 ];
 

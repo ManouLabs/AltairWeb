@@ -23,7 +23,13 @@ export function useDynamicColumns(
     const savedFields: Ref<string[]> = ref((columnStore.getColumns(pageId) as string[] | null) || defaultFields);
 
     if (!columnStore.getColumns(pageId)) {
-        columnStore.setColumns(pageId, defaultFields);
+        columnStore.setColumns(
+            pageId,
+            defaultFields.map((field) => ({
+                field,
+                header: t(`${translationPrefix}.${field}`)
+            }))
+        );
     }
 
     const selectedColumns = computed<Column[]>(() =>
@@ -35,7 +41,13 @@ export function useDynamicColumns(
 
     const columnChanged = (newColumns: Column[]): void => {
         savedFields.value = newColumns.map((col) => col.field);
-        columnStore.setColumns(pageId, savedFields.value);
+        columnStore.setColumns(
+            pageId,
+            savedFields.value.map((field) => ({
+                field,
+                header: t(`${translationPrefix}.${field}`)
+            }))
+        );
     };
 
     return {

@@ -32,6 +32,8 @@ const getActivityIconAndColor = (activity: Activity): { icon: string; color: str
             return { icon: 'pi pi-shop', color: 'bg-green-500' };
         case 'shipper_log':
             return { icon: 'pi pi-truck', color: 'bg-orange-500' };
+        case 'customer_log':
+            return { icon: 'pi pi-users', color: 'bg-purple-500' };
         default:
             return { icon: 'pi pi-info-circle', color: 'bg-gray-600' };
     }

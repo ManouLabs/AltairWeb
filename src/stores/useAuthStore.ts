@@ -52,7 +52,7 @@ export const useAuthStore = defineStore('auth', {
         sessionLifetime: parseInt(import.meta.env.VITE_LIFETIME_SESSION as string) || 15 // in minutes
     }),
     persist: {
-        paths: ['user', 'permissions']
+        pick: ['user', 'permissions']
     },
     getters: {
         isLoggedIn: (state): boolean => !!state.user

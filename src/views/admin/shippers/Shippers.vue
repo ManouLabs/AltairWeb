@@ -233,7 +233,6 @@ onUnmounted(() => {
             @sort="onSort($event)"
             removableSort
             scrollable
-            stripedRows
             rowHover
             size="small"
             :pt="{

@@ -3,7 +3,7 @@
 import dayjs from '@/plugins/dayjs';
 import type { Ref } from 'vue';
 
-interface Record {
+interface DataRecord {
     id: number | string;
     [key: string]: unknown;
 }
@@ -32,7 +32,7 @@ interface LazyParams {
 
 type TranslateFunction = (key: string, params?: Record<string, unknown>) => string;
 
-function findRecordIndex(records: Ref<Record[]>, id: number | string): number {
+function findRecordIndex(records: Ref<DataRecord[]>, id: number | string): number {
     return records.value.findIndex((record) => record.id === id);
 }
 
@@ -79,4 +79,4 @@ const humanizeDate = (dateString: string, t: TranslateFunction, locale: string =
 };
 
 export { extractLazyParams, findRecordIndex, formatDate, humanizeDate };
-export type { LazyParams, LazyEvent, Record, FilterModel, TranslateFunction };
+export type { LazyParams, LazyEvent, DataRecord, FilterModel, TranslateFunction };

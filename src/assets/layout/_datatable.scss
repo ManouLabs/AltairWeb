@@ -47,32 +47,32 @@
    2 · DATATABLE = THE CARD
    ============================ */
 .p-datatable {
-    font-size: 0.875rem;
+    font-size: 1rem;
     background: var(--surface-card);
     border-radius: 1.25rem;
     border: 1px solid var(--surface-border);
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.04),
-        0 4px 24px rgba(0, 0, 0, 0.06);
     overflow: hidden;
-    padding: 1.5rem;
+    padding: 0rem;
 }
 
 .app-dark .p-datatable {
     border-color: rgba(255, 255, 255, 0.08);
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.2),
-        0 4px 24px rgba(0, 0, 0, 0.3);
 }
-
+.p-datatable-column-resizer {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.12) 100%);
+    width: 4px !important;
+}
+.p-datatable-column-header-content {
+    justify-content: center;
+}
 /* ============================
    3 · HEADER (Filter toolbar inside DataTable)
    ============================ */
 .p-datatable .p-datatable-header {
     background: transparent;
     border: none;
-    padding: 0 0 1rem 0;
-    border-bottom: none;
+    padding: 1.5rem 2rem !important;
+    border-bottom: 1px solid var(--surface-border);
 }
 
 /* Toolbar container */
@@ -319,9 +319,9 @@
 .p-datatable .p-datatable-tbody > tr > td {
     border-width: 0 0 1px 0;
     border-color: var(--surface-border);
-    padding: 1.5rem 1rem;
+    padding: 0.8rem 1rem !important;
     color: var(--text-color);
-    font-size: 0.875rem;
+    font-size: 1rem;
     vertical-align: middle;
 }
 
@@ -338,13 +338,13 @@
     background: rgba(139, 92, 246, 0.06) !important;
 }
 
-/* Striped rows */
+/* Striped rows - disabled */
 .p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
-    background: rgba(0, 0, 0, 0.015);
+    background: transparent;
 }
 
 .app-dark .p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
-    background: rgba(255, 255, 255, 0.02);
+    background: transparent;
 }
 
 /* ============================
@@ -520,6 +520,28 @@
 }
 
 /* ============================
+   12.5 · NAME COLUMN - Bold & Black
+   Applied globally to all Name columns
+   ============================ */
+
+/* Target Name column by field attribute */
+.p-datatable .p-datatable-tbody > tr > td[data-p-frozen-column='false']:first-of-type,
+.p-datatable .p-datatable-tbody > tr > td:nth-child(2),
+.p-datatable .name-cell,
+.p-datatable .p-datatable-tbody > tr > td .name-text {
+    font-weight: 700;
+    color: #000000; /* Pure black */
+}
+
+/* Dark mode - bright white */
+.app-dark .p-datatable .p-datatable-tbody > tr > td[data-p-frozen-column='false']:first-of-type,
+.app-dark .p-datatable .p-datatable-tbody > tr > td:nth-child(2),
+.app-dark .p-datatable .name-cell,
+.app-dark .p-datatable .p-datatable-tbody > tr > td .name-text {
+    color: #ffffff; /* Pure white in dark mode */
+}
+
+/* ============================
    13 · SCROLLBAR
    ============================ */
 .p-datatable-scrollable .p-datatable-wrapper::-webkit-scrollbar {
@@ -633,7 +655,8 @@
     }
 
     .p-datatable .p-datatable-header {
-        padding: 1rem;
+        padding: 1rem !important;
+        margin-bottom: 2rem !important;
     }
 
     .p-datatable .p-paginator {
