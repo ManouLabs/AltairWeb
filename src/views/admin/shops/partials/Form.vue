@@ -256,7 +256,7 @@ onMounted(() => {
                                 <InputIcon class="pi pi-phone" />
                                 <InputText
                                     id="phone"
-                                    v-model="record.contactMethods.phone.value"
+                                    v-model="record.contactMethods.phone!.value"
                                     :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="50"
@@ -275,7 +275,7 @@ onMounted(() => {
                                 <InputIcon class="pi pi-envelope" />
                                 <InputText
                                     id="email"
-                                    v-model="record.contactMethods.email.value"
+                                    v-model="record.contactMethods.email!.value"
                                     :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="150"
@@ -294,7 +294,7 @@ onMounted(() => {
                                 <InputIcon class="pi pi-whatsapp" />
                                 <InputText
                                     id="whatsapp"
-                                    v-model="record.contactMethods.whatsapp.value"
+                                    v-model="record.contactMethods.whatsapp!.value"
                                     :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="50"
@@ -330,7 +330,7 @@ onMounted(() => {
                                 />
                                 <InputText
                                     :id="key"
-                                    v-model="record.contactMethods[key].value"
+                                    v-model="record.contactMethods[key as keyof typeof record.contactMethods]!.value"
                                     :disabled="loading.isFormSending"
                                     class="w-full"
                                     maxlength="250"

@@ -11,6 +11,8 @@ import { z } from 'zod';
 
 const { t } = useI18n();
 
+type Locale = 'fr' | 'en' | 'ar';
+
 interface ThemeOption {
     label: string;
     value: string;
@@ -44,7 +46,7 @@ const loading = useLoading();
 const supportedLocales = ref<string[]>(import.meta.env.VITE_SUPPORTED_LOCALES ? import.meta.env.VITE_SUPPORTED_LOCALES.split(',') : ['fr', 'en', 'ar']);
 
 const localeFlags = ref<Record<string, string>>(Object.fromEntries(import.meta.env.VITE_LOCALE_FLAGS.split(',').map((item: string) => item.split(':'))));
-const setLocale = (locale: string): void => {
+const setLocale = (locale: Locale): void => {
     layoutStore.setLocale(locale);
 };
 
@@ -85,7 +87,7 @@ const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
                     name="theme"
                     v-bind="$field"
                     @input="
-                        (val) => {
+                        (val: string) => {
                             $field.handleChange(val);
                             authStore.clearErrors([$field.name]);
                         }

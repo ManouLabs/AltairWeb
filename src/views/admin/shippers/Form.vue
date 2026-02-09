@@ -7,7 +7,9 @@ import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { shipperSchema } from '@/validations/shipper';
 import type { ShipperData, RegionPricing as RegionPricingType } from '@/types/shipper';
-import type { Region, Shop } from '@/types/shop';
+import type { Region } from '@/types/region';
+import type { ShopData } from '@/types/shop';
+type Shop = ShopData;
 import { zodResolver } from '@primevue/forms/resolvers/zod';
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { Ref } from 'vue';
@@ -129,7 +131,7 @@ async function loadShipper(): Promise<void> {
 
     try {
         loading.startDataLoading();
-        const response = await useShipperService.getShipper(route.params.id as string);
+        const response = await useShipperService.getShipper(Number(route.params.id));
         const shipper: ShipperData = response.data;
 
         // Update initial values
@@ -181,7 +183,7 @@ const regionPricingGrid = computed<RegionPricingGridEntry[]>(() => {
         return {
             region_id: region.id,
             region_name: region.name,
-            region_code: region.code,
+            region_code: String(region.code),
             home_delivery_price: existing?.home_delivery_price ?? 0,
             stop_desk_price: existing?.stop_desk_price ?? 0,
             return_price: existing?.return_price ?? 0,
@@ -268,7 +270,7 @@ const onFormSubmit = async ({ valid, values }: FormSubmitEvent): Promise<void> =
         }
 
         if (isEdit.value) {
-            await useShipperService.updateShipper(route.params.id as string, payload);
+            await useShipperService.updateShipper(Number(route.params.id), payload);
             showToast('success', ACTIONS.EDIT, 'shipper', 'tc');
         } else {
             await useShipperService.storeShipper(payload);

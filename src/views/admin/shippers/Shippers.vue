@@ -4,15 +4,14 @@ import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
 import { useLock } from '@/composables/useLock';
 import { useRowEffects } from '@/composables/useRowEffects';
-import dayjs from '@/plugins/dayjs';
 import { useShipperService } from '@/services/useShipperService';
 import { useShopService } from '@/services/useShopService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
-import { findRecordIndex, formatDate } from '@/utilities/helper';
+import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { ShipperData } from '@/types/shipper';
-import type { Shop } from '@/types/shop';
+import type { ShopData } from '@/types/shop';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
@@ -36,7 +35,7 @@ const defaultFiltersConfig = {
 };
 
 // Shops options for filter
-const shopsOptions = ref<Shop[]>([]);
+const shopsOptions = ref<ShopData[]>([]);
 
 // Initialize DataTable
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
@@ -142,10 +141,10 @@ function toggleActive(shipperId: number): void {
         });
 }
 
-function confirmDeleteRecord(event: MouseEvent, shipperIds: number[]): void {
+function confirmDeleteRecord(event: MouseEvent | null, shipperIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget as HTMLElement,
+        target: event?.currentTarget as HTMLElement | undefined,
         message: shipperIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.shippers') }) : t('common.confirmations.delete.message', { entity: t('entity.shipper') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -216,7 +215,7 @@ onUnmounted(() => {
             @filter="onFilter($event)"
             v-model:filters="filters"
             filterDisplay="menu"
-            :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+            :globalFilterFields="['id', ...defaultColumns.map((column) => column.field)]"
             paginator
             @page="onPage($event)"
             :rows="rows"
@@ -237,7 +236,7 @@ onUnmounted(() => {
             size="small"
             :pt="{
                 table: { style: 'min-width: 50rem' },
-                bodyrow: ({ props }) => ({
+                bodyrow: ({ props }: { props: { frozenRow: boolean } }) => ({
                     class: [{ 'font-bold': props.frozenRow }]
                 })
             }"
@@ -254,7 +253,7 @@ onUnmounted(() => {
                                 @click="
                                     confirmDeleteRecord(
                                         $event,
-                                        selectedRecords.map((record) => record.id)
+                                        selectedRecords.map((record: ShipperData) => record.id)
                                     )
                                 "
                                 outlined
@@ -293,7 +292,7 @@ onUnmounted(() => {
                 columnKey="name"
                 field="name"
                 :frozen="frozenColumns.name"
-                v-if="selectedColumns.some((column) => column.field === 'name')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'name')"
                 sortable
                 class="min-w-40"
             >
@@ -336,7 +335,7 @@ onUnmounted(() => {
                 columnKey="type"
                 field="type"
                 :frozen="frozenColumns.type"
-                v-if="selectedColumns.some((column) => column.field === 'type')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'type')"
                 sortable
                 class="min-w-32"
             >
@@ -389,7 +388,7 @@ onUnmounted(() => {
                 columnKey="shops"
                 field="shops"
                 :frozen="frozenColumns.shops"
-                v-if="selectedColumns.some((column) => column.field === 'shops')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'shops')"
                 class="min-w-40"
             >
                 <template #header>
@@ -430,7 +429,7 @@ onUnmounted(() => {
             </Column>
 
             <!-- API Column -->
-            <Column columnKey="api" field="api" :frozen="frozenColumns.api" v-if="selectedColumns.some((column) => column.field === 'api')" class="min-w-32">
+            <Column columnKey="api" field="api" :frozen="frozenColumns.api" v-if="selectedColumns.some((column: Column) => column.field === 'api')" class="min-w-32">
                 <template #header>
                     <HeaderCell
                         :text="t('shipper.columns.api')"
@@ -466,7 +465,7 @@ onUnmounted(() => {
                 columnKey="active"
                 field="active"
                 :frozen="frozenColumns.active"
-                v-if="selectedColumns.some((column) => column.field === 'active')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'active')"
                 sortable
                 class="min-w-32"
             >

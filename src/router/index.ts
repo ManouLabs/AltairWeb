@@ -45,13 +45,13 @@ const adminRoutes: RouteRecordRaw[] = [
     {
         path: 'shippers/create',
         name: 'shipper-create',
-        component: () => import('@/views/admin/shippers/ShipperForm.vue'),
+        component: () => import('@/views/admin/shippers/Form.vue'),
         meta: { requiresAuth: true, requiresPermission: 'create_shippers', activeMenu: '/admin/shippers' }
     },
     {
         path: 'shippers/:id/edit',
         name: 'shipper-edit',
-        component: () => import('@/views/admin/shippers/ShipperForm.vue'),
+        component: () => import('@/views/admin/shippers/Form.vue'),
         meta: { requiresAuth: true, requiresPermission: 'update_shippers', activeMenu: '/admin/shippers' }
     },
     {

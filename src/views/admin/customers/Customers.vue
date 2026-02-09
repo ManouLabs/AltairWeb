@@ -30,7 +30,7 @@ const defaultFiltersConfig = {
 };
 
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable<CustomerData>(
-    (params) =>
+    (params: Record<string, unknown>) =>
         useCustomerService.getCustomers(params).then((data) => {
             regions.value = data.regions || [];
             return {
@@ -172,7 +172,7 @@ const openDialog = () => {
                         break;
                     }
                     default:
-                        console.error(`Unhandled action: ${result.action}`);
+                        console.error(`Unhandled action: ${result.data?.action}`);
                 }
             }
         }
@@ -364,7 +364,7 @@ onUnmounted(() => {
             @filter="onFilter($event)"
             v-model:filters="filters"
             filterDisplay="menu"
-            :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+            :globalFilterFields="['id', ...defaultColumns.map((column) => column.field)]"
             paginator
             @page="onPage($event)"
             :rows="rows"
@@ -385,7 +385,7 @@ onUnmounted(() => {
             size="small"
             :pt="{
                 table: { style: 'min-width: 50rem' },
-                bodyrow: ({ props }) => ({
+                bodyrow: ({ props }: { props: { frozenRow: boolean } }) => ({
                     class: [{ 'font-bold': props.frozenRow }]
                 })
             }"
@@ -403,7 +403,7 @@ onUnmounted(() => {
                                 @click="
                                     confirmDeleteRecord(
                                         $event,
-                                        selectedRecords.map((record) => record.id)
+                                        selectedRecords.map((record: CustomerData) => record.id)
                                     )
                                 "
                                 outlined
@@ -442,7 +442,7 @@ onUnmounted(() => {
                 columnKey="name"
                 field="name"
                 :frozen="frozenColumns.name"
-                v-if="selectedColumns.some((column) => column.field === 'name')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'name')"
                 sortable
                 class="min-w-40"
             >
@@ -485,7 +485,7 @@ onUnmounted(() => {
                 columnKey="status"
                 field="status"
                 :frozen="frozenColumns.status"
-                v-if="selectedColumns.some((column) => column.field === 'status')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'status')"
                 sortable
                 class="min-w-28"
             >
@@ -577,7 +577,7 @@ onUnmounted(() => {
             </Column>
 
             <!-- Address Column -->
-            <Column columnKey="address" field="address" :frozen="frozenColumns.address" v-if="selectedColumns.some((column) => column.field === 'address')">
+            <Column columnKey="address" field="address" :frozen="frozenColumns.address" v-if="selectedColumns.some((column: Column) => column.field === 'address')">
                 <template #header>
                     <HeaderCell
                         :text="t('customer.columns.address')"
@@ -599,7 +599,7 @@ onUnmounted(() => {
             </Column>
 
             <!-- Phone Column -->
-            <Column columnKey="phone" field="phone" :frozen="frozenColumns.phone" v-if="selectedColumns.some((column) => column.field === 'phone')" class="min-w-24">
+            <Column columnKey="phone" field="phone" :frozen="frozenColumns.phone" v-if="selectedColumns.some((column: Column) => column.field === 'phone')" class="min-w-24">
                 <template #header>
                     <HeaderCell
                         :text="t('customer.columns.phone')"
@@ -621,7 +621,7 @@ onUnmounted(() => {
             </Column>
 
             <!-- Email Column -->
-            <Column columnKey="email" field="email" :frozen="frozenColumns.email" v-if="selectedColumns.some((column) => column.field === 'email')" class="min-w-28">
+            <Column columnKey="email" field="email" :frozen="frozenColumns.email" v-if="selectedColumns.some((column: Column) => column.field === 'email')" class="min-w-28">
                 <template #header>
                     <HeaderCell
                         :text="t('customer.columns.email')"
@@ -652,7 +652,7 @@ onUnmounted(() => {
                 columnKey="created_at"
                 field="created_at"
                 :frozen="frozenColumns.created_at"
-                v-if="selectedColumns.some((column) => column.field === 'created_at')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'created_at')"
                 sortable
                 class="min-w-36"
             >
@@ -727,137 +727,45 @@ onUnmounted(() => {
         </DataTable>
 
         <!-- Reputation System Explanation -->
-        <div class="reputation-explanation">
-            <div class="reputation-explanation__header">
-                <i class="pi pi-verified"></i>
-                <div>
-                    <h4>{{ t('customer.reputation.title') }}</h4>
-                    <p>{{ t('customer.reputation.description') }}</p>
+        <Card class="mt-6">
+            <template #title>
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-verified text-primary"></i>
+                    <span>{{ t('customer.reputation.title') }}</span>
                 </div>
-            </div>
-            <div class="reputation-explanation__levels">
-                <div class="reputation-level">
-                    <span class="reputation-tag reputation-tag--excellent">{{ t('customer.reputation.levels.excellent') }}</span>
-                    <span class="reputation-level__threshold">≥ 90%</span>
-                    <span class="reputation-level__label">{{ t('customer.reputation.labels.very_reliable') }}</span>
+            </template>
+            <template #subtitle>
+                {{ t('customer.reputation.description') }}
+            </template>
+            <template #content>
+                <div class="flex justify-between gap-4 flex-wrap">
+                    <div class="flex flex-col items-start gap-2 flex-1 min-w-32">
+                        <Tag severity="success" :value="t('customer.reputation.levels.excellent')" />
+                        <span class="font-semibold">≥ 90%</span>
+                        <span class="text-sm text-surface-500">{{ t('customer.reputation.labels.very_reliable') }}</span>
+                    </div>
+                    <div class="flex flex-col items-start gap-2 flex-1 min-w-32">
+                        <Tag severity="info" :value="t('customer.reputation.levels.good')" />
+                        <span class="font-semibold">70% - 89%</span>
+                        <span class="text-sm text-surface-500">{{ t('customer.reputation.labels.reliable') }}</span>
+                    </div>
+                    <div class="flex flex-col items-start gap-2 flex-1 min-w-32">
+                        <Tag severity="warn" :value="t('customer.reputation.levels.medium')" />
+                        <span class="font-semibold">50% - 69%</span>
+                        <span class="text-sm text-surface-500">{{ t('customer.reputation.labels.attention_required') }}</span>
+                    </div>
+                    <div class="flex flex-col items-start gap-2 flex-1 min-w-32">
+                        <Tag severity="danger" :value="t('customer.reputation.levels.low')" />
+                        <span class="font-semibold">&lt; 50%</span>
+                        <span class="text-sm text-surface-500">{{ t('customer.reputation.labels.at_risk') }}</span>
+                    </div>
+                    <div class="flex flex-col items-start gap-2 flex-1 min-w-32">
+                        <Tag severity="secondary" :value="t('customer.reputation.levels.new')" />
+                        <span class="font-semibold">0 {{ t('customer.reputation.orders_abbrev') }}</span>
+                        <span class="text-sm text-surface-500">{{ t('customer.reputation.labels.no_history') }}</span>
+                    </div>
                 </div>
-                <div class="reputation-level">
-                    <span class="reputation-tag reputation-tag--good">{{ t('customer.reputation.levels.good') }}</span>
-                    <span class="reputation-level__threshold">70% - 89%</span>
-                    <span class="reputation-level__label">{{ t('customer.reputation.labels.reliable') }}</span>
-                </div>
-                <div class="reputation-level">
-                    <span class="reputation-tag reputation-tag--medium">{{ t('customer.reputation.levels.medium') }}</span>
-                    <span class="reputation-level__threshold">50% - 69%</span>
-                    <span class="reputation-level__label">{{ t('customer.reputation.labels.attention_required') }}</span>
-                </div>
-                <div class="reputation-level">
-                    <span class="reputation-tag reputation-tag--low">{{ t('customer.reputation.levels.low') }}</span>
-                    <span class="reputation-level__threshold">&lt; 50%</span>
-                    <span class="reputation-level__label">{{ t('customer.reputation.labels.at_risk') }}</span>
-                </div>
-                <div class="reputation-level">
-                    <span class="reputation-tag reputation-tag--new">{{ t('customer.reputation.levels.new') }}</span>
-                    <span class="reputation-level__threshold">0 {{ t('customer.reputation.orders_abbrev') }}</span>
-                    <span class="reputation-level__label">{{ t('customer.reputation.labels.no_history') }}</span>
-                </div>
-            </div>
-        </div>
+            </template>
+        </Card>
     </div>
 </template>
-
-<style lang="scss" scoped>
-.reputation-explanation {
-    margin-top: 1.5rem;
-    padding: 1.25rem 1.5rem;
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border);
-    border-radius: 1rem;
-
-    &__header {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-bottom: 1.25rem;
-
-        i {
-            font-size: 1.25rem;
-            color: var(--p-primary-color);
-            margin-top: 0.125rem;
-        }
-
-        h4 {
-            margin: 0;
-            font-size: 0.9375rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        p {
-            margin: 0.25rem 0 0;
-            font-size: 0.8125rem;
-            color: var(--text-color-secondary);
-        }
-    }
-
-    &__levels {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-}
-
-.reputation-level {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.375rem;
-    flex: 1;
-
-    &__threshold {
-        font-size: 0.9375rem;
-        font-weight: 600;
-        color: var(--text-color);
-    }
-
-    &__label {
-        font-size: 0.75rem;
-        color: var(--text-color-secondary);
-    }
-}
-
-/* Reputation tags with colors matching the DataTable */
-.reputation-tag {
-    display: inline-block;
-    padding: 0.375rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-
-    &--excellent {
-        background-color: #d1fae5;
-        color: #10b981;
-    }
-
-    &--good {
-        background-color: #dbeafe;
-        color: #3b82f6;
-    }
-
-    &--medium {
-        background-color: #fef3c7;
-        color: #f59e0b;
-    }
-
-    &--low {
-        background-color: #fee2e2;
-        color: #ef4444;
-    }
-
-    &--new {
-        background-color: #f1f5f9;
-        color: #64748b;
-    }
-}
-</style>

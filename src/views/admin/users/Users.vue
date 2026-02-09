@@ -36,7 +36,7 @@ const defaultFiltersConfig = {
 };
 
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
-    (params) =>
+    (params: Parameters<typeof useUserService.getUsers>[0]) =>
         useUserService.getUsers(params).then((data) => {
             allRoles.value = [data.roles, []];
             return {
@@ -191,7 +191,7 @@ const openDialog = () => {
         data: {
             record: record.value,
             rolesOptions: rolesOptions.value,
-            action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE
+            action: record.value?.id ? ACTIONS.EDIT : ACTIONS.CREATE
         },
         onClose: (result) => {
             if (result && result.data?.record?.id) {
@@ -209,17 +209,17 @@ const openDialog = () => {
                         break;
                     }
                     default:
-                        console.error(`Unhandled action: ${result.action}`);
+                        console.error(`Unhandled action: ${result.data?.action}`);
                 }
             }
         }
     });
 };
 
-function confirmDeleteRecord(event: MouseEvent, usersIds: number[]): void {
+function confirmDeleteRecord(event: MouseEvent | null, usersIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget as HTMLElement,
+        target: (event?.currentTarget as HTMLElement) ?? undefined,
         message: usersIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.users') }) : t('common.confirmations.delete.message', { entity: t('entity.user') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -296,7 +296,7 @@ onUnmounted(() => {
             @filter="onFilter($event)"
             v-model:filters="filters"
             filterDisplay="menu"
-            :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+            :globalFilterFields="['id', ...defaultColumns.map((column) => column.field)]"
             paginator
             @page="onPage($event)"
             :rows="rows"
@@ -317,7 +317,7 @@ onUnmounted(() => {
             size="small"
             :pt="{
                 table: { style: 'min-width: 50rem' },
-                bodyrow: ({ props }) => ({
+                bodyrow: ({ props }: { props: { frozenRow: boolean } }) => ({
                     class: [{ 'font-bold': props.frozenRow }]
                 })
             }"
@@ -335,7 +335,7 @@ onUnmounted(() => {
                                 @click="
                                     confirmDeleteRecord(
                                         $event,
-                                        selectedRecords.map((record) => record.id)
+                                        selectedRecords.map((record: User) => record.id)
                                     )
                                 "
                                 outlined
@@ -377,7 +377,7 @@ onUnmounted(() => {
                 columnKey="name"
                 field="name"
                 :frozen="frozenColumns.name"
-                v-if="selectedColumns.some((column) => column.field === 'name')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'name')"
                 sortable
                 class="min-w-32"
             >
@@ -420,7 +420,7 @@ onUnmounted(() => {
                 columnKey="email"
                 field="email"
                 :frozen="frozenColumns.email"
-                v-if="selectedColumns.some((column) => column.field === 'email')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'email')"
                 sortable
                 class="min-w-32"
             >
@@ -458,7 +458,7 @@ onUnmounted(() => {
                 columnKey="email_verified_at"
                 field="email_verified_at"
                 :frozen="frozenColumns.email_verified_at"
-                v-if="selectedColumns.some((column) => column.field === 'email_verified_at')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'email_verified_at')"
                 sortable
                 class="min-w-40"
             >
@@ -497,7 +497,7 @@ onUnmounted(() => {
                         />
 
                         <InputGroup>
-                            <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                            <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e: Date) => formatDate(e, filterModel)" />
                             <InputGroupAddon>
                                 <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
                                 <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
@@ -513,7 +513,7 @@ onUnmounted(() => {
                 :showApplyButton="false"
                 columnKey="roles"
                 :frozen="frozenColumns.roles"
-                v-if="selectedColumns.some((column) => column.field === 'roles')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'roles')"
                 field="roles"
                 class="min-w-32"
             >
@@ -538,7 +538,7 @@ onUnmounted(() => {
                 </template>
                 <template #filter="{ filterModel, applyFilter }">
                     <InputGroup>
-                        <MultiSelect size="small" v-model="filterModel.value" :options="allRoles[0]" optionLabel="name" optionValue="name">
+                        <MultiSelect size="small" v-model="filterModel.value" :options="allRoles?.[0] ?? []" optionLabel="name" optionValue="name">
                             <template #option="slotProps">
                                 <div class="flex items-center gap-2">
                                     <span>{{ slotProps.option.name }}</span>

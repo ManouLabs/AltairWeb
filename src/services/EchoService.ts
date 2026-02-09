@@ -20,6 +20,8 @@ declare global {
     interface Window {
         Echo: Echo<'reverb'>;
     }
+    // Declare Echo as a global variable for TypeScript
+    var Echo: Echo<'reverb'>;
 }
 
 // Initialize and attach to window for global access
@@ -51,3 +53,6 @@ window.Echo = new Echo({
 
 // Export Echo instance for optional direct usage
 export default window.Echo;
+
+// Also assign to globalThis for bare 'Echo' usage
+(globalThis as any).Echo = window.Echo;

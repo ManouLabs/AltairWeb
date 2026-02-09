@@ -21,8 +21,8 @@ export interface User {
 export interface UserFormData {
     name: string | null;
     email: string | null;
-    password: string | null;
-    password_confirmation: string | null;
+    password?: string | null;
+    password_confirmation?: string | null;
     roles: (Role | number)[];
 }
 

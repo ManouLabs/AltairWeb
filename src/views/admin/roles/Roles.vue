@@ -183,10 +183,10 @@ const openDialog = (): void => {
     });
 };
 
-function confirmDeleteRecord(event: MouseEvent, rolesIds: number[]): void {
+function confirmDeleteRecord(event: MouseEvent | null, rolesIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget as HTMLElement,
+        target: event?.currentTarget as HTMLElement | undefined,
         message: rolesIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.roles') }) : t('common.confirmations.delete.message', { entity: t('entity.role') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -263,7 +263,7 @@ onUnmounted(() => {
             @filter="onFilter($event)"
             v-model:filters="filters"
             filterDisplay="menu"
-            :globalFilterFields="('id', defaultFields)"
+            :globalFilterFields="['id', ...defaultFields]"
             paginator
             @page="onPage($event)"
             :rows="rows"
@@ -284,7 +284,7 @@ onUnmounted(() => {
             size="small"
             :pt="{
                 table: { style: 'min-width: 50rem' },
-                bodyrow: ({ props }) => ({
+                bodyrow: ({ props }: { props: { frozenRow?: boolean } }) => ({
                     class: [{ 'font-bold': props.frozenRow }]
                 })
             }"
@@ -302,7 +302,7 @@ onUnmounted(() => {
                                 @click="
                                     confirmDeleteRecord(
                                         $event,
-                                        selectedRecords.map((record) => record.id)
+                                        selectedRecords.map((record: RoleData) => record.id)
                                     )
                                 "
                                 outlined
@@ -340,7 +340,7 @@ onUnmounted(() => {
                 columnKey="name"
                 field="name"
                 :frozen="frozenColumns.name"
-                v-if="selectedColumns.some((column) => column.field === 'name')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'name')"
                 sortable
                 class="min-w-32"
             >
@@ -380,7 +380,7 @@ onUnmounted(() => {
                 :showApplyButton="false"
                 columnKey="permissions"
                 :frozen="frozenColumns.permissions"
-                v-if="selectedColumns.some((column) => column.field === 'permissions')"
+                v-if="selectedColumns.some((column: Column) => column.field === 'permissions')"
                 field="permissions"
                 class="min-w-32"
             >

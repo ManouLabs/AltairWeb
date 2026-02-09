@@ -14,7 +14,8 @@ const ACTIONS = {
     STORE: 'store',
     EDIT: 'edit',
     CREATE: 'create',
-    SEARCH: 'search'
+    SEARCH: 'search',
+    FETCH: 'fetch'
 } as const;
 
 type ActionType = (typeof ACTIONS)[keyof typeof ACTIONS];

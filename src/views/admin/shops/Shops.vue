@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex, humanizeDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
-import type { ShopData, ShopFormData, ContactMethod, Address } from '@/types/shop';
+import type { ShopData, ShopFormData, ContactMethod } from '@/types/shop';
 import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
@@ -354,8 +354,8 @@ onUnmounted(() => {
                     <div v-if="shop.addresses && shop.addresses.length > 0 && shop.addresses[0]" class="shop-contact-item">
                         <i class="pi pi-map-marker"></i>
                         <span
-                            >{{ shop.addresses[0].street }}<template v-if="shop.addresses[0].city">, {{ shop.addresses[0].city.name }}</template
-                            ><template v-if="shop.addresses[0].region">, {{ shop.addresses[0].region.name }}</template></span
+                            >{{ shop.addresses[0].street }}<template v-if="shop.addresses[0].city && typeof shop.addresses[0].city === 'object' && 'name' in shop.addresses[0].city">, {{ shop.addresses[0].city.name }}</template
+                            ><template v-if="shop.addresses[0].region && typeof shop.addresses[0].region === 'object' && 'name' in shop.addresses[0].region">, {{ shop.addresses[0].region.name }}</template></span
                         >
                     </div>
                     <!-- Email -->
