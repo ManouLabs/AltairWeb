@@ -8,8 +8,9 @@ import type { ShopData, ShopFormData, ContactMethod } from '@/types/shop';
 import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, markRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
+import FormHeader from '@/components/FormHeader.vue';
 
 const authStore = useAuthStore();
 const confirm = useConfirm();
@@ -124,13 +125,25 @@ const openDialog = (): void => {
     const isEdit = !!(record.value as ShopData)?.id;
     dialog.open(formComponent, {
         props: {
-            header: isEdit ? t('common.titles.edit', { entity: t('entity.shop') }) : t('common.titles.add', { entity: t('entity.shop') }),
             style: { width: '50vw' },
             breakpoints: { '960px': '75vw', '640px': '90vw' },
             modal: true,
             maximizable: true
         },
-        data: { record: record.value, action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE, regions: regions.value },
+        templates: {
+            header: markRaw(FormHeader)
+        },
+        data: {
+            record: record.value,
+            action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE,
+            regions: regions.value,
+            headerProps: computed(() => ({
+                title: isEdit ? t('common.titles.edit', { entity: t('entity.shop') }) : t('common.titles.add', { entity: t('entity.shop') }),
+                description: t('shop.form.subtitle'),
+                icon: (record.value as ShopData)?.id ? 'pi pi-shop' : 'pi pi-plus-circle',
+                iconColor: '#3B82F6'
+            }))
+        },
         onClose: (result: any) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
@@ -267,13 +280,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- Page Header (same as other pages) -->
-    <div class="datatable-page-header">
-        <div>
-            <h2>{{ t('common.titles.manage', { entity: t('entity.shop') }) }}</h2>
-            <p>{{ t('shop.labels.manage_subtitle') }}</p>
-        </div>
-        <div class="header-actions">
+    <!-- Page Header -->
+    <PageHeader icon="pi pi-shop" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.shop') })" :description="t('shop.labels.manage_subtitle')">
+        <template #actions>
             <IconField>
                 <InputIcon>
                     <i class="pi pi-search" />
@@ -281,8 +290,8 @@ onUnmounted(() => {
                 <InputText v-model="searchQuery" :placeholder="t('common.placeholders.search')" class="w-80" />
             </IconField>
             <Button v-if="authStore.hasPermission('create_shops')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shop') })" :label="`${t('common.labels.new')} ${t('entity.shop')}`" icon="pi pi-plus" @click="addRecord" />
-        </div>
-    </div>
+        </template>
+    </PageHeader>
 
     <!-- Loading State -->
     <div v-if="loadingStore.isDataLoading" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">

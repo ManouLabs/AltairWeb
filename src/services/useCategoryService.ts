@@ -1,6 +1,6 @@
 // src/services/useCategoryService.ts
 import apiClient from '@/services/axios';
-import type { CategoryFormData, CategoriesResponse, CategoryApiResponse, DeleteCategoriesResponse } from '@/types/category';
+import type { CategoryFormData, CategoriesResponse, CategoryApiResponse, DeleteCategoriesResponse, ToggleActiveCategoryResponse } from '@/types/category';
 
 interface FilterParams {
     [key: string]: unknown;
@@ -48,6 +48,16 @@ export const useCategoryService = {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
             const response = await apiClient.put<CategoryApiResponse>(`/api/admin/categories/${categoryId}`, updatedData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async toggleActiveCategory(categoryId: number): Promise<ToggleActiveCategoryResponse> {
+        try {
+            await apiClient.get('/sanctum/csrf-cookie');
+            const response = await apiClient.patch<ToggleActiveCategoryResponse>(`/api/admin/categories/${categoryId}/toggle`);
             return response.data;
         } catch (error) {
             throw error;

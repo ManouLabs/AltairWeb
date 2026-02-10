@@ -1,41 +1,50 @@
-<script setup>
+<script setup lang="ts">
 import { useFakeStats } from '@/composables/useFakeStats';
 import { useCategoryService } from '@/services/useCategoryService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import { findRecordIndex } from '@/utilities/helper';
+import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch, markRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
+import type { CategoryData } from '@/types/category';
+import FormHeader from '@/components/FormHeader.vue';
+import CategoriesSkeleton from './partials/CategoriesSkeleton.vue';
 
 const { t } = useI18n();
 const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
+const loadingStore = useLoading();
 const { showToast } = useShowToast();
 const { getFakeTotalCount, getFakeSalesImpact, getFakeSalesImpactValue, getFakeAvgPrice, getFakeSubCategoryProductCount, getFakeCategoryReference } = useFakeStats();
 
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 
 // Data
-const allCategories = ref([]);
-const selectedCategory = ref(null);
-const selectedKeys = ref({});
-const expandedKeys = ref({});
-const loading = ref(true);
-const subscription = ref(null);
+const record = ref<CategoryData | null>(null);
+const records = ref<CategoryData[]>([]);
+const searchQuery = ref<string>('');
+const selectedKeys = ref<Record<string, boolean>>({});
+const loadingActiveId = ref<number | null>(null);
+const expandedKeys = ref<Record<string, boolean>>({});
+const subscription = ref<any>(null);
+const dataLoaded = ref<boolean>(false);
 
 // Count direct children
-function countDirectChildren(categoryId) {
-    return allCategories.value.filter((c) => c.parent_id === categoryId).length;
+function countDirectChildren(categoryId: number): number {
+    return records.value.filter((c: CategoryData) => c.parent_id === categoryId).length;
 }
 
 // Transform categories to tree structure for PrimeVue Tree
 const treeNodes = computed(() => {
-    const buildTree = (items, parentId = null) => {
+    const buildTree = (items: CategoryData[], parentId: number | null = null): any[] => {
         return items
-            .filter((item) => item.parent_id === parentId)
-            .map((item) => {
+            .filter((item: CategoryData) => item.parent_id === parentId)
+            .map((item: CategoryData) => {
                 const children = buildTree(items, item.id);
                 return {
                     key: String(item.id),
@@ -46,41 +55,90 @@ const treeNodes = computed(() => {
                 };
             });
     };
-    return buildTree(allCategories.value);
+
+    let filteredItems = records.value;
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        filteredItems = records.value.filter((cat: CategoryData) => cat.name?.toLowerCase().includes(query) || cat.description?.toLowerCase().includes(query));
+    }
+
+    return buildTree(filteredItems);
 });
 
 // Get children of selected category
-const selectedChildren = computed(() => {
-    if (!selectedCategory.value) return [];
-    return allCategories.value.filter((c) => c.parent_id === selectedCategory.value.id);
+const selectedChildren = computed<CategoryData[]>(() => {
+    if (!record.value) return [];
+    return records.value.filter((c: CategoryData) => c.parent_id === record.value!.id);
 });
 
-// Fetch categories
-async function fetchCategories() {
-    loading.value = true;
-    try {
-        const response = await useCategoryService.getAllCategories();
-        allCategories.value = response.categories || [];
+// Debounced search with loading state
+const performSearch = debounce((): void => {
+    loadingStore.stopDataLoading();
+}, 200);
 
-        // Auto-select first category if none selected
-        if (!selectedCategory.value && allCategories.value.length > 0) {
-            const rootCategories = allCategories.value.filter((c) => !c.parent_id);
-            if (rootCategories.length > 0) {
-                selectedCategory.value = rootCategories[0];
-                selectedKeys.value = { [String(rootCategories[0].id)]: true };
-                expandedKeys.value = { [String(rootCategories[0].id)]: true };
+watch(searchQuery, () => {
+    loadingStore.startDataLoading();
+    performSearch();
+});
+
+// Fetch records
+function fetchRecords(): void {
+    loadingStore.startDataLoading();
+    useCategoryService
+        .getAllCategories()
+        .then((response) => {
+            records.value = response.categories || [];
+            // Auto-select first category if none selected
+            if (!record.value && records.value.length > 0) {
+                const rootCategories = records.value.filter((c: CategoryData) => !c.parent_id);
+                if (rootCategories.length > 0) {
+                    record.value = rootCategories[0];
+                    selectedKeys.value = { [String(rootCategories[0].id)]: true };
+                    expandedKeys.value = { [String(rootCategories[0].id)]: true };
+                }
             }
-        }
-    } catch (error) {
-        console.error('Failed to fetch categories:', error);
-    } finally {
-        loading.value = false;
-    }
+        })
+        .catch((error: any) => {
+            console.error('Failed to fetch categories:', error);
+        })
+        .finally(() => {
+            loadingStore.stopDataLoading();
+            dataLoaded.value = true;
+        });
+}
+
+// Toggle active status
+function toggleActive(categoryId: number): void {
+    loadingActiveId.value = categoryId;
+    loadingStore.startPageLoading();
+    useCategoryService
+        .toggleActiveCategory(categoryId)
+        .then(() => {
+            const index = findRecordIndex(records, categoryId);
+            if (index !== -1) {
+                records.value[index].active = !records.value[index].active;
+            }
+            // Only update record.value separately if it's a different object
+            if (record.value && record.value.id === categoryId && (index === -1 || record.value !== records.value[index])) {
+                record.value.active = !record.value.active;
+            }
+            showToast('success', ACTIONS.EDIT, 'category', 'tc');
+        })
+        .catch((error: any) => {
+            if (error?.response?.status === 419 || error?.response?.status === 401) {
+                console.error('Session expired, redirecting to login');
+            }
+            console.error('Error updating category status');
+        })
+        .finally(() => {
+            loadingActiveId.value = null;
+            loadingStore.stopPageLoading();
+        });
 }
 
 // Handle tree node selection
-function onNodeSelect(node) {
-    selectedCategory.value = node.data;
+function onNodeSelect(node: any): void {
+    record.value = node.data;
 }
 
 // Add new root category
@@ -89,42 +147,51 @@ function addRootCategory() {
 }
 
 // Add sub-category to selected
-function addSubCategory() {
-    if (!selectedCategory.value) return;
-    openForm(selectedCategory.value.id);
+function addSubCategory(): void {
+    if (!record.value) return;
+    openForm(record.value.id);
 }
 
 // Edit category
-function editCategory(category = null) {
-    const cat = category || selectedCategory.value;
+function editRecord(category: CategoryData | null = null): void {
+    const cat = category || record.value;
     if (!cat) return;
 
     authStore.errors = {};
     dialog.open(formComponent, {
         props: {
-            header: t('category.form.title_edit'),
             style: { width: '32rem' },
             breakpoints: { '960px': '90vw' },
             modal: true
         },
+        templates: {
+            header: markRaw(FormHeader)
+        },
         data: {
             record: { ...cat },
-            allCategories: allCategories.value.filter((c) => c.id !== cat.id),
-            action: ACTIONS.EDIT
+            allCategories: records.value.filter((c: CategoryData) => c.id !== cat.id),
+            action: ACTIONS.EDIT,
+            // Data for FormHeader template
+            headerProps: computed(() => ({
+                title: t('category.form.title_edit'),
+                description: t('category.form.subtitle'),
+                icon: record.value?.icon,
+                iconColor: record.value?.icon_color
+            }))
         },
         onClose: handleFormClose
     });
 }
 
 // Open form modal
-function openForm(parentId = null) {
+function openForm(parentId: number | null = null): void {
     authStore.errors = {};
     const newRecord = {
-        name: '',
+        name: null,
         parent_id: parentId,
         slug: null,
         description: null,
-        icon: 'pi pi-folder',
+        icon: null,
         icon_color: '#8B5CF6',
         active: true,
         publish: true
@@ -132,24 +199,33 @@ function openForm(parentId = null) {
 
     dialog.open(formComponent, {
         props: {
-            header: t('category.form.title_new'),
             style: { width: '32rem' },
             breakpoints: { '960px': '90vw' },
             modal: true
         },
+        templates: {
+            header: markRaw(FormHeader)
+        },
         data: {
             record: newRecord,
-            allCategories: allCategories.value,
-            action: ACTIONS.CREATE
+            allCategories: records.value,
+            action: ACTIONS.CREATE,
+            // Data for FormHeader template
+            headerProps: computed(() => ({
+                title: t('category.form.title_new'),
+                description: t('category.form.subtitle'),
+                icon: 'pi pi-plus-circle',
+                iconColor: '#8B5CF6'
+            }))
         },
         onClose: handleFormClose
     });
 }
 
 // Handle form close
-function handleFormClose(result) {
+function handleFormClose(result: any): void {
     if (result && result.data?.record?.id) {
-        fetchCategories();
+        fetchRecords();
         if (result.data.action === ACTIONS.CREATE) {
             showToast('success', ACTIONS.CREATE, 'category', 'tc');
             // Expand parent node if sub-category was created
@@ -158,16 +234,16 @@ function handleFormClose(result) {
             }
         } else {
             showToast('success', ACTIONS.EDIT, 'category', 'tc');
-            if (selectedCategory.value?.id === result.data.record.id) {
-                selectedCategory.value = result.data.record;
+            if (record.value?.id === result.data.record.id) {
+                record.value = result.data.record;
             }
         }
     }
 }
 
-// Delete category
-function confirmDelete(category = null) {
-    const cat = category || selectedCategory.value;
+// Delete record
+function confirmDeleteRecord(category: CategoryData | null = null): void {
+    const cat = category || record.value;
     if (!cat) return;
 
     confirm.require({
@@ -183,18 +259,20 @@ function confirmDelete(category = null) {
             label: t('common.labels.delete'),
             severity: 'danger'
         },
-        accept: async () => {
-            try {
-                await useCategoryService.deleteCategories([cat.id]);
-                showToast('success', ACTIONS.DELETE, 'category', 'tc');
-                if (selectedCategory.value?.id === cat.id) {
-                    selectedCategory.value = null;
-                    selectedKeys.value = {};
-                }
-                fetchCategories();
-            } catch (error) {
-                console.error('Error deleting category:', error);
-            }
+        accept: () => {
+            useCategoryService
+                .deleteCategories([cat.id])
+                .then(() => {
+                    showToast('success', ACTIONS.DELETE, 'category', 'tc');
+                    if (record.value?.id === cat.id) {
+                        record.value = null;
+                        selectedKeys.value = {};
+                    }
+                    fetchRecords();
+                })
+                .catch((error: any) => {
+                    console.error('Error deleting category:', error);
+                });
         }
     });
 }
@@ -205,644 +283,253 @@ function exportCategories() {
 }
 
 // Real-time updates
-function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.category' + window.tenantId).listen('DataStream', () => {
-        fetchCategories();
+interface EchoEvent {
+    action: string;
+    data: CategoryData | number[];
+}
+
+function handleEchoEvent(event: EchoEvent): void {
+    switch (event.action) {
+        case ACTIONS.DELETE:
+            (event.data as number[]).forEach((id: number) => {
+                const index = findRecordIndex(records, id);
+                if (index !== -1) records.value.splice(index, 1);
+                if (record.value?.id === id) record.value = null;
+            });
+            break;
+        case ACTIONS.UPDATE: {
+            const data = event.data as CategoryData;
+            const index = findRecordIndex(records, data.id);
+            if (index !== -1) {
+                records.value[index] = data;
+                if (record.value?.id === data.id) record.value = data;
+            }
+            break;
+        }
+        case ACTIONS.STORE: {
+            const data = event.data as CategoryData;
+            const exists = records.value.some((r: CategoryData) => r.id === data.id);
+            if (!exists) {
+                records.value.unshift(data);
+            }
+            break;
+        }
+        default:
+            console.error('Unhandled action', event.action);
+    }
+}
+
+function subscribeToEcho(): void {
+    const categoriesChannel = Echo.private(`data-stream.categories${authStore.user.account_id}`);
+    subscription.value = categoriesChannel.listen('DataStream', (event: EchoEvent) => {
+        console.log('Received Echo event for categories:', event);
+        handleEchoEvent(event);
     });
 }
 
 onMounted(() => {
-    fetchCategories();
+    fetchRecords();
     subscribeToEcho();
 });
 
 onUnmounted(() => {
-    if (subscription.value) {
-        subscription.value.stopListening('DataStream');
-    }
+    if (subscription.value) subscription.value.stopListening && subscription.value.stopListening('DataStream');
 });
 </script>
 
 <template>
-    <div class="categories-page">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">{{ t('category.titles.explorative_management') }}</h1>
-                <p class="page-subtitle">{{ t('category.titles.subtitle') }}</p>
-            </div>
-            <div class="header-actions">
+    <!-- Skeleton Loading State -->
+    <CategoriesSkeleton v-if="!dataLoaded" />
+
+    <!-- ===================== ACTUAL CONTENT ===================== -->
+    <template v-else>
+        <PageHeader icon="pi pi-th-large" icon-color="#8B5CF6" :title="t('category.titles.explorative_management')" :description="t('category.titles.subtitle')">
+            <template #actions>
                 <Button :label="t('common.labels.export')" icon="pi pi-download" severity="secondary" outlined @click="exportCategories" />
                 <Button :label="t('category.form.title_new')" icon="pi pi-plus" @click="addRootCategory" v-if="authStore.hasPermission('create_categories')" />
-            </div>
-        </div>
+            </template>
+        </PageHeader>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="flex flex-col lg:flex-row gap-6 min-h-[600px]">
             <!-- Left Panel: Category Tree -->
-            <Card class="tree-panel">
-                <template #title>
-                    <div class="tree-header">
-                        <i class="pi pi-sitemap"></i>
+            <Card class="w-full lg:w-[400px] flex-shrink-0 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden shadow-none !p-0" :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }">
+                <template #content>
+                    <div
+                        class="flex items-center justify-center gap-2 font-semibold text-md uppercase tracking-wider text-surface-500 dark:text-surface-400 bg-surface-50 dark:bg-surface-900 py-6 px-5 border-b border-surface-200 dark:border-surface-700"
+                    >
+                        <i class="pi pi-sitemap text-primary text-base"></i>
                         <span>{{ t('category.titles.category_tree') }}</span>
                     </div>
-                </template>
-                <template #content>
-                    <div v-if="!loading">
-                        <Tree :value="treeNodes" v-model:selectionKeys="selectedKeys" v-model:expandedKeys="expandedKeys" selectionMode="single" @node-select="onNodeSelect" class="category-tree">
+                    <div class="p-4">
+                        <Tree
+                            :value="treeNodes"
+                            v-model:selectionKeys="selectedKeys"
+                            v-model:expandedKeys="expandedKeys"
+                            selectionMode="single"
+                            @node-select="onNodeSelect"
+                            class="!bg-transparent !border-none !p-4"
+                            :pt="{ nodeContent: { class: 'py-2.5' } }"
+                        >
                             <template #default="{ node }">
-                                <div class="tree-node">
-                                    <i :class="node.data?.icon || 'pi pi-folder'" class="tree-node-icon" :style="{ color: node.data?.icon_color || '#8B5CF6' }"></i>
-                                    <span class="node-label">{{ node.label }}</span>
-                                    <Badge v-if="countDirectChildren(node.data?.id) > 0" :value="countDirectChildren(node.data?.id)" severity="secondary" />
+                                <div class="flex items-center gap-3 w-full group py-0.5">
+                                    <i :class="node.data?.icon || 'pi pi-folder'" class="text-base" :style="{ color: node.data?.icon_color || '#8B5CF6' }"></i>
+                                    <span class="flex-1 text-[15px] font-medium group-hover:text-primary transition-colors">{{ node.label }}</span>
+                                    <Badge v-if="countDirectChildren(node.data?.id) > 0" :value="countDirectChildren(node.data?.id)" severity="secondary" class="!bg-surface-200 dark:!bg-surface-700 !text-surface-600 dark:!text-surface-300" />
                                 </div>
                             </template>
                         </Tree>
                     </div>
-                    <div v-else class="flex items-center justify-center p-8">
-                        <ProgressSpinner style="width: 40px; height: 40px" />
-                    </div>
 
                     <!-- Add Root Category Button -->
-                    <div class="add-root-btn" @click="addRootCategory" v-if="authStore.hasPermission('create_categories')">
-                        <i class="pi pi-plus-circle"></i>
+                    <div
+                        class="flex items-center justify-center gap-2 p-4 mx-8 mb-8 border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-lg text-surface-400 dark:text-surface-400 text-md font-semibold cursor-pointer transition-all hover:border-primary hover:text-primary hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                        @click="addRootCategory"
+                        v-if="authStore.hasPermission('create_categories')"
+                    >
+                        <i class="pi pi-plus-circle text-base"></i>
                         <span>{{ t('category.labels.add_root_category') }}</span>
                     </div>
                 </template>
             </Card>
 
             <!-- Right Panel: Category Details -->
-            <div class="details-container" v-if="selectedCategory">
+            <div class="flex-1 flex flex-col gap-6" v-if="record">
                 <!-- Category Header Card -->
-                <Card class="category-header-card">
+                <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl p-8">
                     <template #content>
-                        <div class="category-header-top">
-                            <div class="category-info">
-                                <div class="category-icon-box" :style="{ background: `linear-gradient(135deg, #06B6D4, ${selectedCategory.icon_color || '#8B5CF6'})` }">
-                                    <i :class="selectedCategory.icon || 'pi pi-folder'" class="icon-white"></i>
+                        <div class="flex justify-between items-start">
+                            <div class="flex gap-4">
+                                <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/25" :style="{ background: `linear-gradient(135deg, #06B6D4, ${record.icon_color || '#8B5CF6'})` }">
+                                    <i :class="record.icon || 'pi pi-folder'" class="text-white text-2xl"></i>
                                 </div>
-                                <div class="category-details">
-                                    <div class="category-title-row">
-                                        <h2 class="category-name">{{ selectedCategory.name }}</h2>
-                                        <Tag :value="selectedCategory.active ? t('common.labels.active') : t('common.labels.inactive')" :severity="selectedCategory.active ? 'success' : 'danger'" />
+                                <div>
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h2 class="text-2xl font-bold m-0 tracking-tight">{{ record.name }}</h2>
+                                        <ActiveToggleButton :active="record.active" entity="category" :loading="loadingActiveId === record.id" @toggle="toggleActive(record.id)" />
                                     </div>
-                                    <p class="category-description">
-                                        {{ selectedCategory.description || `Primary category for all ${selectedCategory.name.toLowerCase()} items and related products.` }}
+                                    <p class="text-surface-500 dark:text-surface-400 m-0 text-sm max-w-md line-clamp-2">
+                                        {{ record.description || `Primary category for all ${record.name.toLowerCase()} items and related products.` }}
                                     </p>
                                 </div>
                             </div>
-                            <div class="category-actions" v-if="authStore.hasPermission('update_categories') || authStore.hasPermission('delete_categories')">
-                                <Button icon="pi pi-pencil" severity="secondary" text rounded @click="editCategory()" v-if="authStore.hasPermission('update_categories')" />
-                                <Button icon="pi pi-trash" severity="danger" text rounded @click="confirmDelete()" v-if="authStore.hasPermission('delete_categories')" />
+                            <div class="flex gap-1" v-if="authStore.hasPermission('update_categories') || authStore.hasPermission('delete_categories')">
+                                <Button v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.category') })" icon="pi pi-pencil" severity="secondary" text rounded @click="editRecord()" v-if="authStore.hasPermission('update_categories')" />
+                                <Button
+                                    v-tooltip.top="t('common.tooltips.delete', { entity: t('entity.category') })"
+                                    icon="pi pi-trash"
+                                    severity="danger"
+                                    text
+                                    rounded
+                                    @click="confirmDeleteRecord()"
+                                    v-if="authStore.hasPermission('delete_categories')"
+                                />
                             </div>
                         </div>
 
                         <!-- Stats Row -->
-                        <div class="stats-row">
-                            <div class="stat-item">
-                                <span class="stat-label">{{ t('category.labels.total_products') }}</span>
-                                <span class="stat-value">{{ getFakeTotalCount(selectedCategory.id).toLocaleString() }}</span>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-surface-200 dark:border-surface-700">
+                            <div class="text-left">
+                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.total_products') }}</span>
+                                <span class="text-lg font-bold">{{ getFakeTotalCount(record.id).toLocaleString() }}</span>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">{{ t('category.labels.subcategories') }}</span>
-                                <span class="stat-value">{{ selectedChildren.length }}</span>
+                            <div class="text-left">
+                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.subcategories') }}</span>
+                                <span class="text-lg font-bold">{{ selectedChildren.length }}</span>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">{{ t('category.labels.sales_impact') }}</span>
-                                <span class="stat-value" :class="getFakeSalesImpactValue(selectedCategory.id) >= 0 ? 'positive' : 'negative'">
-                                    {{ getFakeSalesImpact(selectedCategory.id) }}
+                            <div class="text-left">
+                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.sales_impact') }}</span>
+                                <span class="text-lg font-bold" :class="getFakeSalesImpactValue(record.id) >= 0 ? 'text-green-500' : 'text-red-500'">
+                                    {{ getFakeSalesImpact(record.id) }}
                                 </span>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">{{ t('category.labels.avg_price') }}</span>
-                                <span class="stat-value">{{ getFakeAvgPrice(selectedCategory.id) }}</span>
+                            <div class="text-left">
+                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.avg_price') }}</span>
+                                <span class="text-lg font-bold">{{ getFakeAvgPrice(record.id) }}</span>
                             </div>
                         </div>
                     </template>
                 </Card>
 
                 <!-- Sub-categories Section -->
-                <Card class="subcategories-card">
-                    <template #title>
-                        <div class="section-header">
-                            <span>{{ t('category.titles.subcategories_in', { name: selectedCategory.name }) }}</span>
-                            <Button :label="t('category.labels.add_subcategory')" icon="pi pi-plus" text size="small" @click="addSubCategory" v-if="authStore.hasPermission('create_categories')" />
-                        </div>
-                    </template>
-                    <template #content>
-                        <div class="subcategories-grid">
-                            <!-- Existing sub-categories -->
-                            <Card
-                                v-for="child in selectedChildren"
-                                :key="child.id"
-                                class="subcategory-card"
-                                @click="
-                                    selectedCategory = child;
-                                    selectedKeys = { [String(child.id)]: true };
-                                "
-                            >
-                                <template #content>
-                                    <div class="subcat-header">
-                                        <div class="subcat-icon-box" :style="{ backgroundColor: (child.icon_color || '#8B5CF6') + '15' }">
-                                            <i :class="child.icon || 'pi pi-folder'" :style="{ color: child.icon_color || '#8B5CF6' }"></i>
-                                        </div>
-                                        <div class="subcat-actions">
-                                            <Button icon="pi pi-pencil" severity="secondary" text rounded size="small" @click.stop="editCategory(child)" v-if="authStore.hasPermission('update_categories')" />
-                                            <Button icon="pi pi-trash" severity="danger" text rounded size="small" @click.stop="confirmDelete(child)" v-if="authStore.hasPermission('delete_categories')" />
-                                        </div>
-                                    </div>
-                                    <h4 class="subcat-name">{{ child.name }}</h4>
-                                    <div class="subcat-footer">
-                                        <span class="subcat-products">{{ getFakeSubCategoryProductCount(child.id) }} {{ t('category.labels.products') }}</span>
-                                        <Tag :value="'ID: ' + getFakeCategoryReference(child.id)" severity="secondary" />
-                                    </div>
-                                </template>
-                            </Card>
 
-                            <!-- Add New Sub-category Card -->
-                            <div class="add-subcategory-card" @click="addSubCategory" v-if="authStore.hasPermission('create_categories')">
-                                <div class="add-icon-circle">
-                                    <i class="pi pi-plus"></i>
+                <div class="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 px-4 pt-4">
+                    <span>{{ t('category.titles.subcategories_in', { name: record.name }) }}</span>
+                    <Button :label="t('category.labels.add_subcategory')" icon="pi pi-plus" text size="small" @click="addSubCategory" v-if="authStore.hasPermission('create_categories')" />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Existing sub-categories -->
+                    <Card
+                        v-for="child in selectedChildren"
+                        :key="child.id"
+                        class="cursor-pointer !bg-surface-0 dark:!bg-surface-900 border border-surface-200 dark:border-surface-700 group"
+                        :pt="{ content: { class: '!p-4' } }"
+                        @click="
+                            record = child;
+                            selectedKeys = { [String(child.id)]: true };
+                        "
+                    >
+                        <template #content>
+                            <div class="flex justify-between items-start mb-4">
+                                <Avatar :icon="child.icon || 'pi pi-folder'" shape="square" size="large" :style="{ backgroundColor: (child.icon_color || '#8B5CF6') + '20', color: child.icon_color || '#8B5CF6', borderRadius: '12px' }" />
+                                <div class="flex gap-1">
+                                    <Button
+                                        v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.category') })"
+                                        icon="pi pi-pencil"
+                                        severity="secondary"
+                                        text
+                                        rounded
+                                        size="small"
+                                        @click.stop="editRecord(child)"
+                                        v-if="authStore.hasPermission('update_categories')"
+                                    />
+                                    <Button
+                                        v-tooltip.top="t('common.tooltips.delete', { entity: t('entity.category') })"
+                                        icon="pi pi-trash"
+                                        severity="danger"
+                                        text
+                                        rounded
+                                        size="small"
+                                        @click.stop="confirmDeleteRecord(child)"
+                                        v-if="authStore.hasPermission('delete_categories')"
+                                    />
                                 </div>
-                                <span>{{ t('category.labels.new_subcategory') }}</span>
                             </div>
+                            <h4 class="text-[17px] font-bold m-0 mb-3.5 text-surface-900 dark:text-surface-0">{{ child.name }}</h4>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-surface-500 dark:text-surface-400">{{ getFakeSubCategoryProductCount(child.id) }} {{ t('category.labels.products') }}</span>
+                                <Tag :value="'ID: ' + getFakeCategoryReference(child.id)" severity="secondary" class="!text-[10px]" />
+                            </div>
+                        </template>
+                    </Card>
+
+                    <!-- Add New Sub-category Card -->
+                    <div
+                        class="flex flex-col items-center justify-center gap-2.5 min-h-[160px] cursor-pointer transition-all border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-xl text-surface-400 dark:text-surface-400 bg-transparent hover:border-primary hover:bg-primary-50 dark:hover:bg-primary-900/20 group"
+                        @click="addSubCategory"
+                        v-if="authStore.hasPermission('create_categories')"
+                    >
+                        <div class="w-10 h-10 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/40 transition-colors">
+                            <i class="pi pi-plus text-xl text-surface-500 dark:text-surface-400 group-hover:text-primary transition-colors"></i>
                         </div>
-                    </template>
-                </Card>
+                        <span class="text-sm font-semibold uppercase tracking-wider group-hover:text-primary transition-colors">{{ t('category.labels.new_subcategory') }}</span>
+                    </div>
+                </div>
             </div>
 
             <!-- No Selection State -->
-            <Card class="empty-state-card" v-else-if="!loading">
+            <Card class="flex-1 flex items-center justify-center !shadow-none !bg-transparent" v-else-if="!loadingStore.isDataLoading">
                 <template #content>
-                    <div class="empty-content">
-                        <i class="pi pi-folder-open"></i>
-                        <h3>{{ t('category.labels.select_category') }}</h3>
-                        <p>{{ t('category.labels.select_category_hint') }}</p>
+                    <div class="text-center text-surface-500 dark:text-surface-400 p-12">
+                        <i class="pi pi-folder-open text-5xl opacity-30 mb-4"></i>
+                        <h3 class="m-0 mb-2 text-surface-900 dark:text-surface-0 text-lg font-semibold">{{ t('category.labels.select_category') }}</h3>
+                        <p class="m-0 text-sm">{{ t('category.labels.select_category_hint') }}</p>
                     </div>
                 </template>
             </Card>
         </div>
-    </div>
+    </template>
 </template>
 
-<style lang="scss" scoped>
-.categories-page {
-    padding: 1.5rem 2rem;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1.5rem;
-}
-
-.page-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-}
-
-.page-subtitle {
-    color: var(--text-color-secondary);
-    margin: 0.25rem 0 0 0;
-    font-size: 0.875rem;
-}
-
-.header-actions {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.main-content {
-    display: flex;
-    gap: 1.5rem;
-    min-height: 600px;
-}
-
-// Tree Panel
-.tree-panel {
-    width: 300px;
-    flex-shrink: 0;
-    border: 1px solid var(--surface-border);
-    border-radius: 12px;
-    overflow: hidden;
-
-    :deep(.p-card-title) {
-        padding: 0;
-        margin: 0;
-    }
-
-    :deep(.p-card-body) {
-        padding: 0;
-    }
-
-    :deep(.p-card-content) {
-        padding: 0;
-    }
-}
-
-.tree-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-color-secondary);
-    background-color: var(--surface-100);
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--surface-border);
-
-    i {
-        font-size: 1rem;
-        color: var(--primary-color);
-    }
-}
-
-:deep(.category-tree) {
-    background: transparent;
-    border: none;
-    padding: 0.75rem;
-
-    .p-tree-node-content {
-        padding: 0.625rem 0.875rem;
-        border-radius: 8px;
-        margin-bottom: 2px;
-
-        &:hover {
-            background: var(--surface-100);
-        }
-
-        &.p-tree-node-selected {
-            background: var(--primary-color);
-
-            .node-label {
-                color: white;
-            }
-
-            .tree-node-icon {
-                color: white !important;
-            }
-
-            :deep(.p-badge) {
-                background: rgba(255, 255, 255, 0.25);
-                color: white;
-            }
-        }
-    }
-
-    .p-tree-toggler {
-        width: 1.25rem;
-        height: 1.25rem;
-        margin-right: 0.25rem;
-    }
-
-    .p-tree-node-children {
-        padding-left: 1.25rem;
-    }
-}
-
-.tree-node {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    width: 100%;
-}
-
-.tree-node-icon {
-    font-size: 1rem;
-}
-
-.node-label {
-    flex: 1;
-    font-size: 0.9375rem;
-    font-weight: 500;
-}
-
-.add-root-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    margin: 0.75rem;
-    margin-top: 0.5rem;
-    border: 2px dashed var(--surface-300);
-    border-radius: 8px;
-    color: var(--text-color-secondary);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: transparent;
-
-    i {
-        font-size: 1rem;
-    }
-
-    &:hover {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        background: var(--primary-50);
-    }
-}
-
-// Details Container
-.details-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-// Category Header Card
-.category-header-card {
-    :deep(.p-card-content) {
-        padding: 1.5rem;
-    }
-}
-
-.category-header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.category-info {
-    display: flex;
-    gap: 1rem;
-}
-
-.category-icon-box {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
-}
-
-.icon-white {
-    color: white;
-    font-size: 1.5rem;
-}
-
-.category-title-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.25rem;
-}
-
-.category-name {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: -0.01em;
-}
-
-.category-description {
-    color: var(--text-color-secondary);
-    margin: 0;
-    font-size: 0.875rem;
-    max-width: 400px;
-}
-
-.category-actions {
-    display: flex;
-    gap: 0.25rem;
-}
-
-// Stats Row
-.stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--surface-border);
-}
-
-.stat-item {
-    text-align: left;
-}
-
-.stat-label {
-    display: block;
-    font-size: 0.625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-color-secondary);
-    margin-bottom: 0.25rem;
-}
-
-.stat-value {
-    font-size: 1.125rem;
-    font-weight: 700;
-
-    &.positive {
-        color: var(--green-500);
-    }
-
-    &.negative {
-        color: var(--red-500);
-    }
-}
-
-// Subcategories Card
-.subcategories-card {
-    flex: 1;
-
-    :deep(.p-card-title) {
-        padding-bottom: 0;
-    }
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-color-secondary);
-    padding: 1rem 1rem 0;
-}
-
-.subcategories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.subcategory-card {
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    :deep(.p-card-content) {
-        padding: 1rem;
-    }
-}
-
-.subcat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-}
-
-.subcat-icon-box {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-100);
-
-    i {
-        font-size: 1.25rem;
-        color: var(--text-color-secondary);
-    }
-}
-
-.subcat-actions {
-    display: flex;
-    gap: 0.25rem;
-    opacity: 0;
-    transition: opacity 0.2s;
-
-    .subcategory-card:hover & {
-        opacity: 1;
-    }
-}
-
-.subcat-name {
-    font-size: 1.0625rem;
-    font-weight: 700;
-    margin: 0 0 0.875rem 0;
-    color: var(--text-color);
-}
-
-.subcat-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.subcat-products {
-    font-size: 0.75rem;
-    color: var(--text-color-secondary);
-}
-
-// Add Subcategory Card
-.add-subcategory-card {
-    border: 2px dashed var(--surface-300);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.625rem;
-    min-height: 160px;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text-color-secondary);
-    background: transparent;
-
-    .add-icon-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--surface-100);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        i {
-            font-size: 1.25rem;
-            color: var(--text-color-secondary);
-        }
-    }
-
-    span {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-    }
-
-    &:hover {
-        border-color: var(--primary-color);
-        background: var(--primary-50);
-
-        .add-icon-circle {
-            background: var(--primary-100);
-
-            i {
-                color: var(--primary-color);
-            }
-        }
-
-        span {
-            color: var(--primary-color);
-        }
-    }
-}
-
-// Empty State
-.empty-state-card {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.empty-content {
-    text-align: center;
-    color: var(--text-color-secondary);
-    padding: 3rem;
-
-    i {
-        font-size: 3rem;
-        opacity: 0.3;
-        margin-bottom: 1rem;
-    }
-
-    h3 {
-        margin: 0 0 0.5rem;
-        color: var(--text-color);
-    }
-
-    p {
-        margin: 0;
-        font-size: 0.875rem;
-    }
-}
-
-// Responsive
-@media (max-width: 1024px) {
-    .main-content {
-        flex-direction: column;
-    }
-
-    .tree-panel {
-        width: 100%;
-    }
-
-    .stats-row {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-</style>
+<style scoped></style>

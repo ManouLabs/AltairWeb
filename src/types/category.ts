@@ -53,3 +53,8 @@ export interface CategoryApiResponse {
 export interface DeleteCategoriesResponse {
     message: string;
 }
+
+export interface ToggleActiveCategoryResponse {
+    data: CategoryData;
+    message?: string;
+}

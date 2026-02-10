@@ -1,21 +1,35 @@
-<script setup>
+<script setup lang="ts">
 import { useCategoryService } from '@/services/useCategoryService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { categorySchema } from '@/validations/category';
 import { validate, validateField } from '@/validations/validate';
-import { inject, onMounted, ref, computed } from 'vue';
+import { inject, onMounted, ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import type { CategoryData, CategoryFormData } from '@/types/category';
 
 const authStore = useAuthStore();
 const { t } = useI18n();
 const { showToast } = useShowToast();
 const loading = useLoading();
-const record = ref({});
-const allCategories = ref([]);
-const dialogRef = inject('dialogRef');
-const action = ref();
+const record = ref<CategoryFormData>({} as CategoryFormData);
+const allCategories = ref<CategoryData[]>([]);
+const dialogRef = inject<any>('dialogRef');
+const action = ref<string>();
+
+// TreeSelect uses { [key]: true } object format for v-model
+const selectedParentKey = ref<Record<string, boolean> | null>(null);
+
+// Sync selectedParentKey -> record.parent_id
+watch(selectedParentKey, (newVal) => {
+    if (newVal === null || newVal === undefined || Object.keys(newVal).length === 0) {
+        record.value.parent_id = null;
+    } else {
+        const key = Object.keys(newVal)[0];
+        record.value.parent_id = key === 'root' ? null : Number(key);
+    }
+});
 
 // Validation schema
 const schema = categorySchema;
@@ -26,7 +40,7 @@ const validateForm = () => {
     return ok;
 };
 
-const onBlurField = (path) => {
+const onBlurField = (path: string) => {
     const { ok, errors } = validateField(schema, record.value, path);
     if (ok) {
         authStore.clearErrors([path]);
@@ -35,21 +49,149 @@ const onBlurField = (path) => {
     }
 };
 
-// Icon options
-const iconOptions = ['pi pi-home', 'pi pi-shopping-bag', 'pi pi-box', 'pi pi-users', 'pi pi-bolt', 'pi pi-car', 'pi pi-chart-bar', 'pi pi-pencil', 'pi pi-headphones', 'pi pi-palette', 'pi pi-gift', 'pi pi-star'];
-
-// Accent color options
-const accentColors = [
-    { value: '#3B82F6', label: 'Blue' },
-    { value: '#8B5CF6', label: 'Purple' },
-    { value: '#6366F1', label: 'Indigo' },
-    { value: '#EC4899', label: 'Pink' }
+// Icon search and selection
+const iconSearch = ref<string>('');
+const commonIcons = [
+    'pi pi-home',
+    'pi pi-shopping-bag',
+    'pi pi-box',
+    'pi pi-users',
+    'pi pi-bolt',
+    'pi pi-car',
+    'pi pi-chart-bar',
+    'pi pi-pencil',
+    'pi pi-headphones',
+    'pi pi-palette',
+    'pi pi-gift',
+    'pi pi-star',
+    'pi pi-tag',
+    'pi pi-shopping-cart',
+    'pi pi-truck',
+    'pi pi-cog',
+    'pi pi-heart',
+    'pi pi-bookmark',
+    'pi pi-camera',
+    'pi pi-video',
+    'pi pi-image',
+    'pi pi-folder',
+    'pi pi-file',
+    'pi pi-envelope',
+    'pi pi-bell',
+    'pi pi-calendar',
+    'pi pi-clock',
+    'pi pi-map-marker',
+    'pi pi-flag',
+    'pi pi-unlock',
+    'pi pi-lock',
+    'pi pi-user',
+    'pi pi-search',
+    'pi pi-check',
+    'pi pi-times',
+    'pi pi-plus',
+    'pi pi-minus',
+    'pi pi-info-circle',
+    'pi pi-question-circle',
+    'pi pi-exclamation-circle',
+    'pi pi-phone',
+    'pi pi-globe',
+    'pi pi-link',
+    'pi pi-share-alt',
+    'pi pi-download',
+    'pi pi-upload',
+    'pi pi-refresh',
+    'pi pi-play',
+    'pi pi-pause',
+    'pi pi-stop',
+    'pi pi-forward',
+    'pi pi-backward',
+    'pi pi-volume-up',
+    'pi pi-volume-down',
+    'pi pi-tablet',
+    'pi pi-mobile',
+    'pi pi-desktop',
+    'pi pi-send',
+    'pi pi-trash',
+    'pi pi-eye',
+    'pi pi-eye-slash',
+    'pi pi-key',
+    'pi pi-credit-card',
+    'pi pi-money-bill',
+    'pi pi-wallet',
+    'pi pi-briefcase',
+    'pi pi-building',
+    'pi pi-lightbulb',
+    'pi pi-moon',
+    'pi pi-sun',
+    'pi pi-cloud',
+    'pi pi-wifi',
+    'pi pi-bluetooth',
+    'pi pi-mic',
+    'pi pi-database',
+    'pi pi-server',
+    'pi pi-code',
+    'pi pi-terminal',
+    'pi pi-cog',
+    'pi pi-filter',
+    'pi pi-sort',
+    'pi pi-bars',
+    'pi pi-list',
+    'pi pi-th-large',
+    'pi pi-grid',
+    'pi pi-table',
+    'pi pi-chart-line',
+    'pi pi-chart-pie',
+    'pi pi-percentage',
+    'pi pi-dollar',
+    'pi pi-euro',
+    'pi pi-pound',
+    'pi pi-bitcoin',
+    'pi pi-shopping-bag',
+    'pi pi-ticket',
+    'pi pi-at',
+    'pi pi-hashtag',
+    'pi pi-paperclip',
+    'pi pi-history',
+    'pi pi-undo',
+    'pi pi-redo'
 ];
 
-// Parent options with "None" option
-const parentOptions = computed(() => {
-    const options = [{ id: null, name: t('category.labels.none_root') }];
-    return [...options, ...allCategories.value];
+const filteredIcons = computed(() => {
+    if (!iconSearch.value) return commonIcons;
+    const query = iconSearch.value.toLowerCase();
+    return commonIcons.filter((icon) => icon.toLowerCase().includes(query));
+});
+
+// Expanded color options (20 colors as per screenshot)
+const accentColors = ['#3B82F6', '#1D4ED8', '#6366F1', '#4F46E5', '#A855F7', '#8B5CF6', '#EC4899', '#D946EF', '#F43F5E', '#E11D48', '#EF4444', '#F97316', '#F59E0B', '#FACC15', '#84CC16', '#10B981', '#059669', '#06B6D4', '#0F172A', '#94A3B8'];
+
+// Tree options for TreeSelect
+const treeSelectNodes = computed(() => {
+    const buildTree = (items: CategoryData[], parentId: number | null = null): any[] => {
+        return items
+            .filter((item: CategoryData) => item.parent_id === parentId && item.id !== record.value.id) // Exclude self to avoid circular dependency
+            .map((item: CategoryData) => {
+                const children = buildTree(items, item.id);
+                return {
+                    key: String(item.id),
+                    label: item.name,
+                    data: item.id, // TreeSelect uses this as value
+                    value: item.id, // Explicit value for TreeSelect
+                    icon: item.icon || 'pi pi-folder',
+                    children: children.length > 0 ? children : undefined
+                };
+            });
+    };
+
+    // Add "None" option as root
+    const rootOption = {
+        key: 'root',
+        label: t('category.labels.none_root'),
+        data: null,
+        value: null,
+        icon: 'pi pi-folder-open'
+    };
+
+    return [rootOption, ...buildTree(allCategories.value)];
 });
 
 const onFormSubmit = () => {
@@ -59,15 +201,15 @@ const onFormSubmit = () => {
 
     loading.startFormSending();
 
-    const serviceAction = action.value === ACTIONS.CREATE ? useCategoryService.storeCategory : (categoryData) => useCategoryService.updateCategory(record.value.id, categoryData);
+    const serviceAction = action.value === ACTIONS.CREATE ? (data: CategoryFormData) => useCategoryService.storeCategory(data) : (data: CategoryFormData) => useCategoryService.updateCategory(record.value.id!, data);
 
     serviceAction(record.value)
-        .then((response) => {
+        .then((response: any) => {
             dialogRef.value.close({ record: response.data, action: action.value });
         })
-        .catch((error) => {
+        .catch((error: any) => {
             authStore.processError(error, t('common.messages.error_occurred'));
-            showToast('error', action.value, 'category', 'tr');
+            showToast('error', action.value as any, 'category', 'tr');
         })
         .finally(() => {
             loading.stopFormSending();
@@ -82,264 +224,157 @@ onMounted(() => {
     record.value = dialogRef.value.data.record;
     allCategories.value = dialogRef.value.data.allCategories || [];
     action.value = dialogRef.value.data.action;
+
+    // Initialize selectedParentKey from record.parent_id
+    if (record.value.parent_id != null) {
+        selectedParentKey.value = { [String(record.value.parent_id)]: true } as Record<string, boolean>;
+    } else {
+        selectedParentKey.value = { root: true } as Record<string, boolean>;
+    }
 });
 </script>
 
 <template>
-    <form @submit.prevent="onFormSubmit" class="category-form">
-        <!-- Form Header -->
-        <div class="form-header">
-            <div class="header-icon" :style="{ backgroundColor: (record.icon_color || '#3B82F6') + '20' }">
-                <i :class="record.icon || 'pi pi-folder'" :style="{ color: record.icon_color || '#3B82F6' }"></i>
-            </div>
-            <div class="header-text">
-                <h3>{{ action === 'create' ? t('category.form.title_new') : t('category.form.title_edit') }}</h3>
-                <p>{{ t('category.form.subtitle') }}</p>
-            </div>
-        </div>
-
+    <form @submit.prevent="onFormSubmit" class="flex flex-col gap-5">
         <!-- Category Name -->
-        <div class="form-field">
-            <label for="name" class="field-label">{{ t('category.columns.name') }} <span class="required">*</span></label>
-            <InputText
-                id="name"
-                v-model="record.name"
-                :disabled="loading.isFormSending"
-                class="w-full"
-                :placeholder="t('category.placeholders.category_name')"
-                :invalid="authStore.errors?.['name']?.[0] ? true : false"
-                @input="() => authStore.clearErrors(['name'])"
-                @blur="() => onBlurField('name')"
-            />
-            <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
+        <div class="pt-2">
+            <FloatLabel variant="on">
+                <IconField>
+                    <InputIcon>
+                        <i class="pi pi-th-large" />
+                    </InputIcon>
+                    <InputText
+                        id="name"
+                        v-model="record.name"
+                        :disabled="loading.isFormSending"
+                        class="w-full"
+                        :invalid="authStore.errors?.['name']?.[0] ? true : false"
+                        @input="() => authStore.clearErrors(['name'])"
+                        @blur="() => onBlurField('name')"
+                        :placeholder="t('category.placeholders.category_name')"
+                    />
+                </IconField>
+                <label for="name">{{ t('category.columns.name') }} <span class="text-red-500">*</span></label>
+            </FloatLabel>
+            <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small" variant="simple">
                 {{ t(authStore.errors?.['name']?.[0]) }}
             </Message>
         </div>
 
         <!-- Parent Category -->
-        <div class="form-field">
-            <label for="parent_id" class="field-label">{{ t('category.columns.parent_id') }}</label>
-            <Select id="parent_id" v-model="record.parent_id" :options="parentOptions" optionLabel="name" optionValue="id" :disabled="loading.isFormSending" class="w-full" />
+        <div>
+            <FloatLabel variant="on">
+                <IconField>
+                    <InputIcon class="z-10">
+                        <i class="pi pi-folder" />
+                    </InputIcon>
+                    <TreeSelect
+                        id="parent_id"
+                        v-model="selectedParentKey"
+                        :options="treeSelectNodes"
+                        :placeholder="t('category.placeholders.select_parent')"
+                        class="w-full !pl-10"
+                        :disabled="loading.isFormSending"
+                        :invalid="authStore.errors?.['parent_id']?.[0] ? true : false"
+                    />
+                    <label for="parent_id" class="!ml-10">{{ t('category.columns.parent_id') }}</label>
+                </IconField>
+            </FloatLabel>
+            <Message v-if="authStore.errors?.['parent_id']?.[0]" severity="error" size="small" variant="simple">
+                {{ t(authStore.errors?.['parent_id']?.[0]) }}
+            </Message>
         </div>
 
         <!-- Icon & Color Section -->
-        <div class="form-field">
-            <label class="field-label">{{ t('category.labels.icon_and_color') }}</label>
+        <div class="flex flex-col gap-4 p-5 bg-surface-50 dark:bg-surface-900/40 rounded-2xl border border-surface-200 dark:border-surface-700 shadow-inner">
+            <label class="text-sm font-bold text-surface-700 dark:text-surface-200 uppercase tracking-wide">{{ t('category.labels.icon_and_color') }}</label>
 
-            <!-- Icon Grid -->
-            <div class="icon-grid">
-                <button v-for="icon in iconOptions" :key="icon" type="button" class="icon-btn" :class="{ selected: record.icon === icon }" @click="record.icon = icon">
-                    <i :class="icon"></i>
-                </button>
+            <!-- Icon Picker -->
+            <div class="flex flex-col gap-3">
+                <IconField>
+                    <InputIcon>
+                        <i class="pi pi-search" />
+                    </InputIcon>
+                    <InputText v-model="iconSearch" :placeholder="t('category.placeholders.search_icon')" class="w-full !bg-surface-0 dark:!bg-surface-900" />
+                </IconField>
+
+                <div class="grid grid-cols-6 gap-2 max-h-[110px] overflow-y-auto p-1 custom-scrollbar pr-2">
+                    <button
+                        v-for="icon in filteredIcons"
+                        :key="icon"
+                        type="button"
+                        class="w-full aspect-square border border-surface-200 dark:border-surface-700 rounded-xl bg-surface-0 dark:bg-surface-800 cursor-pointer transition-all flex items-center justify-center hover:border-primary hover:shadow-sm text-surface-600 dark:text-surface-400 group"
+                        :class="{ '!border-primary !bg-primary-50 dark:!bg-primary-900/30 !text-primary !border-2 shadow-sm': record.icon === icon }"
+                        @click="record.icon = icon"
+                    >
+                        <i :class="icon" class="text-xl group-hover:scale-110 transition-transform"></i>
+                    </button>
+                    <div v-if="filteredIcons.length === 0" class="col-span-6 py-6 text-center text-sm text-surface-500 italic">
+                        {{ t('category.messages.no_icons_found') }}
+                    </div>
+                </div>
             </div>
 
             <!-- Accent Colors -->
-            <div class="accent-section">
-                <span class="accent-label">{{ t('category.labels.accent') }} :</span>
-                <div class="color-options">
+            <div class="flex flex-col gap-3 pt-4 border-t border-surface-200 dark:border-surface-700">
+                <span class="text-[10px] font-black uppercase tracking-widest text-surface-500 dark:text-surface-400">{{ t('category.labels.accent_color') }} :</span>
+                <div class="grid grid-cols-10 gap-2">
                     <button
                         v-for="color in accentColors"
-                        :key="color.value"
+                        :key="color"
                         type="button"
-                        class="color-btn"
-                        :class="{ selected: record.icon_color === color.value }"
-                        :style="{ backgroundColor: color.value }"
-                        :title="color.label"
-                        @click="record.icon_color = color.value"
-                    ></button>
+                        class="w-7 h-7 rounded-full border border-surface-200 dark:border-surface-700 cursor-pointer transition-all hover:scale-125 flex items-center justify-center p-0"
+                        :class="{ 'ring-2 ring-primary ring-offset-2 dark:ring-offset-surface-900 z-10': record.icon_color === color }"
+                        :style="{ backgroundColor: color }"
+                        @click="record.icon_color = color"
+                    >
+                        <i v-if="record.icon_color === color" class="pi pi-check text-[9px] text-white"></i>
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Visibility Toggle -->
-        <div class="toggle-field">
-            <div class="toggle-info">
-                <span class="toggle-label">{{ t('category.labels.visibility_status') }}</span>
-                <span class="toggle-description">{{ t('category.labels.visibility_description') }}</span>
+        <div class="flex justify-between items-center py-2 px-1">
+            <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-semibold">{{ t('category.labels.visibility_status') }}</span>
+                <span class="text-xs text-surface-500 dark:text-surface-400">{{ t('category.labels.visibility_description') }}</span>
             </div>
             <ToggleSwitch v-model="record.publish" />
         </div>
 
         <!-- Active Toggle -->
-        <div class="toggle-field">
-            <div class="toggle-info">
-                <span class="toggle-label">{{ t('category.labels.active_status') }}</span>
-                <span class="toggle-description">{{ t('category.labels.active_description') }}</span>
+        <div class="flex justify-between items-center py-2 px-1 border-t border-surface-100 dark:border-surface-800">
+            <div class="flex flex-col gap-0.5">
+                <span class="text-sm font-semibold">{{ t('category.labels.active_status') }}</span>
+                <span class="text-xs text-surface-500 dark:text-surface-400">{{ t('category.labels.active_description') }}</span>
             </div>
             <ToggleSwitch v-model="record.active" />
         </div>
 
         <!-- Form Actions -->
-        <div class="form-actions">
-            <Button :label="t('common.labels.cancel')" text @click="closeDialog" :disabled="loading.isFormSending" />
-            <Button :label="t('common.labels.save')" type="submit" :loading="loading.isFormSending" />
+        <div class="flex justify-end gap-3 pt-4 mt-2 border-t border-surface-200 dark:border-surface-700">
+            <Button :label="t('common.labels.cancel')" severity="secondary" text @click="closeDialog" :disabled="loading.isFormSending" />
+            <Button :label="t('common.labels.save')" type="submit" :loading="loading.isFormSending" rounded />
         </div>
     </form>
 </template>
 
 <style scoped>
-.category-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
 }
-
-.form-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--surface-border);
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
 }
-
-.header-icon {
-    width: 48px;
-    height: 48px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
     border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
-
-.header-icon i {
-    font-size: 1.25rem;
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
 }
-
-.header-text h3 {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-}
-
-.header-text p {
-    margin: 0.25rem 0 0 0;
-    font-size: 0.875rem;
-    color: var(--text-color-secondary);
-}
-
-.form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.field-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.required {
-    color: var(--red-500);
-}
-
-/* Icon Grid */
-.icon-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.5rem;
-}
-
-.icon-btn {
-    width: 100%;
-    aspect-ratio: 1;
-    border: 2px solid var(--surface-border);
-    border-radius: 10px;
-    background: var(--surface-ground);
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.icon-btn i {
-    font-size: 1.125rem;
-    color: var(--text-color-secondary);
-}
-
-.icon-btn:hover {
-    border-color: var(--primary-color);
-}
-
-.icon-btn.selected {
-    border-color: var(--primary-color);
-    background: var(--primary-color);
-}
-
-.icon-btn.selected i {
-    color: white;
-}
-
-/* Accent Colors */
-.accent-section {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.75rem;
-}
-
-.accent-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-color-secondary);
-}
-
-.color-options {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.color-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 3px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.color-btn:hover {
-    transform: scale(1.1);
-}
-
-.color-btn.selected {
-    border-color: var(--surface-0);
-    box-shadow: 0 0 0 2px var(--primary-color);
-}
-
-/* Toggle Fields */
-.toggle-field {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-top: 1px solid var(--surface-border);
-}
-
-.toggle-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-}
-
-.toggle-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.toggle-description {
-    font-size: 0.75rem;
-    color: var(--text-color-secondary);
-}
-
-/* Form Actions */
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--surface-border);
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
 }
 </style>

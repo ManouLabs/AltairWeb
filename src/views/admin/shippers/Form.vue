@@ -15,6 +15,8 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
+import FormHeader from '@/components/FormHeader.vue';
+import { Form as PForm } from '@primevue/forms';
 
 const route = useRoute();
 const router = useRouter();
@@ -160,7 +162,7 @@ async function loadShipper(): Promise<void> {
         formKey.value++;
     } catch (error) {
         console.error('Error loading shipper:', error);
-        showToast('error', ACTIONS.FETCH, 'shipper', 'tc');
+        showToast('error', ACTIONS.EDIT, 'shipper', 'tc');
     } finally {
         loading.stopDataLoading();
     }
@@ -220,7 +222,7 @@ function toggleRegion(regionId: number, enabled: boolean): void {
     }
 }
 
-interface FormSubmitEvent {
+interface ShipperFormSubmitEvent {
     valid: boolean;
     values: {
         name: string;
@@ -239,7 +241,7 @@ interface ShipperPayload {
     api?: string;
 }
 
-const onFormSubmit = async ({ valid, values }: FormSubmitEvent): Promise<void> => {
+const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
     if (!valid) return;
 
     try {
@@ -317,13 +319,18 @@ onMounted(async () => {
 
 <template>
     <div>
-        <!-- Page Header (outside card) -->
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-surface-900 dark:text-white">
-                {{ isEdit ? t('common.titles.edit', { entity: t('entity.shipper') }) : t('common.titles.add', { entity: t('entity.shipper') }) }}
-            </h1>
-            <Button :label="t('common.labels.back')" icon="pi pi-arrow-left" severity="secondary" outlined @click="goBack" />
-        </div>
+        <!-- Page Header -->
+        <FormHeader
+            :title="isEdit ? t('common.titles.edit', { entity: t('entity.shipper') }) : t('common.titles.add', { entity: t('entity.shipper') })"
+            :description="t('shipper.form.subtitle')"
+            :icon="isEdit ? 'pi pi-truck' : 'pi pi-plus-circle'"
+            iconColor="#3B82F6"
+            class="mb-6"
+        >
+            <template #actions>
+                <Button :label="t('common.labels.back')" icon="pi pi-arrow-left" severity="secondary" outlined @click="goBack" />
+            </template>
+        </FormHeader>
 
         <!-- Loading Skeleton -->
         <div v-if="isLoading" class="flex flex-col gap-6">
@@ -384,7 +391,7 @@ onMounted(async () => {
         </div>
 
         <!-- Actual Form -->
-        <Form v-else :key="formKey" v-slot="$form" :initialValues="initialValues" :resolver="resolver" :validateOnBlur="true" @submit="onFormSubmit" class="flex flex-col gap-6">
+        <PForm v-else :key="formKey" v-slot="$form" :initialValues="initialValues" :resolver="resolver" :validateOnBlur="true" @submit="onFormSubmit" class="flex flex-col gap-6">
             <!-- Basic Info Section -->
             <div class="card">
                 <h2 class="text-xs font-bold text-surface-900 dark:text-white uppercase tracking-wider mb-6">{{ t('shipper.labels.basic_info') }}</h2>
@@ -576,6 +583,6 @@ onMounted(async () => {
                 <Button :label="t('common.labels.cancel')" severity="secondary" outlined @click="goBack" :disabled="loading.isFormSending" />
                 <Button :label="t('shipper.labels.save_shipper')" type="submit" :loading="loading.isFormSending" />
             </div>
-        </Form>
+        </PForm>
     </div>
 </template>

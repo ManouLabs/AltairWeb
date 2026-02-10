@@ -20,7 +20,8 @@ export function useDynamicColumns(
     const { t } = useI18n();
     const columnStore = useColumnStore();
 
-    const savedFields: Ref<string[]> = ref((columnStore.getColumns(pageId) as string[] | null) || defaultFields);
+    const columnsFromStore = columnStore.getColumns(pageId);
+    const savedFields: Ref<string[]> = ref(columnsFromStore ? columnsFromStore.map((col) => col.field) : defaultFields);
 
     if (!columnStore.getColumns(pageId)) {
         columnStore.setColumns(

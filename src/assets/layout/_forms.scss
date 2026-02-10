@@ -1,0 +1,30 @@
+/* Global form component overrides */
+.p-inputtext,
+.p-select,
+.p-dropdown,
+.p-multiselect,
+.p-textarea,
+.p-calendar,
+.p-inputnumber-input,
+.p-password-input,
+.p-treeselect {
+    background-color: #f8fafc !important;
+    border-color: #eef1f6 !important;
+
+    &:enabled:hover {
+        border-color: var(--p-primary-color) !important;
+    }
+
+    &:enabled:focus {
+        border-color: var(--p-primary-color) !important;
+        box-shadow: 0 0 0 1px var(--p-primary-color) !important;
+    }
+
+    &.p-invalid {
+        border-color: var(--p-red-500) !important;
+    }
+}
+
+/* Ensure Select placeholder/label alignment with padding if needed globally,
+   but be careful not to break other selects.
+   The user specifically asked for background and border. */

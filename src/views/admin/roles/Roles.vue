@@ -13,8 +13,10 @@ import type { RoleData, Permission } from '@/types/role';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, markRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
+import FormHeader from '@/components/FormHeader.vue';
+import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
 
 onMounted(() => {
     initialize();
@@ -34,6 +36,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
     (params: any) =>
         useRoleService.getRoles(params).then((data) => {
             allPermissions.value = [data.permissions, []];
+            dataLoaded.value = true;
             return {
                 data: data.roles,
                 meta: data.meta
@@ -54,6 +57,7 @@ const defaultFields = ['name', 'permissions'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref<RoleData | null>(null);
+const dataLoaded = ref(false);
 
 interface Column {
     field: string;
@@ -144,21 +148,24 @@ const openDialog = (): void => {
     const isEdit = !!(record.value as RoleData)?.id;
     dialog.open(formComponent, {
         props: {
-            header: isEdit ? t('common.titles.edit', { entity: t('entity.role') }) : t('common.titles.add', { entity: t('entity.role') }),
-            style: {
-                width: '30vw'
-            },
-            breakpoints: {
-                '960px': '75vw',
-                '640px': '90vw'
-            },
+            style: { width: '30vw' },
+            breakpoints: { '960px': '75vw', '640px': '90vw' },
             modal: true,
             maximizable: true
+        },
+        templates: {
+            header: markRaw(FormHeader)
         },
         data: {
             record: record.value,
             permissionsOptions: permissionsOptions.value,
-            action: record.value?.id ? ACTIONS.EDIT : ACTIONS.CREATE
+            action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE,
+            headerProps: computed(() => ({
+                title: isEdit ? t('common.titles.edit', { entity: t('entity.role') }) : t('common.titles.add', { entity: t('entity.role') }),
+                description: t('role.form.subtitle'),
+                icon: isEdit ? 'pi pi-shield-check' : 'pi pi-shield-plus',
+                iconColor: '#3B82F6'
+            }))
         },
         onClose: (result: any) => {
             if (result && result.data?.record?.id) {
@@ -235,212 +242,212 @@ onUnmounted(() => {
 
 <template>
     <div>
-        <div class="datatable-page-header">
-            <div>
-                <h2>{{ t('common.titles.manage', { entity: t('entity.roles') }) }}</h2>
-                <p>{{ t('common.subtitles.manage', { entity: t('entity.roles').toLowerCase() }) }}</p>
-            </div>
-            <div class="header-actions">
-                <Button
-                    v-if="authStore.hasPermission('export_roles')"
-                    v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.roles') })"
-                    :label="t('common.labels.export')"
-                    icon="pi pi-upload"
-                    outlined
-                    severity="info"
-                    @click="exportCSV($event)"
-                />
-                <Button v-if="authStore.hasPermission('create_roles')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.role')" severity="primary" @click="addRecord" />
-            </div>
-        </div>
-        <DataTable
-            ref="recordDataTable"
-            lazy
-            dataKey="id"
-            v-model:selection="selectedRecords"
-            :value="records"
-            :rowClass="getRowClass"
-            @filter="onFilter($event)"
-            v-model:filters="filters"
-            filterDisplay="menu"
-            :globalFilterFields="['id', ...defaultFields]"
-            paginator
-            @page="onPage($event)"
-            :rows="rows"
-            :totalRecords="total"
-            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-            :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.roles') })"
-            resizableColumns
-            columnResizeMode="fit"
-            reorderableColumns
-            :frozenValue="lockedRow"
-            sortField="id"
-            :sortOrder="-1"
-            @sort="onSort($event)"
-            removableSort
-            scrollable
-            rowHover
-            size="small"
-            :pt="{
-                table: { style: 'min-width: 50rem' },
-                bodyrow: ({ props }: { props: { frozenRow?: boolean } }) => ({
-                    class: [{ 'font-bold': props.frozenRow }]
-                })
-            }"
-        >
-            <template #header>
-                <Toolbar class="w-full">
-                    <template #start>
-                        <div class="flex space-x-2">
-                            <Button
-                                v-if="authStore.hasPermission('delete_roles')"
-                                v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.roles') })"
-                                :label="t('common.labels.delete_selected')"
-                                icon="pi pi-trash"
-                                severity="danger"
-                                @click="
-                                    confirmDeleteRecord(
-                                        $event,
-                                        selectedRecords.map((record: RoleData) => record.id)
-                                    )
-                                "
-                                outlined
-                                :disabled="!selectedRecords || !selectedRecords.length"
-                            />
-                            <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
-                        </div>
-                    </template>
-                    <template #center>
-                        <FloatLabel class="w-full" variant="on">
-                            <MultiSelect id="selected_columns" :modelValue="selectedColumns" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
-                            <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
-                        </FloatLabel>
-                    </template>
-                    <template #end>
-                        <FloatLabel class="w-full" variant="on">
-                            <IconField>
-                                <InputIcon>
-                                    <i class="pi pi-search" />
-                                </InputIcon>
-                                <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" @input="searchDone" />
-                                <label for="global_search">{{ t('common.placeholders.search') }}</label>
-                            </IconField>
-                        </FloatLabel>
-                    </template>
-                </Toolbar>
-            </template>
-            <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
-            <!-- ID column removed (hard-coded or not needed) -->
-            <Column
-                :showClearButton="false"
-                :showApplyButton="false"
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                columnKey="name"
-                field="name"
-                :frozen="frozenColumns.name"
-                v-if="selectedColumns.some((column: Column) => column.field === 'name')"
-                sortable
-                class="min-w-32"
+        <!-- Skeleton Loading State -->
+        <DataTableSkeleton v-if="!dataLoaded" :columns="2" has-tag-column />
+        <template v-else>
+            <PageHeader icon="pi pi-wrench" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.roles') })" :description="t('common.subtitles.manage', { entity: t('entity.roles').toLowerCase() })">
+                <template #actions>
+                    <Button
+                        v-if="authStore.hasPermission('export_roles')"
+                        v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.roles') })"
+                        :label="t('common.labels.export')"
+                        icon="pi pi-upload"
+                        outlined
+                        severity="info"
+                        @click="exportCSV($event)"
+                    />
+                    <Button v-if="authStore.hasPermission('create_roles')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.role')" severity="primary" @click="addRecord" />
+                </template>
+            </PageHeader>
+            <DataTable
+                ref="recordDataTable"
+                lazy
+                dataKey="id"
+                v-model:selection="selectedRecords"
+                :value="records"
+                :rowClass="getRowClass"
+                @filter="onFilter($event)"
+                v-model:filters="filters"
+                filterDisplay="menu"
+                :globalFilterFields="['id', ...defaultFields]"
+                paginator
+                @page="onPage($event)"
+                :rows="rows"
+                :totalRecords="total"
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.roles') })"
+                resizableColumns
+                columnResizeMode="fit"
+                reorderableColumns
+                :frozenValue="lockedRow"
+                sortField="id"
+                :sortOrder="-1"
+                @sort="onSort($event)"
+                removableSort
+                scrollable
+                rowHover
+                size="small"
+                :pt="{
+                    table: { style: 'min-width: 50rem' },
+                    bodyrow: ({ props }: { props: { frozenRow?: boolean } }) => ({
+                        class: [{ 'font-bold': props.frozenRow }]
+                    })
+                }"
             >
                 <template #header>
-                    <HeaderCell
-                        :text="t('role.columns.name')"
-                        :frozen="frozenColumns.name"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('name')"
-                    />
+                    <Toolbar class="w-full">
+                        <template #start>
+                            <div class="flex space-x-2">
+                                <Button
+                                    v-if="authStore.hasPermission('delete_roles')"
+                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.roles') })"
+                                    :label="t('common.labels.delete_selected')"
+                                    icon="pi pi-trash"
+                                    severity="danger"
+                                    @click="
+                                        confirmDeleteRecord(
+                                            $event,
+                                            selectedRecords.map((record: RoleData) => record.id)
+                                        )
+                                    "
+                                    outlined
+                                    :disabled="!selectedRecords || !selectedRecords.length"
+                                />
+                                <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
+                            </div>
+                        </template>
+                        <template #center>
+                            <FloatLabel class="w-full" variant="on">
+                                <MultiSelect id="selected_columns" :modelValue="selectedColumns" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
+                                <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
+                            </FloatLabel>
+                        </template>
+                        <template #end>
+                            <FloatLabel class="w-full" variant="on">
+                                <IconField>
+                                    <InputIcon>
+                                        <i class="pi pi-search" />
+                                    </InputIcon>
+                                    <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" @input="searchDone" />
+                                    <label for="global_search">{{ t('common.placeholders.search') }}</label>
+                                </IconField>
+                            </FloatLabel>
+                        </template>
+                    </Toolbar>
                 </template>
-                <template #body="{ data }">
-                    <DataCell>
-                        <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
-                            <div class="flex items-center gap-2"><i class="pi pi-shield"></i> {{ data.name }}</div>
-                            <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
-                        </div>
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <InputGroup>
-                        <InputText v-model="filterModel.value" size="small" />
-                        <InputGroupAddon>
-                            <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                            <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                        </InputGroupAddon>
-                    </InputGroup>
-                </template>
-            </Column>
-            <!-- guard_name column removed (hard-coded on server) -->
-            <Column
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                :showClearButton="false"
-                :showApplyButton="false"
-                columnKey="permissions"
-                :frozen="frozenColumns.permissions"
-                v-if="selectedColumns.some((column: Column) => column.field === 'permissions')"
-                field="permissions"
-                class="min-w-32"
-            >
-                <template #header>
-                    <HeaderCell
-                        :text="t('role.columns.permissions')"
-                        :frozen="frozenColumns.permissions"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('permissions')"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <DataCell class="grid grid-cols-4 w-full">
-                        <div v-for="permission in data.permissions" :key="permission.id" class="w-full">
-                            <Tag severity="info" :value="permission.name" :class="{ 'font-bold': frozenColumns.permissions }" />
-                        </div>
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <InputGroup>
-                        <MultiSelect size="small" v-model="filterModel.value" :options="allPermissions?.[0] || []" optionLabel="name" optionValue="name">
-                            <template #option="slotProps">
-                                <div class="flex items-center gap-2">
-                                    <span>{{ slotProps.option.name }}</span>
-                                </div>
-                            </template>
-                        </MultiSelect>
-                        <InputGroupAddon>
-                            <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                            <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                        </InputGroupAddon>
-                    </InputGroup>
-                </template>
-            </Column>
-            <Column columnKey="actions" :exportable="false" style="min-width: 5rem" :header="t('common.columns.actions')">
-                <template #body="{ data, frozenRow, index }">
-                    <DataCell>
-                        <div class="flex items-center justify-center gap-1">
-                            <RowActionMenu
-                                :actions="[
-                                    { label: t('common.labels.view'), icon: 'pi pi-eye', command: () => editRecord(data), visible: authStore.hasPermission('view_roles') },
-                                    { label: t('common.labels.edit'), icon: 'pi pi-pencil', command: () => editRecord(data), visible: authStore.hasPermission('update_roles') },
-                                    { label: t('common.labels.delete'), icon: 'pi pi-trash', severity: 'danger', command: () => confirmDeleteRecord(null, [data.id]), visible: authStore.hasPermission('delete_roles') }
-                                ]"
-                            />
-                            <Button
-                                v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"
-                                :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                rounded
-                                size="small"
-                                @click="toggleLock(data, frozenRow, index)"
-                                severity="secondary"
-                            />
-                        </div>
-                    </DataCell>
-                </template>
-            </Column>
-        </DataTable>
+                <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
+                <!-- ID column removed (hard-coded or not needed) -->
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="name"
+                    field="name"
+                    :frozen="frozenColumns.name"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'name')"
+                    sortable
+                    class="min-w-32"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('role.columns.name')"
+                            :frozen="frozenColumns.name"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('name')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
+                                <div class="flex items-center gap-2"><i class="pi pi-shield"></i> {{ data.name }}</div>
+                                <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
+                            </div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
+                </Column>
+                <!-- guard_name column removed (hard-coded on server) -->
+                <Column
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    columnKey="permissions"
+                    :frozen="frozenColumns.permissions"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'permissions')"
+                    field="permissions"
+                    class="min-w-32"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('role.columns.permissions')"
+                            :frozen="frozenColumns.permissions"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('permissions')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell class="grid grid-cols-4 w-full">
+                            <div v-for="permission in data.permissions" :key="permission.id" class="w-full">
+                                <Tag severity="info" :value="permission.name" :class="{ 'font-bold': frozenColumns.permissions }" />
+                            </div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <MultiSelect size="small" v-model="filterModel.value" :options="allPermissions?.[0] || []" optionLabel="name" optionValue="name">
+                                <template #option="slotProps">
+                                    <div class="flex items-center gap-2">
+                                        <span>{{ slotProps.option.name }}</span>
+                                    </div>
+                                </template>
+                            </MultiSelect>
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
+                </Column>
+                <Column columnKey="actions" :exportable="false" style="min-width: 5rem" :header="t('common.columns.actions')">
+                    <template #body="{ data, frozenRow, index }">
+                        <DataCell>
+                            <div class="flex items-center justify-center gap-1">
+                                <RowActionMenu
+                                    :actions="[
+                                        { label: t('common.labels.view'), icon: 'pi pi-eye', command: () => editRecord(data), visible: authStore.hasPermission('view_roles') },
+                                        { label: t('common.labels.edit'), icon: 'pi pi-pencil', command: () => editRecord(data), visible: authStore.hasPermission('update_roles') },
+                                        { label: t('common.labels.delete'), icon: 'pi pi-trash', severity: 'danger', command: () => confirmDeleteRecord(null, [data.id]), visible: authStore.hasPermission('delete_roles') }
+                                    ]"
+                                />
+                                <Button
+                                    v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"
+                                    :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                    text
+                                    rounded
+                                    size="small"
+                                    @click="toggleLock(data, frozenRow, index)"
+                                    severity="secondary"
+                                />
+                            </div>
+                        </DataCell>
+                    </template>
+                </Column>
+            </DataTable>
+        </template>
     </div>
 </template>

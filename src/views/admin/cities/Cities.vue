@@ -13,8 +13,10 @@ import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, markRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
+import FormHeader from '@/components/FormHeader.vue';
+import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
 
 onMounted(() => {
     initialize();
@@ -41,6 +43,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
     (params) =>
         useCityService.getCities(params).then((data) => {
             allRegions.value = data.regions;
+            dataLoaded.value = true;
             return {
                 data: data.cities,
                 meta: data.meta
@@ -61,6 +64,7 @@ const defaultFields = ['name', 'name_fr', 'name_ar', 'postal_code', 'region', 'c
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref(null);
+const dataLoaded = ref(false);
 const defaultColumns = computed(() =>
     defaultFields.map((field) => ({
         field,
@@ -141,16 +145,24 @@ function editRecord(row) {
 const openDialog = () => {
     dialog.open(formComponent, {
         props: {
-            header: t('common.titles.add', { entity: t('entity.city') }),
             style: { width: '40vw' },
             breakpoints: { '960px': '75vw', '640px': '90vw' },
             modal: true,
             maximizable: true
         },
+        templates: {
+            header: markRaw(FormHeader)
+        },
         data: {
             record: record.value,
             regionsOptions: allRegions.value || [],
-            action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE
+            action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE,
+            headerProps: computed(() => ({
+                title: record.value.id ? t('common.titles.edit', { entity: t('entity.city') }) : t('common.titles.add', { entity: t('entity.city') }),
+                description: t('city.form.subtitle'),
+                icon: record.value.id ? 'pi pi-map' : 'pi pi-plus-circle',
+                iconColor: '#3B82F6'
+            }))
         },
         onClose: (result) => {
             if (result && result.data?.record?.id) {
@@ -224,443 +236,443 @@ onUnmounted(() => {
 
 <template>
     <div>
-        <div class="datatable-page-header">
-            <div>
-                <h2>{{ t('common.titles.manage', { entity: t('entity.cities') }) }}</h2>
-                <p>{{ t('common.subtitles.manage', { entity: t('entity.cities').toLowerCase() }) }}</p>
-            </div>
-            <div class="header-actions">
-                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.cities') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
-                <Button v-if="authStore.hasPermission('createcity')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.city') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.city')" severity="primary" @click="addRecord" />
-            </div>
-        </div>
-        <DataTable
-            ref="recordDataTable"
-            lazy
-            dataKey="id"
-            v-model:selection="selectedRecords"
-            :value="records"
-            :rowClass="getRowClass"
-            @filter="onFilter($event)"
-            v-model:filters="filters"
-            filterDisplay="menu"
-            :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
-            paginator
-            @page="onPage($event)"
-            :rows="rows"
-            :totalRecords="total"
-            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-            :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.city') })"
-            resizableColumns
-            columnResizeMode="fit"
-            reorderableColumns
-            :frozenValue="lockedRow"
-            sortField="id"
-            :sortOrder="-1"
-            @sort="onSort($event)"
-            removableSort
-            scrollable
-            rowHover
-            size="small"
-            :pt="{
-                table: { style: 'min-width: 50rem' },
-                bodyrow: ({ props }) => ({
-                    class: [{ 'font-bold': props.frozenRow }]
-                })
-            }"
-        >
-            <template #header>
-                <Toolbar class="w-full">
-                    <template #start>
-                        <div class="flex space-x-2">
-                            <Button
-                                v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.city') })"
-                                :label="t('common.labels.delete_selected')"
-                                icon="pi pi-trash"
-                                severity="danger"
-                                @click="
-                                    confirmDeleteRecord(
-                                        $event,
-                                        selectedRecords.map((record) => record.id)
-                                    )
-                                "
-                                outlined
-                                :disabled="!selectedRecords || !selectedRecords.length"
-                            />
-                            <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
-                        </div>
-                    </template>
-                    <template #center>
-                        <FloatLabel class="w-full" variant="on">
-                            <MultiSelect id="selected_columns" :modelValue="selectedColumns" display="chip" :maxSelectedLabels="0" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
-                            <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
-                        </FloatLabel>
-                    </template>
-                    <template #end>
-                        <FloatLabel class="w-full" variant="on">
-                            <IconField>
-                                <InputIcon>
-                                    <i class="pi pi-search" />
-                                </InputIcon>
-                                <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" />
-                                <label for="global_search">{{ t('common.placeholders.search') }}</label>
-                            </IconField>
-                        </FloatLabel>
-                    </template>
-                </Toolbar>
-            </template>
-
-            <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
-            <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
-                <template #body="{ data }">
-                    <DataCell>{{ data.id }}</DataCell>
+        <!-- Skeleton Loading State -->
+        <DataTableSkeleton v-if="!dataLoaded" :columns="7" />
+        <template v-else>
+            <PageHeader icon="pi pi-building" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.cities') })" :description="t('common.subtitles.manage', { entity: t('entity.cities').toLowerCase() })">
+                <template #actions>
+                    <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.cities') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
+                    <Button v-if="authStore.hasPermission('createcity')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.city') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.city')" severity="primary" @click="addRecord" />
                 </template>
-            </Column>
-            <Column
-                :showClearButton="false"
-                :showApplyButton="false"
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                columnKey="name"
-                field="name"
-                :frozen="frozenColumns.name"
-                v-if="selectedColumns.some((column) => column.field === 'name')"
-                sortable
-                class="min-w-32"
+            </PageHeader>
+            <DataTable
+                ref="recordDataTable"
+                lazy
+                dataKey="id"
+                v-model:selection="selectedRecords"
+                :value="records"
+                :rowClass="getRowClass"
+                @filter="onFilter($event)"
+                v-model:filters="filters"
+                filterDisplay="menu"
+                :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+                paginator
+                @page="onPage($event)"
+                :rows="rows"
+                :totalRecords="total"
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.city') })"
+                resizableColumns
+                columnResizeMode="fit"
+                reorderableColumns
+                :frozenValue="lockedRow"
+                sortField="id"
+                :sortOrder="-1"
+                @sort="onSort($event)"
+                removableSort
+                scrollable
+                rowHover
+                size="small"
+                :pt="{
+                    table: { style: 'min-width: 50rem' },
+                    bodyrow: ({ props }) => ({
+                        class: [{ 'font-bold': props.frozenRow }]
+                    })
+                }"
             >
                 <template #header>
-                    <HeaderCell
-                        :text="t('city.columns.name')"
-                        :frozen="frozenColumns.name"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('name')"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <DataCell>
-                        <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
-                            <span>{{ data.name }}</span>
-                            <Tag v-if="highlights[data.id] === 'new'" value="NEW" severity="success" rounded size="small" />
-                            <Tag v-else-if="highlights[data.id] === 'updated'" value="UPDATED" severity="info" rounded size="small" />
-                        </div>
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <InputGroup>
-                        <InputText v-model="filterModel.value" size="small" />
-                        <InputGroupAddon>
-                            <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                            <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                        </InputGroupAddon>
-                    </InputGroup>
-                </template>
-            </Column>
-            <Column
-                :showClearButton="false"
-                :showApplyButton="false"
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                columnKey="name_fr"
-                field="name_fr"
-                :frozen="frozenColumns.name_fr"
-                v-if="selectedColumns.some((column) => column.field === 'name_fr')"
-                sortable
-                class="min-w-32"
-            >
-                <template #header>
-                    <HeaderCell
-                        :text="t('city.columns.name_fr')"
-                        :frozen="frozenColumns.name_fr"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('name_fr')"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <DataCell>
-                        <div :class="{ 'font-bold': frozenColumns.name_fr }">{{ data.name_fr }}</div>
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <InputGroup>
-                        <InputText v-model="filterModel.value" size="small" />
-                        <InputGroupAddon>
-                            <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                            <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                        </InputGroupAddon>
-                    </InputGroup>
-                </template>
-            </Column>
-            <Column
-                :showClearButton="false"
-                :showApplyButton="false"
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                columnKey="name_ar"
-                field="name_ar"
-                :frozen="frozenColumns.name_ar"
-                v-if="selectedColumns.some((column) => column.field === 'name_ar')"
-                sortable
-                class="min-w-32"
-            >
-                <template #header>
-                    <HeaderCell
-                        :text="t('city.columns.name_ar')"
-                        :frozen="frozenColumns.name_ar"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('name_ar')"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <DataCell>
-                        <div :class="{ 'font-bold': frozenColumns.name_ar }">{{ data.name_ar }}</div>
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <InputGroup>
-                        <InputText v-model="filterModel.value" size="small" />
-                        <InputGroupAddon>
-                            <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                            <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                        </InputGroupAddon>
-                    </InputGroup>
-                </template>
-            </Column>
-            <Column
-                :showClearButton="false"
-                :showApplyButton="false"
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                columnKey="postal_code"
-                field="postal_code"
-                :frozen="frozenColumns.postal_code"
-                v-if="selectedColumns.some((column) => column.field === 'postal_code')"
-                sortable
-                class="min-w-32"
-            >
-                <template #header>
-                    <HeaderCell
-                        :text="t('city.columns.postal_code')"
-                        :frozen="frozenColumns.postal_code"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('postal_code')"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <DataCell>
-                        <div :class="{ 'font-bold': frozenColumns.postal_code }">{{ data.postal_code }}</div>
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <InputGroup>
-                        <InputText v-model="filterModel.value" size="small" />
-                        <InputGroupAddon>
-                            <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                            <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                        </InputGroupAddon>
-                    </InputGroup>
-                </template>
-            </Column>
-            <Column
-                :showClearButton="false"
-                :showApplyButton="false"
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                columnKey="region"
-                field="region"
-                :frozen="frozenColumns.region"
-                v-if="selectedColumns.some((column) => column.field === 'region')"
-                class="min-w-32"
-            >
-                <template #header>
-                    <HeaderCell
-                        :text="t('city.columns.region')"
-                        :frozen="frozenColumns.region"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('region')"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <DataCell>
-                        <Tag :value="data.region?.name" severity="info" rounded size="small" :class="{ 'font-bold': frozenColumns.region }" />
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <InputGroup>
-                        <MultiSelect v-model="filterModel.value" :options="allRegions" optionLabel="name" optionValue="name" :placeholder="t('common.placeholders.select')" class="w-full" size="small" display="chip" />
-                        <InputGroupAddon>
-                            <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                            <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                        </InputGroupAddon>
-                    </InputGroup>
-                </template>
-            </Column>
-
-            <Column
-                :showClearButton="false"
-                :showApplyButton="false"
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                dataType="date"
-                columnKey="created_at"
-                field="created_at"
-                :frozen="frozenColumns.created_at"
-                v-if="selectedColumns.some((column) => column.field === 'created_at')"
-                sortable
-                class="min-w-40"
-            >
-                <template #header>
-                    <HeaderCell
-                        :text="t('city.columns.created_at')"
-                        :frozen="frozenColumns.created_at"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('created_at')"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <DataCell>
-                        <div :class="{ 'font-bold': frozenColumns.created_at }">{{ dayjs(data.created_at).format('l') }}</div>
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <div class="flex flex-col gap-2">
-                        <Select
-                            v-model="filterModel.matchMode"
-                            :options="[
-                                { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
-                                { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
-                                { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
-                                { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
-                            ]"
-                            optionLabel="label"
-                            optionValue="value"
-                            class="w-full"
-                            placeholder="Filter Mode"
-                        />
-                        <InputGroup>
-                            <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
-                            <InputGroupAddon>
-                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                    <Toolbar class="w-full">
+                        <template #start>
+                            <div class="flex space-x-2">
                                 <Button
-                                    size="small"
-                                    icon="pi pi-times"
+                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.city') })"
+                                    :label="t('common.labels.delete_selected')"
+                                    icon="pi pi-trash"
                                     severity="danger"
-                                    outlined
-                                    :disabled="!filterModel.value"
                                     @click="
-                                        (() => {
-                                            filterModel.value = null;
-                                            applyFilter();
-                                        })()
+                                        confirmDeleteRecord(
+                                            $event,
+                                            selectedRecords.map((record) => record.id)
+                                        )
                                     "
+                                    outlined
+                                    :disabled="!selectedRecords || !selectedRecords.length"
                                 />
+                                <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
+                            </div>
+                        </template>
+                        <template #center>
+                            <FloatLabel class="w-full" variant="on">
+                                <MultiSelect id="selected_columns" :modelValue="selectedColumns" display="chip" :maxSelectedLabels="0" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
+                                <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
+                            </FloatLabel>
+                        </template>
+                        <template #end>
+                            <FloatLabel class="w-full" variant="on">
+                                <IconField>
+                                    <InputIcon>
+                                        <i class="pi pi-search" />
+                                    </InputIcon>
+                                    <InputText id="global_search" v-model="filters['global'].value" @keyup.enter="searchDone" />
+                                    <label for="global_search">{{ t('common.placeholders.search') }}</label>
+                                </IconField>
+                            </FloatLabel>
+                        </template>
+                    </Toolbar>
+                </template>
+
+                <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
+                <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
+                    <template #body="{ data }">
+                        <DataCell>{{ data.id }}</DataCell>
+                    </template>
+                </Column>
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="name"
+                    field="name"
+                    :frozen="frozenColumns.name"
+                    v-if="selectedColumns.some((column) => column.field === 'name')"
+                    sortable
+                    class="min-w-32"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('city.columns.name')"
+                            :frozen="frozenColumns.name"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('name')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
+                                <span>{{ data.name }}</span>
+                                <Tag v-if="highlights[data.id] === 'new'" value="NEW" severity="success" rounded size="small" />
+                                <Tag v-else-if="highlights[data.id] === 'updated'" value="UPDATED" severity="info" rounded size="small" />
+                            </div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
-                    </div>
-                </template>
-            </Column>
-            <Column
-                :showClearButton="false"
-                :showApplyButton="false"
-                :showFilterMatchModes="false"
-                :showFilterOperator="false"
-                dataType="date"
-                columnKey="updated_at"
-                field="updated_at"
-                :frozen="frozenColumns.updated_at"
-                v-if="selectedColumns.some((column) => column.field === 'updated_at')"
-                sortable
-                class="min-w-40"
-            >
-                <template #header>
-                    <HeaderCell
-                        :text="t('city.columns.updated_at')"
-                        :frozen="frozenColumns.updated_at"
-                        :reorderTooltip="t('common.tooltips.reorder_columns')"
-                        :lockTooltip="t('common.tooltips.lock_column')"
-                        :unlockTooltip="t('common.tooltips.unlock_column')"
-                        @toggle="toggleColumnFrozen('updated_at')"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <DataCell>
-                        <div :class="{ 'font-bold': frozenColumns.updated_at }">{{ dayjs(data.updated_at).format('l') }}</div>
-                    </DataCell>
-                </template>
-                <template #filter="{ filterModel, applyFilter }">
-                    <div class="flex flex-col gap-2">
-                        <Select
-                            v-model="filterModel.matchMode"
-                            :options="[
-                                { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
-                                { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
-                                { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
-                                { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
-                            ]"
-                            optionLabel="label"
-                            optionValue="value"
-                            class="w-full"
-                            placeholder="Filter Mode"
+                    </template>
+                </Column>
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="name_fr"
+                    field="name_fr"
+                    :frozen="frozenColumns.name_fr"
+                    v-if="selectedColumns.some((column) => column.field === 'name_fr')"
+                    sortable
+                    class="min-w-32"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('city.columns.name_fr')"
+                            :frozen="frozenColumns.name_fr"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('name_fr')"
                         />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.name_fr }">{{ data.name_fr }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>
-                            <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                            <InputText v-model="filterModel.value" size="small" />
                             <InputGroupAddon>
-                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button
-                                    size="small"
-                                    icon="pi pi-times"
-                                    severity="danger"
-                                    outlined
-                                    :disabled="!filterModel.value"
-                                    @click="
-                                        (() => {
-                                            filterModel.value = null;
-                                            applyFilter();
-                                        })()
-                                    "
-                                />
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
-                    </div>
-                </template>
-            </Column>
+                    </template>
+                </Column>
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="name_ar"
+                    field="name_ar"
+                    :frozen="frozenColumns.name_ar"
+                    v-if="selectedColumns.some((column) => column.field === 'name_ar')"
+                    sortable
+                    class="min-w-32"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('city.columns.name_ar')"
+                            :frozen="frozenColumns.name_ar"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('name_ar')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.name_ar }">{{ data.name_ar }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
+                </Column>
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="postal_code"
+                    field="postal_code"
+                    :frozen="frozenColumns.postal_code"
+                    v-if="selectedColumns.some((column) => column.field === 'postal_code')"
+                    sortable
+                    class="min-w-32"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('city.columns.postal_code')"
+                            :frozen="frozenColumns.postal_code"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('postal_code')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.postal_code }">{{ data.postal_code }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
+                </Column>
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="region"
+                    field="region"
+                    :frozen="frozenColumns.region"
+                    v-if="selectedColumns.some((column) => column.field === 'region')"
+                    class="min-w-32"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('city.columns.region')"
+                            :frozen="frozenColumns.region"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('region')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <Tag :value="data.region?.name" severity="info" rounded size="small" :class="{ 'font-bold': frozenColumns.region }" />
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <MultiSelect v-model="filterModel.value" :options="allRegions" optionLabel="name" optionValue="name" :placeholder="t('common.placeholders.select')" class="w-full" size="small" display="chip" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
+                </Column>
 
-            <Column columnKey="actions" :exportable="false" style="min-width: 5rem" :header="t('common.columns.actions')">
-                <template #body="{ data, frozenRow, index }">
-                    <DataCell>
-                        <div class="flex items-center justify-center gap-1">
-                            <RowActionMenu
-                                :actions="[
-                                    { label: t('common.labels.view'), icon: 'pi pi-eye', command: () => editRecord(data), visible: authStore.hasPermission('view_cities') },
-                                    { label: t('common.labels.edit'), icon: 'pi pi-pencil', command: () => editRecord(data), visible: authStore.hasPermission('update_cities') },
-                                    { label: t('common.labels.delete'), icon: 'pi pi-trash', severity: 'danger', command: () => confirmDeleteRecord(null, [data.id]), visible: authStore.hasPermission('delete_cities') }
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    dataType="date"
+                    columnKey="created_at"
+                    field="created_at"
+                    :frozen="frozenColumns.created_at"
+                    v-if="selectedColumns.some((column) => column.field === 'created_at')"
+                    sortable
+                    class="min-w-40"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('city.columns.created_at')"
+                            :frozen="frozenColumns.created_at"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('created_at')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.created_at }">{{ dayjs(data.created_at).format('l') }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <div class="flex flex-col gap-2">
+                            <Select
+                                v-model="filterModel.matchMode"
+                                :options="[
+                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
+                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
+                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
+                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
                                 ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                class="w-full"
+                                placeholder="Filter Mode"
                             />
-                            <Button
-                                v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"
-                                :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'"
-                                text
-                                rounded
-                                size="small"
-                                @click="toggleLock(data, frozenRow, index)"
-                                severity="secondary"
-                            />
+                            <InputGroup>
+                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <InputGroupAddon>
+                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                    <Button
+                                        size="small"
+                                        icon="pi pi-times"
+                                        severity="danger"
+                                        outlined
+                                        :disabled="!filterModel.value"
+                                        @click="
+                                            (() => {
+                                                filterModel.value = null;
+                                                applyFilter();
+                                            })()
+                                        "
+                                    />
+                                </InputGroupAddon>
+                            </InputGroup>
                         </div>
-                    </DataCell>
-                </template>
-            </Column>
-        </DataTable>
+                    </template>
+                </Column>
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    dataType="date"
+                    columnKey="updated_at"
+                    field="updated_at"
+                    :frozen="frozenColumns.updated_at"
+                    v-if="selectedColumns.some((column) => column.field === 'updated_at')"
+                    sortable
+                    class="min-w-40"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('city.columns.updated_at')"
+                            :frozen="frozenColumns.updated_at"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('updated_at')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.updated_at }">{{ dayjs(data.updated_at).format('l') }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <div class="flex flex-col gap-2">
+                            <Select
+                                v-model="filterModel.matchMode"
+                                :options="[
+                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
+                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
+                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
+                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
+                                ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                class="w-full"
+                                placeholder="Filter Mode"
+                            />
+                            <InputGroup>
+                                <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <InputGroupAddon>
+                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                    <Button
+                                        size="small"
+                                        icon="pi pi-times"
+                                        severity="danger"
+                                        outlined
+                                        :disabled="!filterModel.value"
+                                        @click="
+                                            (() => {
+                                                filterModel.value = null;
+                                                applyFilter();
+                                            })()
+                                        "
+                                    />
+                                </InputGroupAddon>
+                            </InputGroup>
+                        </div>
+                    </template>
+                </Column>
+
+                <Column columnKey="actions" :exportable="false" style="min-width: 5rem" :header="t('common.columns.actions')">
+                    <template #body="{ data, frozenRow, index }">
+                        <DataCell>
+                            <div class="flex items-center justify-center gap-1">
+                                <RowActionMenu
+                                    :actions="[
+                                        { label: t('common.labels.view'), icon: 'pi pi-eye', command: () => editRecord(data), visible: authStore.hasPermission('view_cities') },
+                                        { label: t('common.labels.edit'), icon: 'pi pi-pencil', command: () => editRecord(data), visible: authStore.hasPermission('update_cities') },
+                                        { label: t('common.labels.delete'), icon: 'pi pi-trash', severity: 'danger', command: () => confirmDeleteRecord(null, [data.id]), visible: authStore.hasPermission('delete_cities') }
+                                    ]"
+                                />
+                                <Button
+                                    v-tooltip.top="frozenRow ? t('common.tooltips.unlock_row') : t('common.tooltips.lock_row')"
+                                    :icon="frozenRow ? 'pi pi-lock' : 'pi pi-lock-open'"
+                                    text
+                                    rounded
+                                    size="small"
+                                    @click="toggleLock(data, frozenRow, index)"
+                                    severity="secondary"
+                                />
+                            </div>
+                        </DataCell>
+                    </template>
+                </Column>
+            </DataTable>
+        </template>
     </div>
 </template>

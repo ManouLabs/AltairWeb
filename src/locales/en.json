@@ -176,7 +176,6 @@
                 "message": "Are you sure you want to delete the selected {entity}?"
             }
         },
-
         "toasts": {
             "create": {
                 "summary": "{entity} created",
@@ -267,6 +266,9 @@
             "name": "Name",
             "guard_name": "Guard name",
             "permissions": "Permissions"
+        },
+        "form": {
+            "subtitle": "Configure system roles and permissions"
         }
     },
     "user": {
@@ -423,6 +425,9 @@
         "types": {
             "company": "Company",
             "individual": "Individual"
+        },
+        "form": {
+            "subtitle": "Configure carrier settings and pricing"
         }
     },
     "plan": {
@@ -436,6 +441,9 @@
             "price": "Price",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        },
+        "form": {
+            "subtitle": "Define feature limits and pricing details"
         }
     },
     "region": {
@@ -448,6 +456,9 @@
             "latitude": "Latitude",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        },
+        "form": {
+            "subtitle": "Configure geographic region details"
         }
     },
     "city": {
@@ -461,6 +472,9 @@
             "latitude": "Latitude",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        },
+        "form": {
+            "subtitle": "Manage city information and postal codes"
         }
     },
     "category": {
@@ -497,6 +511,7 @@
             "active_description": "Activate category for use in the system",
             "icon_and_color": "Icon & Color",
             "accent": "Accent",
+            "accent_color": "ACCENT COLOR",
             "none_root": "None (Root Category)",
             "products": "Products",
             "id_ref": "ID",
@@ -505,7 +520,11 @@
         },
         "placeholders": {
             "select_parent": "Select parent category...",
-            "category_name": "Ex: Electronics, Clothing..."
+            "category_name": "Ex: Electronics, Clothing...",
+            "search_icon": "Search an icon..."
+        },
+        "messages": {
+            "no_icons_found": "No icons found"
         },
         "form": {
             "title_new": "New Category",
@@ -655,12 +674,72 @@
         "cancel": "Cancel",
         "completed": "Completed",
         "pending": "Pending",
-        "fileSizeTypes": ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
-        "dayNames": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        "dayNamesShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-        "dayNamesMin": ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
-        "monthNames": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-        "monthNamesShort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        "fileSizeTypes": [
+            "B",
+            "KB",
+            "MB",
+            "GB",
+            "TB",
+            "PB",
+            "EB",
+            "ZB",
+            "YB"
+        ],
+        "dayNames": [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+        ],
+        "dayNamesShort": [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+        ],
+        "dayNamesMin": [
+            "Su",
+            "Mo",
+            "Tu",
+            "We",
+            "Th",
+            "Fr",
+            "Sa"
+        ],
+        "monthNames": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ],
+        "monthNamesShort": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+        ],
         "chooseYear": "Choose Year",
         "chooseMonth": "Choose Month",
         "chooseDate": "Choose Date",
