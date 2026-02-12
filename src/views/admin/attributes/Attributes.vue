@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ActiveToggleButton from '@/components/ActiveToggleButton.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
@@ -54,6 +55,7 @@ const defaultFields = ['name', 'type', 'categories', 'values', 'active', 'create
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const dataLoaded = ref(false);
+const loadingActiveId = ref<number | null>(null);
 
 interface Column {
     field: string;
@@ -173,19 +175,23 @@ function confirmDeleteRecord(event: MouseEvent | null, attributeIds: number[]): 
     });
 }
 
-function toggleActive(data: AttributeData): void {
+function toggleActive(attributeId: number): void {
+    loadingActiveId.value = attributeId;
     useAttributeService
-        .toggleActiveAttribute(data.id)
+        .toggleActiveAttribute(attributeId)
         .then((response) => {
-            const index = findRecordIndex(records, data.id);
+            const index = findRecordIndex(records, attributeId);
             if (index !== -1) {
                 records.value[index] = response.data;
-                markHighlight(data.id, 'updated');
+                markHighlight(attributeId, 'updated');
             }
             showToast('success', ACTIONS.EDIT, 'attribute', 'tc');
         })
         .catch(() => {
             console.error('Error toggling attribute');
+        })
+        .finally(() => {
+            loadingActiveId.value = null;
         });
 }
 
@@ -221,29 +227,35 @@ onUnmounted(() => {
 
 <template>
     <div>
+        <!-- Page Header (always visible) -->
+        <PageHeader icon="pi pi-sliders-h" icon-color="#F59E0B" :title="t('common.titles.manage', { entity: t('entity.attributes') })" :description="t('attribute.labels.manage_subtitle')">
+            <template #actions>
+                <Button
+                    v-if="authStore.hasPermission('export_attributes')"
+                    v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.attributes') })"
+                    :label="t('common.labels.export')"
+                    icon="pi pi-upload"
+                    outlined
+                    severity="info"
+                    :disabled="!dataLoaded"
+                    @click="exportCSV($event)"
+                />
+                <Button
+                    v-if="authStore.hasPermission('create_attributes')"
+                    v-tooltip.top="t('common.tooltips.add', { entity: t('entity.attribute') })"
+                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.attribute')"
+                    severity="primary"
+                    :disabled="!dataLoaded"
+                    @click="addRecord"
+                />
+            </template>
+        </PageHeader>
+
         <!-- Skeleton Loading State -->
         <DataTableSkeleton v-if="!dataLoaded" :columns="6" />
+
+        <!-- DataTable -->
         <template v-else>
-            <PageHeader icon="pi pi-sliders-h" icon-color="#F59E0B" :title="t('common.titles.manage', { entity: t('entity.attributes') })" :description="t('attribute.labels.manage_subtitle')">
-                <template #actions>
-                    <Button
-                        v-if="authStore.hasPermission('export_attributes')"
-                        v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.attributes') })"
-                        :label="t('common.labels.export')"
-                        icon="pi pi-upload"
-                        outlined
-                        severity="info"
-                        @click="exportCSV($event)"
-                    />
-                    <Button
-                        v-if="authStore.hasPermission('create_attributes')"
-                        v-tooltip.top="t('common.tooltips.add', { entity: t('entity.attribute') })"
-                        :label="'+ ' + t('common.labels.new') + ' ' + t('entity.attribute')"
-                        severity="primary"
-                        @click="addRecord"
-                    />
-                </template>
-            </PageHeader>
             <DataTable
                 ref="recordDataTable"
                 lazy
@@ -481,7 +493,7 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <ToggleSwitch :modelValue="data.active" @update:modelValue="toggleActive(data)" :disabled="!authStore.hasPermission('update_attributes')" />
+                            <ActiveToggleButton :active="data.active" entity="attribute" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
                         </DataCell>
                     </template>
                 </Column>

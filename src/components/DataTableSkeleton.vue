@@ -24,20 +24,6 @@ defineProps({
 </script>
 
 <template>
-    <!-- Skeleton Page Header -->
-    <div class="datatable-page-header">
-        <div class="flex items-center gap-4">
-            <Skeleton width="3rem" height="3rem" borderRadius="12px" />
-            <div class="flex flex-col gap-2">
-                <Skeleton width="14rem" height="1.25rem" />
-                <Skeleton width="20rem" height="0.85rem" />
-            </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <Skeleton v-for="i in actionButtons" :key="i" :width="i === 1 ? '7rem' : '9rem'" height="2.5rem" borderRadius="8px" />
-        </div>
-    </div>
-
     <!-- Skeleton DataTable -->
     <div class="border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
         <!-- Skeleton Toolbar -->
