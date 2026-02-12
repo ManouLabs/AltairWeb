@@ -54,6 +54,12 @@ const productsMenu = computed(() => [
         icon: 'pi pi-fw pi-th-large',
         to: '/admin/categories',
         visible: can('view_categories')
+    },
+    {
+        label: t('navigation.side_bar.attributes'),
+        icon: 'pi pi-fw pi-sliders-h',
+        to: '/admin/attributes',
+        visible: can('view_attributes')
     }
 ]);
 

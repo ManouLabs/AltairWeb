@@ -5,7 +5,6 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { findRecordIndex } from '@/utilities/helper';
-import debounce from 'lodash-es/debounce';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch, markRaw } from 'vue';
@@ -41,9 +40,27 @@ function countDirectChildren(categoryId: number): number {
 
 // Transform categories to tree structure for PrimeVue Tree
 const treeNodes = computed(() => {
+    const allItems = records.value;
+    const query = searchQuery.value?.toLowerCase();
+
+    // Collect IDs of matching categories and all their ancestors so the tree stays intact
+    const visibleIds = new Set<number>();
+    if (query) {
+        const matchingIds = allItems.filter((cat: CategoryData) => cat.name?.toLowerCase().includes(query) || cat.description?.toLowerCase().includes(query)).map((cat: CategoryData) => cat.id);
+
+        // Walk up parent chain for each match
+        const addAncestors = (id: number) => {
+            if (visibleIds.has(id)) return;
+            visibleIds.add(id);
+            const parent = allItems.find((c: CategoryData) => c.id === id);
+            if (parent?.parent_id) addAncestors(parent.parent_id);
+        };
+        matchingIds.forEach(addAncestors);
+    }
+
     const buildTree = (items: CategoryData[], parentId: number | null = null): any[] => {
         return items
-            .filter((item: CategoryData) => item.parent_id === parentId)
+            .filter((item: CategoryData) => item.parent_id === parentId && (!query || visibleIds.has(item.id)))
             .map((item: CategoryData) => {
                 const children = buildTree(items, item.id);
                 return {
@@ -56,13 +73,7 @@ const treeNodes = computed(() => {
             });
     };
 
-    let filteredItems = records.value;
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        filteredItems = records.value.filter((cat: CategoryData) => cat.name?.toLowerCase().includes(query) || cat.description?.toLowerCase().includes(query));
-    }
-
-    return buildTree(filteredItems);
+    return buildTree(allItems);
 });
 
 // Get children of selected category
@@ -71,15 +82,20 @@ const selectedChildren = computed<CategoryData[]>(() => {
     return records.value.filter((c: CategoryData) => c.parent_id === record.value!.id);
 });
 
-// Debounced search with loading state
-const performSearch = debounce((): void => {
-    loadingStore.stopDataLoading();
-}, 200);
-
-watch(searchQuery, () => {
-    loadingStore.startDataLoading();
-    performSearch();
+// Auto-expand all nodes when searching so filtered results are visible
+watch(searchQuery, (val) => {
+    if (val) {
+        const allKeys: Record<string, boolean> = {};
+        records.value.forEach((c: CategoryData) => {
+            allKeys[String(c.id)] = true;
+        });
+        expandedKeys.value = allKeys;
+    }
 });
+
+const clearSearch = () => {
+    searchQuery.value = '';
+};
 
 // Fetch records
 function fetchRecords(): void {
@@ -361,6 +377,20 @@ onUnmounted(() => {
                         <i class="pi pi-sitemap text-primary text-base"></i>
                         <span>{{ t('category.titles.category_tree') }}</span>
                     </div>
+
+                    <!-- Search / Filter -->
+                    <div class="px-4 pt-4">
+                        <IconField>
+                            <InputIcon>
+                                <i class="pi pi-search text-surface-400" />
+                            </InputIcon>
+                            <InputText v-model="searchQuery" :placeholder="t('category.placeholders.search_categories')" class="w-full !bg-surface-50 dark:!bg-surface-800/60 !border-surface-200 dark:!border-surface-700 !rounded-xl" />
+                            <InputIcon v-if="searchQuery" class="cursor-pointer" @click="clearSearch">
+                                <i class="pi pi-times text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors" />
+                            </InputIcon>
+                        </IconField>
+                    </div>
+
                     <div class="p-4">
                         <Tree
                             :value="treeNodes"

@@ -25,7 +25,9 @@
         "customer": "Customer",
         "customers": "Customers",
         "category": "Category",
-        "categories": "Categories"
+        "categories": "Categories",
+        "attribute": "Attribute",
+        "attributes": "Attributes"
     },
     "common": {
         "contents": {
@@ -100,6 +102,7 @@
             "no": "No",
             "ok": "Ok",
             "new": "New",
+            "more": "more",
             "delete_selected": "Delete selected",
             "export": "Export",
             "apply": "Apply",
@@ -125,6 +128,12 @@
             "published": "Published",
             "draft": "Draft",
             "select": "Select..."
+        },
+        "icon_picker": {
+            "title": "Icon & Color",
+            "search_icon": "Search an icon...",
+            "accent_color": "ACCENT COLOR",
+            "no_icons_found": "No icons found"
         },
         "tooltips": {
             "edit": "Edit {entity}",
@@ -242,7 +251,8 @@
             "users": "Users",
             "roles": "Roles",
             "customers": "Customers",
-            "categories": "Categories"
+            "categories": "Categories",
+            "attributes": "Attributes"
         },
         "top_bar": {
             "search": "Search...",
@@ -521,7 +531,8 @@
         "placeholders": {
             "select_parent": "Select parent category...",
             "category_name": "Ex: Electronics, Clothing...",
-            "search_icon": "Search an icon..."
+            "search_icon": "Search an icon...",
+            "search_categories": "Filter categories..."
         },
         "messages": {
             "no_icons_found": "No icons found"
@@ -530,6 +541,68 @@
             "title_new": "New Category",
             "title_edit": "Edit Category",
             "subtitle": "Configure details and appearance"
+        }
+    },
+    "attribute": {
+        "columns": {
+            "name": "Name",
+            "type": "Type",
+            "categories": "Categories",
+            "values": "Values",
+            "active": "Active",
+            "created_at": "Created At"
+        },
+        "types": {
+            "dropdown": "Dropdown",
+            "text": "Text Field",
+            "switches": "Swatches",
+            "multiselect": "Multi Select",
+            "date": "Date Picker",
+            "numeric": "Number",
+            "boolean": "Yes / No",
+            "radio": "Radio Buttons"
+        },
+        "labels": {
+            "manage_subtitle": "Add, edit and manage product attributes."
+        },
+        "form": {
+            "name": "Attribute Name",
+            "type": "Attribute Type",
+            "values": "Attribute Values",
+            "add_value": "Add Value",
+            "value_placeholder": "e.g. Red, Large, Cotton...",
+            "no_values": "No values defined yet. Click 'Add New Option' to start.",
+            "categories": "Linked Categories",
+            "select_categories": "Select categories...",
+            "active": "Active",
+            "subtitle": "Design attributes and map them to relevant product categories.",
+            "basic_info": "Basic Information",
+            "type_and_logic": "Type & Logic",
+            "attribute_type": "Attribute Type",
+            "display_name": "Display Name",
+            "name_placeholder": "e.g. Size, Color, Material...",
+            "attribute_options": "Attribute Options",
+            "add_new_option": "Add New Option",
+            "option_label": "Option Label",
+            "storefront_preview": "Storefront Preview",
+            "select_label": "Select {name}",
+            "preview_hint": "Live preview of the customer interface.",
+            "assign_categories": "Assign to Categories",
+            "selected": "Selected",
+            "mapping_logic": "Mapping Logic",
+            "mapping_logic_desc": "Attributes assigned to a parent category are automatically inherited by all its sub-categories.",
+            "actions_col": "Actions",
+            "save_attribute": "Save Attribute",
+            "select_all": "Select All",
+            "deselect_all": "Deselect All",
+            "expand_all": "Expand All",
+            "collapse_all": "Collapse All",
+            "no_options_needed": "This attribute type does not require predefined options.",
+            "yes_label": "Yes Label",
+            "no_label": "No Label",
+            "yes_placeholder": "e.g. Yes, Enabled, True",
+            "no_placeholder": "e.g. No, Disabled, False",
+            "search_categories": "Search categories..."
         }
     },
     "address": {
@@ -674,72 +747,12 @@
         "cancel": "Cancel",
         "completed": "Completed",
         "pending": "Pending",
-        "fileSizeTypes": [
-            "B",
-            "KB",
-            "MB",
-            "GB",
-            "TB",
-            "PB",
-            "EB",
-            "ZB",
-            "YB"
-        ],
-        "dayNames": [
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday"
-        ],
-        "dayNamesShort": [
-            "Sun",
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat"
-        ],
-        "dayNamesMin": [
-            "Su",
-            "Mo",
-            "Tu",
-            "We",
-            "Th",
-            "Fr",
-            "Sa"
-        ],
-        "monthNames": [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December"
-        ],
-        "monthNamesShort": [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec"
-        ],
+        "fileSizeTypes": ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
+        "dayNames": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+        "dayNamesShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        "dayNamesMin": ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+        "monthNames": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        "monthNamesShort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         "chooseYear": "Choose Year",
         "chooseMonth": "Choose Month",
         "chooseDate": "Choose Date",

@@ -95,6 +95,24 @@ const adminRoutes: RouteRecordRaw[] = [
         name: 'categories',
         component: () => import('@/views/admin/categories/Categories.vue'),
         meta: { requiresAuth: true, requiresPermission: 'view_categories' }
+    },
+    {
+        path: 'attributes',
+        name: 'attributes',
+        component: () => import('@/views/admin/attributes/Attributes.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_attributes' }
+    },
+    {
+        path: 'attributes/create',
+        name: 'attribute-create',
+        component: () => import('@/views/admin/attributes/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'create_attributes', activeMenu: '/admin/attributes' }
+    },
+    {
+        path: 'attributes/:id/edit',
+        name: 'attribute-edit',
+        component: () => import('@/views/admin/attributes/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'update_attributes', activeMenu: '/admin/attributes' }
     }
 ];
 
@@ -129,27 +147,38 @@ const router = createRouter({
 const handleRouteGuard = async (to: RouteLocationNormalized, next: NavigationGuardNext, authStore: ReturnType<typeof useAuthStore>): Promise<void> => {
     const meta = to.meta as RouteMeta;
 
+    // For guest-only routes (login), redirect to admin if already authenticated
+    if (meta.requiresGuest) {
+        // Check in-memory state first
+        if (authStore.user || authStore.isLoggedIn) {
+            return next({ path: '/admin' });
+        }
+        // Also check backend session (e.g. after page refresh, in-memory state is lost)
+        try {
+            await authStore.fetchUser();
+            if (authStore.user) {
+                return next({ path: '/admin' });
+            }
+        } catch (e) {
+            // No active session — allow access to login
+        }
+        return next();
+    }
+
+    // For auth-required routes, ensure user is authenticated
     if (meta.requiresAuth && !authStore.user) {
         try {
             await authStore.fetchUser();
         } catch (e) {
             // Ignore fetch errors
         }
-        if (authStore.user) {
-            return next();
-        } else {
+        if (!authStore.user) {
             console.warn('User not authenticated, redirecting to login');
             return next({ name: 'login', query: { redirect: to.fullPath } });
         }
     }
 
-    if (meta.requiresGuest) {
-        // If user is logged in, redirect to admin
-        if (authStore.isLoggedIn) {
-            return next({ path: '/admin' });
-        }
-    }
-
+    // Permission checks — user is authenticated but may lack the role/permission
     if (meta.requiresSuperAdmin && !authStore.user?.roles?.includes('Super Admin')) {
         return next({ name: 'accessDenied' });
     }
@@ -171,7 +200,12 @@ router.beforeEach(async (to, _from, next) => {
         await handleRouteGuard(to, next, authStore);
     } catch (error) {
         loading.stopPageLoading();
-        next({ name: 'login' });
+        // If the user is authenticated but something else failed, go to access denied
+        if (authStore.user) {
+            next({ name: 'accessDenied' });
+        } else {
+            next({ name: 'login' });
+        }
     }
 });
 

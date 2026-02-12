@@ -40,7 +40,7 @@ apiClient.interceptors.response.use(
     },
     async (error: AxiosError) => {
         const status = error.response?.status;
-        if (status && [401, 403, 419].includes(status)) {
+        if (status && [401, 419].includes(status)) {
             const authStore = useAuthStore();
             authStore.handleSessionExpired();
         }
