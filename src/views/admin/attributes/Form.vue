@@ -268,6 +268,7 @@ onMounted(async () => {
     await loadCategories();
     await loadAttribute();
     isLoading.value = false;
+    loading.stopPageLoading();
 });
 </script>
 
@@ -282,8 +283,14 @@ onMounted(async () => {
             class="mb-6"
         >
             <template #actions>
-                <Button :label="t('common.labels.cancel')" severity="secondary" outlined @click="goBack" :disabled="loading.isFormSending" />
-                <Button :label="t('attribute.form.save_attribute')" type="submit" form="attributeForm" :loading="loading.isFormSending" />
+                <Button :label="t('common.labels.cancel')" icon="pi pi-times" severity="secondary" outlined @click="goBack" :disabled="loading.isFormSending" />
+                <Button
+                    :label="isEdit ? t('common.labels.edit_entity', { entity: t('entity.attribute') }) : t('common.labels.create_entity', { entity: t('entity.attribute') })"
+                    :icon="isEdit ? 'pi pi-pencil' : 'pi pi-plus'"
+                    type="submit"
+                    form="attributeForm"
+                    :loading="loading.isFormSending"
+                />
             </template>
         </FormHeader>
 
@@ -323,17 +330,20 @@ onMounted(async () => {
                     <CardSection :title="t('attribute.form.basic_info')" icon="pi pi-info-circle">
                         <FormField v-slot="$field" name="name" class="flex flex-col gap-1.5">
                             <label for="attr_name" class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">{{ t('attribute.form.display_name') }} *</label>
-                            <InputText
-                                id="attr_name"
-                                name="name"
-                                :disabled="loading.isFormSending"
-                                class="w-full"
-                                :placeholder="t('attribute.form.name_placeholder')"
-                                maxlength="150"
-                                v-bind="$field"
-                                @input="() => authStore.clearErrors(['name'])"
-                                autofocus
-                            />
+                            <IconField>
+                                <InputIcon class="pi pi-tag" />
+                                <InputText
+                                    id="attr_name"
+                                    name="name"
+                                    :disabled="loading.isFormSending"
+                                    class="w-full"
+                                    :placeholder="t('attribute.form.name_placeholder')"
+                                    maxlength="150"
+                                    v-bind="$field"
+                                    @input="() => authStore.clearErrors(['name'])"
+                                    autofocus
+                                />
+                            </IconField>
                             <Message v-if="$field.invalid || authStore.errors.name" severity="error" size="small">
                                 {{ $field.error?.message ? t($field.error.message) : authStore.errors?.name?.[0] }}
                             </Message>

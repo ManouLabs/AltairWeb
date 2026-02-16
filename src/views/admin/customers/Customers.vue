@@ -16,6 +16,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, type Ref, markRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import FormHeader from '@/components/FormHeader.vue';
 import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
 
@@ -47,6 +48,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
+const router = useRouter();
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
@@ -346,29 +348,32 @@ onUnmounted(() => {
 
 <template>
     <div>
+        <!-- Page Header (always visible) -->
+        <PageHeader icon="pi pi-id-card" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.customers') })" :description="t('customer.labels.manage_subtitle')">
+            <template #actions>
+                <Button
+                    v-if="authStore.hasPermission('export_customers')"
+                    v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.customers') })"
+                    :label="t('common.labels.export')"
+                    icon="pi pi-upload"
+                    outlined
+                    severity="info"
+                    @click="exportCSV($event)"
+                />
+                <Button
+                    v-if="authStore.hasPermission('create_customers')"
+                    v-tooltip.top="t('common.tooltips.add', { entity: t('entity.customer') })"
+                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.customer')"
+                    severity="primary"
+                    :disabled="!dataLoaded"
+                    @click="addRecord"
+                />
+            </template>
+        </PageHeader>
+
         <!-- Skeleton Loading State -->
         <DataTableSkeleton v-if="!dataLoaded" :columns="7" has-avatar />
         <template v-else>
-            <PageHeader icon="pi pi-id-card" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.customers') })" :description="t('customer.labels.manage_subtitle')">
-                <template #actions>
-                    <Button
-                        v-if="authStore.hasPermission('export_customers')"
-                        v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.customers') })"
-                        :label="t('common.labels.export')"
-                        icon="pi pi-upload"
-                        outlined
-                        severity="info"
-                        @click="exportCSV($event)"
-                    />
-                    <Button
-                        v-if="authStore.hasPermission('create_customers')"
-                        v-tooltip.top="t('common.tooltips.add', { entity: t('entity.customer') })"
-                        :label="'+ ' + t('common.labels.new') + ' ' + t('entity.customer')"
-                        severity="primary"
-                        @click="addRecord"
-                    />
-                </template>
-            </PageHeader>
             <DataTable
                 ref="recordDataTable"
                 lazy
@@ -721,7 +726,7 @@ onUnmounted(() => {
                             <div class="flex items-center justify-center gap-1">
                                 <RowActionMenu
                                     :actions="[
-                                        { label: t('common.labels.view'), icon: 'pi pi-eye', command: () => editRecord(data), visible: authStore.hasPermission('view_customers') },
+                                        { label: t('common.labels.view'), icon: 'pi pi-eye', command: () => router.push({ name: 'customer-show', params: { id: data.id } }), visible: authStore.hasPermission('view_customers') },
                                         { label: t('common.labels.edit'), icon: 'pi pi-pencil', command: () => editRecord(data), visible: authStore.hasPermission('update_customers') },
                                         { label: t('common.labels.delete'), icon: 'pi pi-trash', severity: 'danger', command: () => confirmDeleteRecord(null, [data.id]), visible: authStore.hasPermission('delete_customers') }
                                     ]"

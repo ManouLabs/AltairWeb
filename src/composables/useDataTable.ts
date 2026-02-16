@@ -114,6 +114,7 @@ export function useDataTable<T extends { id: number | string }>(dataFetcher: Dat
             total.value = 0;
         } finally {
             loading.stopDataLoading();
+            loading.stopPageLoading();
         }
     }, debounceDelay);
 
@@ -166,6 +167,10 @@ export function useDataTable<T extends { id: number | string }>(dataFetcher: Dat
         lazyParams.value = {};
         if (recordDataTable.value) {
             recordDataTable.value.resetPage();
+            // Reset DataTable internal sort state
+            const dt = recordDataTable.value as any;
+            dt.d_sortField = null;
+            dt.d_sortOrder = null;
         }
         loadLazyData();
     };

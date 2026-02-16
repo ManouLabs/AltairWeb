@@ -248,15 +248,15 @@ onUnmounted(() => {
 
 <template>
     <div>
+        <PageHeader icon="pi pi-list" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.plans') })" :description="t('common.subtitles.manage', { entity: t('entity.plans').toLowerCase() })">
+            <template #actions>
+                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.plans') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
+                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.plan') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.plan')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
+            </template>
+        </PageHeader>
         <!-- Skeleton Loading State -->
         <DataTableSkeleton v-if="!dataLoaded" :columns="7" />
         <template v-else>
-            <PageHeader icon="pi pi-list" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.plans') })" :description="t('common.subtitles.manage', { entity: t('entity.plans').toLowerCase() })">
-                <template #actions>
-                    <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.plans') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
-                    <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.plan') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.plan')" severity="primary" @click="addRecord" />
-                </template>
-            </PageHeader>
             <DataTable
                 ref="recordDataTable"
                 lazy

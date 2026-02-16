@@ -125,8 +125,10 @@
             "addresses": "Addresses",
             "logo": "Logo",
             "online_presence": "Online Presence",
-            "published": "Published",
-            "draft": "Draft",
+
+            "create_entity": "Create {entity}",
+            "edit_entity": "Edit {entity}",
+
             "select": "Select..."
         },
         "icon_picker": {
@@ -252,7 +254,8 @@
             "roles": "Roles",
             "customers": "Customers",
             "categories": "Categories",
-            "attributes": "Attributes"
+            "attributes": "Attributes",
+            "products": "Products"
         },
         "top_bar": {
             "search": "Search...",
@@ -382,6 +385,31 @@
                 "at_risk": "At risk customer",
                 "no_history": "No order history"
             }
+        },
+        "show": {
+            "back_to_customers": "Back to Customers",
+            "total_spent": "Total Spent",
+            "success_rate": "Success Rate",
+            "avg_order_value": "Avg Order Value",
+            "recent_orders": "Recent COD Orders",
+            "view_all": "View All",
+            "edit_details": "Edit Customer Details",
+            "edit_profile": "Edit Profile",
+            "block": "Block",
+            "unblock": "Unblock",
+            "delivered_orders": "Delivered Orders",
+            "failed_returned": "Failed / Returned",
+            "reputation_note": "Consistently provides correct addresses and confirms delivery within minutes.",
+            "no_orders_yet": "No orders recorded yet.",
+            "order_id": "Order ID",
+            "status": "Status",
+            "date": "Date",
+            "amount": "Amount",
+            "customer_since": "Customer since",
+            "reputation_summary": "Reputation Summary"
+        },
+        "form": {
+            "subtitle": "Configure customer details and contact information"
         }
     },
     "shipper": {
@@ -503,7 +531,7 @@
             "icon_color": "Icon Color",
             "sort_order": "Sort Order",
             "active": "Active",
-            "publish": "Publish",
+
             "created_at": "Created At",
             "updated_at": "Updated At"
         },
@@ -603,6 +631,111 @@
             "yes_placeholder": "e.g. Yes, Enabled, True",
             "no_placeholder": "e.g. No, Disabled, False",
             "search_categories": "Search categories..."
+        }
+    },
+    "product": {
+        "columns": {
+            "name": "Name",
+            "sku": "SKU",
+            "category": "Category",
+            "sale_price": "Price",
+            "stock": "Stock",
+            "active": "Status"
+        },
+        "labels": {
+            "manage_subtitle": "Add, edit and manage your product catalog.",
+
+            "no_category": "Uncategorized",
+            "units": "units",
+            "in_stock": "IN STOCK",
+            "low_stock": "LOW STOCK",
+            "out_of_stock": "OUT OF STOCK"
+        },
+        "form": {
+            "subtitle": "Fill in the product details below.",
+            "product_info": "Product Information",
+            "name": "Product Name",
+            "name_placeholder": "e.g. Classic T-Shirt, Leather Wallet...",
+            "category": "Category",
+            "category_placeholder": "Select a category...",
+            "create_category": "Create Category",
+            "sku_prefix": "SKU Prefix",
+            "sku_prefix_placeholder": "e.g. CCT, PLW...",
+            "low_stock_threshold": "Low Stock Alert",
+
+            "attributes": "Attributes",
+            "select_category_for_attributes": "Please select a category above to load associated attributes.",
+            "no_attributes_for_category": "No attributes are associated with this category. Create one to get started.",
+            "create_attribute": "Create Attribute",
+            "inline_attr_category_hint": "Will be linked to:",
+            "select_attribute": "Select attribute to add",
+            "add_attribute_btn": "Add Attribute",
+            "add_another_attribute": "Add attribute",
+            "grouped_by": "Grouped by",
+
+            "price_stock": "Price & Stock",
+            "stock_management": "Stock Management",
+            "single_stock": "Single Stock",
+            "single_stock_desc": "Global inventory across all variants",
+            "per_variant": "Per Variant",
+            "per_variant_desc": "Individual stock & price for each choice",
+            "per_variant_note": "Stock is managed per variant below. Configure each variant's stock in the variant matrix.",
+            "standard_purchase_price": "Standard Purchase Price",
+            "standard_sale_price": "Standard Sale Price",
+            "purchase_price": "Purchase Price",
+            "sale_price": "Sale Price",
+            "margin": "Margin",
+            "total_stock": "Total Stock",
+            "manage_via_variants": "Manage via variants",
+            "prices_disabled_note": "\"Per Variant\" mode is active — set prices per variant below.",
+            "total_stock_disabled_note": "This field is disabled because \"Per Variant\" mode is active",
+
+            "generate_matrix": "Generate Variants",
+            "variant_matrix": "Variant Matrix",
+            "variant_matrix_subtitle": "Configure and generate your variant combinations.",
+            "variant_matrix_desc": "Edit parent Price/Stock to bulk update nested children.",
+            "expand_all": "Expand All",
+            "collapse_all": "Collapse All",
+            "group_by": "Group by",
+            "variant_tree": "Variant Tree",
+            "sku": "SKU",
+            "price_col": "Price ($)",
+            "stock_col": "Stock Level",
+            "actions_col": "Actions",
+            "n_variants": "Variants",
+            "no_variants": "No variants generated. Add attributes and click 'Generate Variants'.",
+            "no_variants_hint": "Select attributes above to generate your product combinations.",
+            "bulk_actions": "Bulk Actions",
+            "set_price": "Set Price",
+            "set_stock": "Set Stock",
+            "set_all": "Set All",
+            "variants_out_of_sync": "Attribute values have changed. Regenerate the matrix to update — your existing data will be preserved.",
+            "regenerate": "Regenerate",
+
+            "product_image": "Product Image",
+            "upload_image": "Click to upload",
+            "image_hint": "PNG, JPG up to 2MB",
+            "file_too_large": "File is too large. Maximum size: {max}",
+            "remove_image": "Remove Image",
+            "product_info_tip": "Product Info",
+            "product_info_tip_desc": "Toggle the Active switch to make this product visible to customers. Inactive products are only visible to managers."
+        },
+        "show": {
+            "subtitle": "View product details and inventory.",
+            "details": "Product Details",
+            "name": "Name",
+            "sku_prefix": "SKU Prefix",
+            "category": "Category",
+            "status": "Status",
+            "stock_type": "Stock Type",
+            "created": "Created",
+            "purchase": "Purchase",
+            "sale": "Sale",
+            "margin_label": "Margin",
+            "stock": "Stock",
+            "variants": "Variants",
+            "attributes": "Attributes",
+            "quick_actions": "Quick Actions"
         }
     },
     "address": {

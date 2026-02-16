@@ -72,16 +72,19 @@ onMounted(() => {
             <!-- Name -->
             <div class="col-span-2">
                 <FloatLabel variant="on" class="w-full">
-                    <InputText
-                        id="name"
-                        v-model="record.name"
-                        :disabled="loading.isFormSending"
-                        autofocus
-                        class="w-full"
-                        :invalid="authStore.errors?.['name']?.[0] ? true : false"
-                        @input="() => authStore.clearErrors(['name'])"
-                        @blur="() => onBlurField('name')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-tag" />
+                        <InputText
+                            id="name"
+                            v-model="record.name"
+                            :disabled="loading.isFormSending"
+                            autofocus
+                            class="w-full"
+                            :invalid="authStore.errors?.['name']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['name'])"
+                            @blur="() => onBlurField('name')"
+                        />
+                    </IconField>
                     <label for="name">{{ t('plan.columns.name') }} *</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
@@ -92,7 +95,10 @@ onMounted(() => {
             <!-- Orders -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber id="orders" v-model="record.orders" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['orders']?.[0] ? true : false" @blur="() => onBlurField('orders')" />
+                    <IconField>
+                        <InputIcon class="pi pi-shopping-cart" />
+                        <InputNumber id="orders" v-model="record.orders" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['orders']?.[0] ? true : false" @blur="() => onBlurField('orders')" />
+                    </IconField>
                     <label for="orders">{{ t('plan.columns.orders') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['orders']?.[0]" severity="error" size="small">
@@ -103,16 +109,19 @@ onMounted(() => {
             <!-- Products -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber
-                        id="products"
-                        v-model="record.products"
-                        :disabled="loading.isFormSending"
-                        class="w-full"
-                        :useGrouping="false"
-                        :min="0"
-                        :invalid="authStore.errors?.['products']?.[0] ? true : false"
-                        @blur="() => onBlurField('products')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-box" />
+                        <InputNumber
+                            id="products"
+                            v-model="record.products"
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            :useGrouping="false"
+                            :min="0"
+                            :invalid="authStore.errors?.['products']?.[0] ? true : false"
+                            @blur="() => onBlurField('products')"
+                        />
+                    </IconField>
                     <label for="products">{{ t('plan.columns.products') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['products']?.[0]" severity="error" size="small">
@@ -123,7 +132,10 @@ onMounted(() => {
             <!-- Users -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber id="users" v-model="record.users" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['users']?.[0] ? true : false" @blur="() => onBlurField('users')" />
+                    <IconField>
+                        <InputIcon class="pi pi-users" />
+                        <InputNumber id="users" v-model="record.users" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['users']?.[0] ? true : false" @blur="() => onBlurField('users')" />
+                    </IconField>
                     <label for="users">{{ t('plan.columns.users') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['users']?.[0]" severity="error" size="small">
@@ -134,7 +146,10 @@ onMounted(() => {
             <!-- Shops -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber id="shops" v-model="record.shops" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['shops']?.[0] ? true : false" @blur="() => onBlurField('shops')" />
+                    <IconField>
+                        <InputIcon class="pi pi-shop" />
+                        <InputNumber id="shops" v-model="record.shops" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['shops']?.[0] ? true : false" @blur="() => onBlurField('shops')" />
+                    </IconField>
                     <label for="shops">{{ t('plan.columns.shops') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['shops']?.[0]" severity="error" size="small">
@@ -145,7 +160,10 @@ onMounted(() => {
             <!-- Price -->
             <div>
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber id="price" v-model="record.price" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['price']?.[0] ? true : false" @blur="() => onBlurField('price')" />
+                    <IconField>
+                        <InputIcon class="pi pi-dollar" />
+                        <InputNumber id="price" v-model="record.price" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['price']?.[0] ? true : false" @blur="() => onBlurField('price')" />
+                    </IconField>
                     <label for="price">{{ t('plan.columns.price') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['price']?.[0]" severity="error" size="small">

@@ -37,6 +37,12 @@ const adminRoutes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresPermission: 'view_customers' }
     },
     {
+        path: 'customers/:id',
+        name: 'customer-show',
+        component: () => import('@/views/admin/customers/CustomerShow.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_customers', activeMenu: '/admin/customers' }
+    },
+    {
         path: 'shippers',
         name: 'shippers',
         component: () => import('@/views/admin/shippers/Shippers.vue'),
@@ -113,6 +119,30 @@ const adminRoutes: RouteRecordRaw[] = [
         name: 'attribute-edit',
         component: () => import('@/views/admin/attributes/Form.vue'),
         meta: { requiresAuth: true, requiresPermission: 'update_attributes', activeMenu: '/admin/attributes' }
+    },
+    {
+        path: 'products',
+        name: 'products',
+        component: () => import('@/views/admin/products/Products.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_products' }
+    },
+    {
+        path: 'products/create',
+        name: 'product-create',
+        component: () => import('@/views/admin/products/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'create_products', activeMenu: '/admin/products' }
+    },
+    {
+        path: 'products/:id/edit',
+        name: 'product-edit',
+        component: () => import('@/views/admin/products/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'update_products', activeMenu: '/admin/products' }
+    },
+    {
+        path: 'products/:id',
+        name: 'product-show',
+        component: () => import('@/views/admin/products/ProductShow.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_products', activeMenu: '/admin/products' }
     }
 ];
 
@@ -210,8 +240,7 @@ router.beforeEach(async (to, _from, next) => {
 });
 
 router.afterEach(() => {
-    const loading = useLoading();
-    loading.stopPageLoading();
+    // Progress bar is now stopped by each page when data is loaded
 });
 
 export default router;

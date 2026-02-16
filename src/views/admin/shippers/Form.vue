@@ -314,6 +314,7 @@ onMounted(async () => {
     await Promise.all([loadRegions(), loadShops()]);
     await loadShipper();
     isLoading.value = false;
+    loading.stopPageLoading();
 });
 </script>
 
@@ -328,7 +329,14 @@ onMounted(async () => {
             class="mb-6"
         >
             <template #actions>
-                <Button :label="t('common.labels.back')" icon="pi pi-arrow-left" severity="secondary" outlined @click="goBack" />
+                <Button :label="t('common.labels.cancel')" icon="pi pi-times" severity="secondary" outlined @click="goBack" :disabled="loading.isFormSending" />
+                <Button
+                    :label="isEdit ? t('common.labels.edit_entity', { entity: t('entity.shipper') }) : t('common.labels.create_entity', { entity: t('entity.shipper') })"
+                    :icon="isEdit ? 'pi pi-pencil' : 'pi pi-plus'"
+                    type="submit"
+                    form="shipperForm"
+                    :loading="loading.isFormSending"
+                />
             </template>
         </FormHeader>
 
@@ -382,16 +390,10 @@ onMounted(async () => {
                     <Skeleton height="44px" class="w-full" />
                 </div>
             </div>
-
-            <!-- Actions Skeleton -->
-            <div class="flex justify-end gap-3">
-                <Skeleton width="100px" height="42px" />
-                <Skeleton width="120px" height="42px" />
-            </div>
         </div>
 
         <!-- Actual Form -->
-        <PForm v-else :key="formKey" v-slot="$form" :initialValues="initialValues" :resolver="resolver" :validateOnBlur="true" @submit="onFormSubmit" class="flex flex-col gap-6">
+        <PForm v-else id="shipperForm" :key="formKey" v-slot="$form" :initialValues="initialValues" :resolver="resolver" :validateOnBlur="true" @submit="onFormSubmit" class="flex flex-col gap-6">
             <!-- Basic Info Section -->
             <div class="card">
                 <h2 class="text-xs font-bold text-surface-900 dark:text-white uppercase tracking-wider mb-6">{{ t('shipper.labels.basic_info') }}</h2>
@@ -576,12 +578,6 @@ onMounted(async () => {
                         </template>
                     </Column>
                 </DataTable>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex justify-end gap-3">
-                <Button :label="t('common.labels.cancel')" severity="secondary" outlined @click="goBack" :disabled="loading.isFormSending" />
-                <Button :label="t('shipper.labels.save_shipper')" type="submit" :loading="loading.isFormSending" />
             </div>
         </PForm>
     </div>

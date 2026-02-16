@@ -236,15 +236,22 @@ onUnmounted(() => {
 
 <template>
     <div>
+        <PageHeader icon="pi pi-building" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.cities') })" :description="t('common.subtitles.manage', { entity: t('entity.cities').toLowerCase() })">
+            <template #actions>
+                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.cities') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
+                <Button
+                    v-if="authStore.hasPermission('createcity')"
+                    v-tooltip.top="t('common.tooltips.add', { entity: t('entity.city') })"
+                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.city')"
+                    severity="primary"
+                    :disabled="!dataLoaded"
+                    @click="addRecord"
+                />
+            </template>
+        </PageHeader>
         <!-- Skeleton Loading State -->
         <DataTableSkeleton v-if="!dataLoaded" :columns="7" />
         <template v-else>
-            <PageHeader icon="pi pi-building" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.cities') })" :description="t('common.subtitles.manage', { entity: t('entity.cities').toLowerCase() })">
-                <template #actions>
-                    <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.cities') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
-                    <Button v-if="authStore.hasPermission('createcity')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.city') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.city')" severity="primary" @click="addRecord" />
-                </template>
-            </PageHeader>
             <DataTable
                 ref="recordDataTable"
                 lazy

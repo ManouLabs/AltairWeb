@@ -1,7 +1,14 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
+import { onMounted } from 'vue';
 
 const authStore = useAuthStore();
+const loading = useLoading();
+
+onMounted(() => {
+    loading.stopPageLoading();
+});
 
 function smoothScroll(id) {
     document.body.click();

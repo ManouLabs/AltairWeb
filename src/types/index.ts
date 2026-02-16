@@ -27,3 +27,6 @@ export type { Address, ContactMethods, ShopFile, ShopData, ShopFormData, ShopsRe
 
 // User types
 export * from './user';
+
+// Product types
+export * from './product';

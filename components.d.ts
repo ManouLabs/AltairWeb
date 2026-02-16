@@ -16,6 +16,7 @@ declare module 'vue' {
     CardSection: typeof import('./src/components/CardSection.vue')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     Column: typeof import('primevue/column')['default']
+    ConfirmDialog: typeof import('primevue/confirmdialog')['default']
     ConfirmPopup: typeof import('primevue/confirmpopup')['default']
     Contact: typeof import('./src/components/Contact.vue')['default']
     DataCell: typeof import('./src/components/DataCell.vue')['default']
@@ -47,6 +48,7 @@ declare module 'vue' {
     MultiSelect: typeof import('primevue/multiselect')['default']
     OverlayBadge: typeof import('primevue/overlaybadge')['default']
     PageHeader: typeof import('./src/components/PageHeader.vue')['default']
+    Panel: typeof import('primevue/panel')['default']
     Password: typeof import('primevue/password')['default']
     PickList: typeof import('primevue/picklist')['default']
     Popover: typeof import('primevue/popover')['default']
@@ -70,6 +72,7 @@ declare module 'vue' {
     Toolbar: typeof import('primevue/toolbar')['default']
     Tree: typeof import('primevue/tree')['default']
     TreeSelect: typeof import('primevue/treeselect')['default']
+    TreeTable: typeof import('primevue/treetable')['default']
   }
   export interface ComponentCustomProperties {
     StyleClass: typeof import('primevue/styleclass')['default']

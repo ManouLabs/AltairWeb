@@ -91,8 +91,11 @@ const closeDialog = (): void => {
         <div class="flex flex-col gap-8 pt-2">
             <div>
                 <FloatLabel variant="on">
-                    <label for="name" class="block font-bold mb-3">{{ $t('role.columns.name') }}</label>
-                    <InputText :disabled="loading.isFormSending" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
+                    <IconField>
+                        <InputIcon class="pi pi-shield" />
+                        <InputText :disabled="loading.isFormSending" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
+                    </IconField>
+                    <label for="name">{{ $t('role.columns.name') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
                     {{ $t(authStore.errors?.['name']?.[0]) }}

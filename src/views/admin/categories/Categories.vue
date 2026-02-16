@@ -354,18 +354,19 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <!-- Page Header (always visible) -->
+    <PageHeader icon="pi pi-th-large" icon-color="#8B5CF6" :title="t('category.titles.explorative_management')" :description="t('category.titles.subtitle')">
+        <template #actions>
+            <Button :label="t('common.labels.export')" icon="pi pi-download" severity="secondary" outlined @click="exportCategories" />
+            <Button :label="t('category.form.title_new')" icon="pi pi-plus" @click="addRootCategory" v-if="authStore.hasPermission('create_categories')" />
+        </template>
+    </PageHeader>
+
     <!-- Skeleton Loading State -->
     <CategoriesSkeleton v-if="!dataLoaded" />
 
     <!-- ===================== ACTUAL CONTENT ===================== -->
     <template v-else>
-        <PageHeader icon="pi pi-th-large" icon-color="#8B5CF6" :title="t('category.titles.explorative_management')" :description="t('category.titles.subtitle')">
-            <template #actions>
-                <Button :label="t('common.labels.export')" icon="pi pi-download" severity="secondary" outlined @click="exportCategories" />
-                <Button :label="t('category.form.title_new')" icon="pi pi-plus" @click="addRootCategory" v-if="authStore.hasPermission('create_categories')" />
-            </template>
-        </PageHeader>
-
         <!-- Main Content -->
         <div class="flex flex-col lg:flex-row gap-6 min-h-[600px]">
             <!-- Left Panel: Category Tree -->

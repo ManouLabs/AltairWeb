@@ -289,7 +289,14 @@ onUnmounted(() => {
                 </InputIcon>
                 <InputText v-model="searchQuery" :placeholder="t('common.placeholders.search')" class="w-80" />
             </IconField>
-            <Button v-if="authStore.hasPermission('create_shops')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shop') })" :label="`${t('common.labels.new')} ${t('entity.shop')}`" icon="pi pi-plus" @click="addRecord" />
+            <Button
+                v-if="authStore.hasPermission('create_shops')"
+                v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shop') })"
+                :label="`${t('common.labels.new')} ${t('entity.shop')}`"
+                icon="pi pi-plus"
+                :disabled="!dataLoaded"
+                @click="addRecord"
+            />
         </template>
     </PageHeader>
 

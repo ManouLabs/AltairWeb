@@ -276,23 +276,33 @@ onUnmounted(() => {
 
 <template>
     <div>
+        <PageHeader icon="pi pi-users" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.users') })" :description="t('common.subtitles.manage', { entity: t('entity.users').toLowerCase() })">
+            <template #actions>
+                <Button
+                    v-if="authStore.hasPermission('export_users')"
+                    v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.users') })"
+                    :label="t('common.labels.export')"
+                    icon="pi pi-upload"
+                    outlined
+                    severity="info"
+                    @click="exportCSV($event)"
+                />
+                <Button
+                    v-if="authStore.hasPermission('create_users')"
+                    v-tooltip.top="t('common.tooltips.add', { entity: t('entity.user') })"
+                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.user')"
+                    severity="primary"
+                    :disabled="!dataLoaded"
+                    @click="addRecord"
+                />
+            </template>
+        </PageHeader>
+
         <!-- Skeleton Loading State -->
         <DataTableSkeleton v-if="!dataLoaded" :columns="4" has-avatar has-tag-column />
+
+        <!-- DataTable -->
         <template v-else>
-            <PageHeader icon="pi pi-users" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.users') })" :description="t('common.subtitles.manage', { entity: t('entity.users').toLowerCase() })">
-                <template #actions>
-                    <Button
-                        v-if="authStore.hasPermission('export_users')"
-                        v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.users') })"
-                        :label="t('common.labels.export')"
-                        icon="pi pi-upload"
-                        outlined
-                        severity="info"
-                        @click="exportCSV($event)"
-                    />
-                    <Button v-if="authStore.hasPermission('create_users')" v-tooltip.top="t('common.tooltips.add', { entity: t('entity.user') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.user')" severity="primary" @click="addRecord" />
-                </template>
-            </PageHeader>
             <DataTable
                 ref="recordDataTable"
                 lazy

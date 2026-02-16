@@ -7,6 +7,15 @@ interface FilterParams {
 }
 
 export const useCustomerService = {
+    async getCustomer(customerId: number): Promise<CustomerApiResponse> {
+        try {
+            const response = await apiClient.get<CustomerApiResponse>(`/api/admin/customers/${customerId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async getCustomers(params: FilterParams = {}): Promise<CustomersResponse> {
         try {
             const response = await apiClient.post<CustomersResponse>('/api/admin/customers/filter', { params });

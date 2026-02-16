@@ -1,12 +1,10 @@
 <script setup>
 import { useLayoutStore } from '@/stores/useLayoutStore';
-import { useLoading } from '@/stores/useLoadingStore';
 import { computed, onMounted, ref, watch } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
 
-const loading = useLoading();
 const layoutStore = useLayoutStore();
 
 onMounted(() => {
@@ -71,7 +69,6 @@ function isOutsideClicked(event) {
     <div class="layout-wrapper" :class="containerClass">
         <DynamicDialog />
         <ConfirmPopup></ConfirmPopup>
-        <ProgressBar v-if="loading.isPageLoading" mode="indeterminate" style="height: 4px; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%" />
 
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>

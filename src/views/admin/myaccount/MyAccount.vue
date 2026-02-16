@@ -80,8 +80,9 @@ function getUsagePercent(current: number | undefined, max: number | undefined): 
     return Math.min(Math.round((current / max) * 100), 100);
 }
 
-onMounted(() => {
-    authStore.fetchUser();
+onMounted(async () => {
+    await authStore.fetchUser();
+    loading.stopPageLoading();
 });
 </script>
 <template>

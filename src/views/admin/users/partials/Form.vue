@@ -97,8 +97,11 @@ const closeDialog = (): void => {
         <div class="flex flex-col gap-8 pt-2">
             <div>
                 <FloatLabel variant="on">
-                    <label for="name" class="block font-bold mb-3">{{ $t('user.columns.name') }}</label>
-                    <InputText :disabled="loading.isFormSending" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
+                    <IconField>
+                        <InputIcon class="pi pi-user" />
+                        <InputText :disabled="loading.isFormSending" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
+                    </IconField>
+                    <label for="name">{{ $t('user.columns.name') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
                     {{ $t(authStore.errors?.['name']?.[0]) }}
@@ -106,18 +109,21 @@ const closeDialog = (): void => {
             </div>
             <div>
                 <FloatLabel variant="on">
-                    <label for="email" class="block font-bold mb-3">{{ $t('user.columns.email') }}</label>
-                    <InputText
-                        type="email"
-                        :disabled="loading.isFormSending"
-                        id="email"
-                        v-model.trim="record.email"
-                        autofocus
-                        fluid
-                        :invalid="authStore.errors?.email ? true : false"
-                        @input="() => authStore.clearErrors([`email`])"
-                        @blur="onBlurField('email')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-envelope" />
+                        <InputText
+                            type="email"
+                            :disabled="loading.isFormSending"
+                            id="email"
+                            v-model.trim="record.email"
+                            autofocus
+                            fluid
+                            :invalid="authStore.errors?.email ? true : false"
+                            @input="() => authStore.clearErrors([`email`])"
+                            @blur="onBlurField('email')"
+                        />
+                    </IconField>
+                    <label for="email">{{ $t('user.columns.email') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['email']?.[0]" severity="error" size="small">
                     {{ $t(authStore.errors?.['email']?.[0]) }}
@@ -125,30 +131,33 @@ const closeDialog = (): void => {
             </div>
             <div>
                 <FloatLabel variant="on">
-                    <Password
-                        v-model.trim="record.password"
-                        :disabled="loading.isFormSending"
-                        :invalid="authStore.errors?.password ? true : false"
-                        :required="action === ACTIONS.CREATE"
-                        autofocus
-                        fluid
-                        toggleMask
-                        @input="() => authStore.clearErrors([`password`])"
-                        @blur="onBlurField('password')"
-                    >
-                        <template #header>
-                            <div class="font-semibold text-xm mb-4">{{ $t('user.columns.password') }}</div>
-                        </template>
-                        <template #footer>
-                            <Divider />
-                            <ul class="pl-2 my-0 leading-normal">
-                                <li>{{ $t('common.contents.password_requirements.lowercase') }}</li>
-                                <li>{{ $t('common.contents.password_requirements.uppercase') }}</li>
-                                <li>{{ $t('common.contents.password_requirements.numeric') }}</li>
-                                <li>{{ $t('common.contents.password_requirements.minimum_length', { length: 8 }) }}</li>
-                            </ul>
-                        </template>
-                    </Password>
+                    <IconField>
+                        <InputIcon class="pi pi-lock" />
+                        <Password
+                            v-model.trim="record.password"
+                            :disabled="loading.isFormSending"
+                            :invalid="authStore.errors?.password ? true : false"
+                            :required="action === ACTIONS.CREATE"
+                            autofocus
+                            fluid
+                            toggleMask
+                            @input="() => authStore.clearErrors([`password`])"
+                            @blur="onBlurField('password')"
+                        >
+                            <template #header>
+                                <div class="font-semibold text-xm mb-4">{{ $t('user.columns.password') }}</div>
+                            </template>
+                            <template #footer>
+                                <Divider />
+                                <ul class="pl-2 my-0 leading-normal">
+                                    <li>{{ $t('common.contents.password_requirements.lowercase') }}</li>
+                                    <li>{{ $t('common.contents.password_requirements.uppercase') }}</li>
+                                    <li>{{ $t('common.contents.password_requirements.numeric') }}</li>
+                                    <li>{{ $t('common.contents.password_requirements.minimum_length', { length: 8 }) }}</li>
+                                </ul>
+                            </template>
+                        </Password>
+                    </IconField>
                     <label for="password">{{ $t('user.columns.password') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['password']?.[0]" severity="error" size="small">
@@ -158,18 +167,21 @@ const closeDialog = (): void => {
 
             <div>
                 <FloatLabel variant="on">
-                    <Password
-                        v-model.trim="record.password_confirmation"
-                        :disabled="loading.isFormSending"
-                        :invalid="authStore.errors?.password_confirmation ? true : false"
-                        :required="action === ACTIONS.CREATE"
-                        autofocus
-                        fluid
-                        toggleMask
-                        name="password_confirmation"
-                        @input="() => authStore.clearErrors([`password_confirmation`])"
-                        @blur="onBlurField('password_confirmation')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-lock" />
+                        <Password
+                            v-model.trim="record.password_confirmation"
+                            :disabled="loading.isFormSending"
+                            :invalid="authStore.errors?.password_confirmation ? true : false"
+                            :required="action === ACTIONS.CREATE"
+                            autofocus
+                            fluid
+                            toggleMask
+                            name="password_confirmation"
+                            @input="() => authStore.clearErrors([`password_confirmation`])"
+                            @blur="onBlurField('password_confirmation')"
+                        />
+                    </IconField>
                     <label for="password_confirmation">{{ $t('user.columns.password_confirmation') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['password_confirmation']?.[0]" severity="error" size="small">

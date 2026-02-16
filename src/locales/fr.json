@@ -60,7 +60,9 @@
             "apply": "Appliquer",
             "clear": "Effacer",
             "clear_all_filters": "Effacer tous les filtres",
-            "select_status": "Sélectionner le statut"
+            "select_status": "Sélectionner le statut",
+            "create_entity": "Créer {entity}",
+            "edit_entity": "Modifier {entity}"
         },
         "tooltips": {
             "edit": "Modifier {entity}",
@@ -162,6 +164,9 @@
             "users": "Utilisateurs",
             "roles": "Rôles",
             "customers": "Clients",
+            "products": "Produits",
+            "categories": "Catégories",
+            "attributes": "Attributs",
             "profile": "Profil",
             "logout": "Déconnexion"
         },
@@ -251,6 +256,95 @@
             "block_customer": "Bloquer ce client",
             "block_warning": "Le blocage de ce client l'empêchera de passer de nouvelles commandes. Une raison est requise.",
             "blocking_reason_min": "La raison de blocage doit comporter au moins 10 caractères."
+        },
+        "show": {
+            "back_to_customers": "Retour aux Clients",
+            "total_spent": "Total Dépensé",
+            "success_rate": "Taux de Réussite",
+            "avg_order_value": "Valeur Moy. Commande",
+            "recent_orders": "Commandes COD Récentes",
+            "view_all": "Voir Tout",
+            "edit_details": "Modifier les Détails Client",
+            "edit_profile": "Modifier le Profil",
+            "block": "Bloquer",
+            "unblock": "Débloquer",
+            "delivered_orders": "Commandes Livrées",
+            "failed_returned": "Échouées / Retournées",
+            "reputation_note": "Fournit systématiquement des adresses correctes et confirme la livraison en quelques minutes.",
+            "no_orders_yet": "Aucune commande enregistrée.",
+            "order_id": "N° Commande",
+            "status": "Statut",
+            "date": "Date",
+            "amount": "Montant",
+            "customer_since": "Client depuis",
+            "reputation_summary": "Résumé de Réputation"
+        }
+    },
+    "product": {
+        "columns": {
+            "name": "Nom",
+            "category": "Catégorie",
+            "sale_price": "Prix",
+            "stock": "Stock",
+            "active": "Statut",
+            "created_at": "Créé le"
+        },
+        "labels": {
+            "manage_subtitle": "Ajoutez, modifiez et gérez votre catalogue de produits.",
+
+            "no_category": "Non catégorisé",
+            "units": "unités"
+        },
+        "form": {
+            "subtitle": "Remplissez les détails du produit ci-dessous.",
+            "product_info": "Informations du Produit",
+            "name": "Nom du Produit",
+            "name_placeholder": "ex. T-Shirt Classique, Portefeuille en Cuir...",
+            "category": "Catégorie",
+            "category_placeholder": "Sélectionner une catégorie...",
+            "sku_prefix": "Préfixe SKU",
+            "sku_prefix_placeholder": "ex. CCT, PLW...",
+            "low_stock_threshold": "Alerte Stock Bas",
+
+            "price_stock": "Prix et Stock",
+            "stock_management": "Gestion du Stock",
+            "single_stock": "Stock Unique",
+            "per_variant": "Par Variante",
+            "purchase_price": "Prix d'Achat",
+            "sale_price": "Prix de Vente",
+            "margin": "Marge",
+            "total_stock": "Stock Total",
+            "attributes_variants": "Attributs et Variantes",
+            "add_attribute": "Ajouter un attribut...",
+            "values_count": "valeurs",
+            "generate_matrix": "Générer les Variantes",
+            "variant": "Variante",
+            "sku": "SKU",
+            "stock_col": "Stock",
+            "no_variants": "Aucune variante générée. Ajoutez des attributs et cliquez sur 'Générer les Variantes'.",
+            "product_image": "Image du Produit",
+            "upload_image": "Cliquez pour télécharger",
+            "image_hint": "PNG, JPG jusqu'à 2Mo",
+            "remove_image": "Supprimer l'Image",
+            "product_info_tip": "Info Produit",
+            "product_info_tip_desc": "Activez le bouton Actif pour rendre ce produit visible aux clients. Les produits inactifs ne sont visibles que par les gestionnaires."
+        },
+        "show": {
+            "subtitle": "Voir les détails du produit et l'inventaire.",
+            "details": "Détails du Produit",
+            "name": "Nom",
+            "sku_prefix": "Préfixe SKU",
+            "category": "Catégorie",
+            "status": "Statut",
+            "stock_type": "Type de Stock",
+            "created": "Créé le",
+            "purchase": "Achat",
+            "sale": "Vente",
+            "margin_label": "Marge",
+            "stock": "Stock",
+            "variants": "Variantes",
+            "attributes": "Attributs",
+            "quick_actions": "Actions Rapides"
         }
     },
     "primevue": {

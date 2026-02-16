@@ -72,17 +72,20 @@ onMounted(() => {
         <div class="grid grid-cols-2 gap-4 pt-2">
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputText
-                        id="name"
-                        v-model="record.name"
-                        :disabled="loading.isFormSending"
-                        autofocus
-                        class="w-full"
-                        maxlength="50"
-                        :invalid="authStore.errors?.['name']?.[0] ? true : false"
-                        @input="() => authStore.clearErrors(['name'])"
-                        @blur="() => onBlurField('name')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-tag" />
+                        <InputText
+                            id="name"
+                            v-model="record.name"
+                            :disabled="loading.isFormSending"
+                            autofocus
+                            class="w-full"
+                            maxlength="50"
+                            :invalid="authStore.errors?.['name']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['name'])"
+                            @blur="() => onBlurField('name')"
+                        />
+                    </IconField>
                     <label for="name">{{ t('city.columns.name') }} *</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
@@ -92,16 +95,19 @@ onMounted(() => {
 
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputText
-                        id="name_ar"
-                        v-model="record.name_ar"
-                        :disabled="loading.isFormSending"
-                        class="w-full"
-                        maxlength="50"
-                        :invalid="authStore.errors?.['name_ar']?.[0] ? true : false"
-                        @input="() => authStore.clearErrors(['name_ar'])"
-                        @blur="() => onBlurField('name_ar')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-tag" />
+                        <InputText
+                            id="name_ar"
+                            v-model="record.name_ar"
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            maxlength="50"
+                            :invalid="authStore.errors?.['name_ar']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['name_ar'])"
+                            @blur="() => onBlurField('name_ar')"
+                        />
+                    </IconField>
                     <label for="name_ar">{{ t('city.columns.name_ar') }} *</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name_ar']?.[0]" severity="error" size="small">
@@ -111,16 +117,19 @@ onMounted(() => {
 
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputText
-                        id="name_fr"
-                        v-model="record.name_fr"
-                        :disabled="loading.isFormSending"
-                        class="w-full"
-                        maxlength="50"
-                        :invalid="authStore.errors?.['name_fr']?.[0] ? true : false"
-                        @input="() => authStore.clearErrors(['name_fr'])"
-                        @blur="() => onBlurField('name_fr')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-tag" />
+                        <InputText
+                            id="name_fr"
+                            v-model="record.name_fr"
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            maxlength="50"
+                            :invalid="authStore.errors?.['name_fr']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['name_fr'])"
+                            @blur="() => onBlurField('name_fr')"
+                        />
+                    </IconField>
                     <label for="name_fr">{{ t('city.columns.name_fr') }} *</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name_fr']?.[0]" severity="error" size="small">
@@ -130,16 +139,19 @@ onMounted(() => {
 
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber
-                        id="postal_code"
-                        v-model="record.postal_code"
-                        :disabled="loading.isFormSending"
-                        class="w-full"
-                        maxlength="20"
-                        :invalid="authStore.errors?.['postal_code']?.[0] ? true : false"
-                        @input="() => authStore.clearErrors(['postal_code'])"
-                        @blur="() => onBlurField('postal_code')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-hashtag" />
+                        <InputNumber
+                            id="postal_code"
+                            v-model="record.postal_code"
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            maxlength="20"
+                            :invalid="authStore.errors?.['postal_code']?.[0] ? true : false"
+                            @input="() => authStore.clearErrors(['postal_code'])"
+                            @blur="() => onBlurField('postal_code')"
+                        />
+                    </IconField>
                     <label for="postal_code">{{ t('city.columns.postal_code') }} *</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['postal_code']?.[0]" severity="error" size="small">
@@ -149,18 +161,21 @@ onMounted(() => {
 
             <div class="col-span-2">
                 <FloatLabel variant="on" class="w-full">
-                    <Select
-                        id="region"
-                        v-model="record.region"
-                        :options="regionsOptions"
-                        optionLabel="name"
-                        filter
-                        :disabled="loading.isFormSending"
-                        class="w-full"
-                        :invalid="authStore.errors?.['region']?.[0] ? true : false"
-                        @blur="() => onBlurField('region')"
-                        @change="() => authStore.clearErrors(['region'])"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-map" />
+                        <Select
+                            id="region"
+                            v-model="record.region"
+                            :options="regionsOptions"
+                            optionLabel="name"
+                            filter
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            :invalid="authStore.errors?.['region']?.[0] ? true : false"
+                            @blur="() => onBlurField('region')"
+                            @change="() => authStore.clearErrors(['region'])"
+                        />
+                    </IconField>
                     <label for="region">{{ t('city.columns.region') }} *</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['region']?.[0]" severity="error" size="small">
@@ -170,17 +185,20 @@ onMounted(() => {
 
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber
-                        id="longitude"
-                        v-model="record.longitude"
-                        :disabled="loading.isFormSending"
-                        class="w-full"
-                        :useGrouping="false"
-                        :min-fraction-digits="0"
-                        :max-fraction-digits="7"
-                        :invalid="authStore.errors?.['longitude']?.[0] ? true : false"
-                        @blur="() => onBlurField('longitude')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-map-marker" />
+                        <InputNumber
+                            id="longitude"
+                            v-model="record.longitude"
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            :useGrouping="false"
+                            :min-fraction-digits="0"
+                            :max-fraction-digits="7"
+                            :invalid="authStore.errors?.['longitude']?.[0] ? true : false"
+                            @blur="() => onBlurField('longitude')"
+                        />
+                    </IconField>
                     <label for="longitude">{{ t('city.columns.longitude') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['longitude']?.[0]" severity="error" size="small">
@@ -190,17 +208,20 @@ onMounted(() => {
 
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
-                    <InputNumber
-                        id="latitude"
-                        v-model="record.latitude"
-                        :disabled="loading.isFormSending"
-                        class="w-full"
-                        :useGrouping="false"
-                        :min-fraction-digits="0"
-                        :max-fraction-digits="7"
-                        :invalid="authStore.errors?.['latitude']?.[0] ? true : false"
-                        @blur="() => onBlurField('latitude')"
-                    />
+                    <IconField>
+                        <InputIcon class="pi pi-map-marker" />
+                        <InputNumber
+                            id="latitude"
+                            v-model="record.latitude"
+                            :disabled="loading.isFormSending"
+                            class="w-full"
+                            :useGrouping="false"
+                            :min-fraction-digits="0"
+                            :max-fraction-digits="7"
+                            :invalid="authStore.errors?.['latitude']?.[0] ? true : false"
+                            @blur="() => onBlurField('latitude')"
+                        />
+                    </IconField>
                     <label for="latitude">{{ t('city.columns.latitude') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['latitude']?.[0]" severity="error" size="small">

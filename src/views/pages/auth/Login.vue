@@ -14,6 +14,7 @@ const authStore = useAuthStore();
 
 // Redirect to admin if already logged in
 onMounted(() => {
+    loading.stopPageLoading();
     if (authStore.isLoggedIn) {
         router.push('/admin');
     }

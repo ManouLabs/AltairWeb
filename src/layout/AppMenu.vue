@@ -50,6 +50,12 @@ const mainMenu = computed(() => [
 
 const productsMenu = computed(() => [
     {
+        label: t('navigation.side_bar.products'),
+        icon: 'pi pi-fw pi-box',
+        to: '/admin/products',
+        visible: can('view_products')
+    },
+    {
         label: t('navigation.side_bar.categories'),
         icon: 'pi pi-fw pi-th-large',
         to: '/admin/categories',

@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { useAttributeService } from '@/services/useAttributeService';
-import { useCategoryService } from '@/services/useCategoryService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { attributeSchema, ATTRIBUTE_TYPES } from '@/validations/attribute';
 import { validate, validateField } from '@/validations/validate';
-import type { AttributeData, AttributeFormData } from '@/types/attribute';
-import type { CategoryData } from '@/types/category';
-import { inject, onMounted, ref, computed, watch } from 'vue';
+import type { AttributeFormData } from '@/types/attribute';
+import { inject, onMounted, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const authStore = useAuthStore();
@@ -26,25 +24,6 @@ const record = ref<AttributeFormData>({
 
 const dialogRef = inject<any>('dialogRef');
 const action = ref<string>('');
-const allCategories = ref<CategoryData[]>([]);
-
-// TreeSelect uses { [key]: true } object format for v-model
-const selectedCategoryKeys = ref<Record<string, boolean>>({});
-
-// Sync selectedCategoryKeys -> record.category_ids
-watch(
-    selectedCategoryKeys,
-    (newVal) => {
-        if (!newVal || Object.keys(newVal).length === 0) {
-            record.value.category_ids = [];
-        } else {
-            record.value.category_ids = Object.keys(newVal)
-                .map(Number)
-                .filter((n) => !isNaN(n));
-        }
-    },
-    { deep: true }
-);
 
 const schema = attributeSchema;
 
@@ -60,26 +39,6 @@ const onBlurField = (path: string) => {
     else authStore.errors = { ...authStore.errors, ...errors };
 };
 
-// Tree options for TreeSelect
-const treeSelectNodes = computed(() => {
-    const buildTree = (items: CategoryData[], parentId: number | null = null): any[] => {
-        return items
-            .filter((item: CategoryData) => item.parent_id === parentId)
-            .map((item: CategoryData) => {
-                const children = buildTree(items, item.id);
-                return {
-                    key: String(item.id),
-                    label: item.name,
-                    data: item.id,
-                    value: item.id,
-                    icon: item.icon || 'pi pi-folder',
-                    children: children.length > 0 ? children : undefined
-                };
-            });
-    };
-    return buildTree(allCategories.value);
-});
-
 // Whether the selected type supports values
 const supportsValues = computed(() => {
     return record.value.type === 'dropdown' || record.value.type === 'multiselect';
@@ -93,7 +52,6 @@ function addValue(): void {
 // Remove a value entry
 function removeValue(index: number): void {
     record.value.values.splice(index, 1);
-    // Reorder sort_order
     record.value.values.forEach((v, i) => (v.sort_order = i));
 }
 
@@ -106,8 +64,11 @@ const typeConfig: Record<string, { icon: string; color: string }> = {
     date: { icon: 'pi pi-calendar', color: '#8B5CF6' },
     numeric: { icon: 'pi pi-hashtag', color: '#06B6D4' },
     boolean: { icon: 'pi pi-check-square', color: '#10B981' },
-    file: { icon: 'pi pi-file', color: '#6B7280' }
+    radio: { icon: 'pi pi-circle', color: '#EF4444' }
 };
+
+// Category name resolved from the parent context
+const categoryName = ref<string>('');
 
 const onFormSubmit = (): void => {
     if (!validateForm()) return;
@@ -120,10 +81,8 @@ const onFormSubmit = (): void => {
         formData.values = [];
     }
 
-    const isEdit = action.value === ACTIONS.EDIT;
-    const serviceAction = isEdit ? (data: Partial<AttributeFormData>) => useAttributeService.updateAttribute((record.value as AttributeFormData & { id: number }).id, data) : useAttributeService.storeAttribute;
-
-    serviceAction(formData as AttributeFormData)
+    useAttributeService
+        .storeAttribute(formData as AttributeFormData)
         .then((response) => {
             dialogRef?.value.close({ record: response.data, action: action.value });
         })
@@ -138,15 +97,7 @@ const onFormSubmit = (): void => {
 
 const closeDialog = (): void => dialogRef?.value.close();
 
-onMounted(async () => {
-    // Load categories for TreeSelect
-    try {
-        const data = await useCategoryService.getCategories({});
-        allCategories.value = data.categories || [];
-    } catch (e) {
-        console.error('Failed to load categories');
-    }
-
+onMounted(() => {
     if (!dialogRef?.value) return;
 
     const incoming = dialogRef.value.data.record || ({} as AttributeFormData);
@@ -154,26 +105,11 @@ onMounted(async () => {
     record.value = {
         ...record.value,
         ...incoming,
-        category_ids: (incoming as AttributeData).categories?.map((c: { id: number }) => c.id) || incoming.category_ids || [],
-        values:
-            (incoming as AttributeData).values?.map((v: any) => ({
-                id: v.id,
-                value: v.value,
-                sort_order: v.sort_order ?? 0
-            })) ||
-            incoming.values ||
-            []
+        category_ids: incoming.category_ids || [],
+        values: incoming.values || []
     };
 
-    // Set TreeSelect keys from category_ids
-    if (record.value.category_ids.length) {
-        const keys: Record<string, boolean> = {};
-        record.value.category_ids.forEach((id) => {
-            keys[String(id)] = true;
-        });
-        selectedCategoryKeys.value = keys;
-    }
-
+    categoryName.value = dialogRef.value.data.categoryName || '';
     action.value = dialogRef.value.data.action;
 });
 </script>
@@ -181,6 +117,13 @@ onMounted(async () => {
 <template>
     <form @submit.prevent="onFormSubmit" class="flex flex-col space-y-4">
         <div class="grid grid-cols-1 gap-4 pt-2">
+            <!-- Category badge (read-only context) -->
+            <div v-if="categoryName" class="col-span-1 flex items-center gap-2">
+                <i class="pi pi-folder text-sm text-primary"></i>
+                <span class="text-sm text-surface-500 dark:text-surface-400">{{ t('product.form.inline_attr_category_hint') }}</span>
+                <Tag :value="categoryName" severity="info" />
+            </div>
+
             <!-- Name -->
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
@@ -240,24 +183,6 @@ onMounted(async () => {
                     </div>
                 </div>
             </transition>
-
-            <!-- Categories TreeSelect -->
-            <div class="col-span-1">
-                <FloatLabel variant="on" class="w-full">
-                    <TreeSelect
-                        id="categories"
-                        v-model="selectedCategoryKeys"
-                        :options="treeSelectNodes"
-                        selectionMode="checkbox"
-                        :placeholder="t('attribute.form.select_categories')"
-                        class="w-full"
-                        :disabled="loading.isFormSending"
-                        :metaKeySelection="false"
-                        display="chip"
-                    />
-                    <label for="categories">{{ t('attribute.form.categories') }}</label>
-                </FloatLabel>
-            </div>
 
             <!-- Active Toggle -->
             <div class="col-span-1 flex items-center gap-3">
