@@ -46,6 +46,7 @@ export interface ProductData {
     image: ProductImageData | null;
     attributes: ProductAttributeData[];
     variants: ProductVariantData[];
+    selected_value_ids: number[];
     created_at: string;
     updated_at: string;
 }

@@ -290,16 +290,18 @@ async function loadProduct(): Promise<void> {
         initialValues.low_stock_threshold = product.low_stock_threshold;
         initialValues.active = product.active;
 
-        selectedCategoryId.value = product.category?.id || null;
+        selectedCategoryId.value = product.category?.id ? ({ [product.category.id]: true } as any) : null;
         stockType.value = product.stock_type;
         purchasePrice.value = product.purchase_price !== null ? Number(product.purchase_price) : null;
         salePrice.value = product.sale_price !== null ? Number(product.sale_price) : null;
         totalStock.value = product.total_stock;
         selectedAttributeIds.value = product.attributes?.map((a) => a.id) || [];
 
-        // Populate selected value IDs from existing product attributes
+        // Populate selected value IDs from the stored pivot data
+        const selectedSet = new Set<number>((product.selected_value_ids || []).map(Number));
         for (const attr of product.attributes || []) {
-            selectedValueIds[attr.id] = (attr.values || []).map((v) => v.id);
+            const attrValueIds = (attr.values || []).map((v: any) => v.id);
+            selectedValueIds[attr.id] = attrValueIds.filter((id: number) => selectedSet.has(id));
         }
 
         variants.value = product.variants || [];
@@ -572,7 +574,7 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
 
         const formData = new FormData();
         formData.append('name', values.name);
-        formData.append('sku_prefix', initialValues.sku_prefix || '');
+        formData.append('sku_prefix', values.sku_prefix || '');
         formData.append('low_stock_threshold', String(initialValues.low_stock_threshold));
         formData.append('stock_type', stockType.value);
         formData.append('active', values.active ? '1' : '0');
@@ -594,6 +596,16 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
         selectedAttributeIds.value.forEach((id, i) => {
             formData.append(`attribute_ids[${i}]`, String(id));
         });
+
+        // Selected attribute values
+        let valIdx = 0;
+        for (const attrId of selectedAttributeIds.value) {
+            const valueIds = selectedValueIds[attrId] || [];
+            for (const vid of valueIds) {
+                formData.append(`selected_value_ids[${valIdx}]`, String(vid));
+                valIdx++;
+            }
+        }
 
         // Variants
         if (stockType.value === 'variant') {
