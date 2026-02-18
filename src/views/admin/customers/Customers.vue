@@ -151,6 +151,10 @@ function editRecord(row: CustomerData): void {
     openDialog();
 }
 
+function viewRecord(row: CustomerData): void {
+    router.push({ name: 'customer-show', params: { id: row.id } });
+}
+
 const openDialog = () => {
     const isEdit = !!(record.value as CustomerData)?.id;
     dialog.open(formComponent, {
@@ -393,7 +397,7 @@ onUnmounted(() => {
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
                 :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.customers') })"
                 resizableColumns
-                columnResizeMode="fit"
+                columnResizeMode="expand"
                 reorderableColumns
                 :frozenValue="lockedRow"
                 sortField="id"
@@ -478,9 +482,15 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
+                            <div class="flex items-center gap-2 cursor-pointer" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }" @click="viewRecord(data)">
                                 <i class="pi pi-user"></i>
-                                {{ data.name }}
+                                <div>
+                                    <div class="font-semibold text-surface-800 dark:text-surface-100">{{ data.name }}</div>
+                                    <div class="text-xs text-surface-400 mt-0.5">
+                                        <span>{{ data.status_label }}</span>
+                                        <span> · {{ dayjs(data.created_at).fromNow() }}</span>
+                                    </div>
+                                </div>
                                 <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
                         </DataCell>

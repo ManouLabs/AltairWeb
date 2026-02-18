@@ -288,7 +288,7 @@ onUnmounted(() => {
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
                 :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.roles') })"
                 resizableColumns
-                columnResizeMode="fit"
+                columnResizeMode="expand"
                 reorderableColumns
                 :frozenValue="lockedRow"
                 sortField="id"

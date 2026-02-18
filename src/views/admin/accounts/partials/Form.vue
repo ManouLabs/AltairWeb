@@ -17,7 +17,6 @@ const loading = useLoading();
 const record = ref({});
 const dialogRef = inject('dialogRef');
 const action = ref();
-const plansOptions = ref([]);
 
 const schema = accountSchema;
 
@@ -64,7 +63,7 @@ const closeDialog = () => {
 
 // Per-step validation
 const validateStep1 = () => {
-    const fields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib', 'plan', 'active'];
+    const fields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib'];
     let ok = true;
     const newErrors = { ...authStore.errors };
 
@@ -157,7 +156,6 @@ const submitFromStep3 = () => {
 onMounted(() => {
     record.value = dialogRef.value.data.record;
     action.value = dialogRef.value.data.action;
-    plansOptions.value = dialogRef.value.data.planOptions;
 });
 </script>
 <template>
@@ -302,40 +300,6 @@ onMounted(() => {
                             </FloatLabel>
                             <Message v-if="authStore.errors?.['rib']?.[0]" severity="error" size="small">
                                 {{ t(authStore.errors?.['rib']?.[0]) }}
-                            </Message>
-                        </div>
-                        <div class="col-span-2">
-                            <FloatLabel variant="on" class="w-full">
-                                <IconField>
-                                    <InputIcon class="pi pi-star" />
-                                    <Select
-                                        id="plan"
-                                        v-model="record.plan"
-                                        :options="plansOptions"
-                                        filter
-                                        optionLabel="name"
-                                        :disabled="loading.isFormSending"
-                                        class="w-full"
-                                        :invalid="authStore.errors?.['plan']?.[0] ? true : false"
-                                        @change="() => authStore.clearErrors(['plan'])"
-                                        @blur="() => onBlurField('plan')"
-                                    />
-                                </IconField>
-                                <label for="plan">{{ t('account.columns.plan') }}</label>
-                            </FloatLabel>
-                            <Message v-if="authStore.errors?.['plan']?.[0]" severity="error" size="small">
-                                {{ t(authStore.errors?.['plan']?.[0]) }}
-                            </Message>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <ToggleSwitch id="active" v-model="record.active" :class="{ 'p-invalid': authStore.errors?.active }" @change="onBlurField('active')" />
-                                <label for="active" class="font-medium">
-                                    {{ t('account.columns.active') }}
-                                </label>
-                            </div>
-                            <Message v-if="authStore.errors?.['active']?.[0]" severity="error" size="small">
-                                {{ t(authStore.errors?.['active']?.[0]) }}
                             </Message>
                         </div>
                     </div>

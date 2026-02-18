@@ -36,8 +36,6 @@ export interface Account {
     nif?: string | null;
     nis?: string | null;
     rib?: string | null;
-    plan?: Plan | null;
-    active: boolean;
     contacts?: Contact[];
     created_at?: string;
     updated_at?: string;
@@ -51,8 +49,6 @@ export interface AccountFormData {
     nif?: string | null;
     nis?: string | null;
     rib?: string | null;
-    plan?: { id: number; name?: string | null } | null;
-    active?: boolean;
     contacts?: Contact[];
 }
 
@@ -67,7 +63,6 @@ export interface AccountsFilterParams {
 
 export interface AccountsResponse {
     data: Account[];
-    plans?: Plan[];
     meta: {
         total: number;
         per_page: number;
@@ -82,9 +77,4 @@ export interface AccountApiResponse {
 
 export interface DeleteAccountsResponse {
     message: string;
-}
-
-export interface ToggleActiveAccountResponse {
-    data: Account;
-    message?: string;
 }

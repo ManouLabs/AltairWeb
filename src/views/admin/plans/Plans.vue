@@ -1,4 +1,5 @@
 <script setup>
+import ActiveToggleButton from '@/components/ActiveToggleButton.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -63,6 +64,7 @@ const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(def
 
 const record = ref(null);
 const dataLoaded = ref(false);
+const loadingActiveId = ref(null);
 const defaultColumns = computed(() =>
     defaultFields.map((field) => ({
         field,
@@ -183,6 +185,7 @@ const openDialog = () => {
 };
 
 function toggleActive(planId) {
+    loadingActiveId.value = planId;
     usePlanService
         .toggleActivePlan(planId)
         .then(() => {
@@ -196,6 +199,9 @@ function toggleActive(planId) {
                 console.error('Session expired, redirecting to login');
             }
             console.error('Error updating plan status');
+        })
+        .finally(() => {
+            loadingActiveId.value = null;
         });
 }
 
@@ -276,7 +282,7 @@ onUnmounted(() => {
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
                 :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.plan') })"
                 resizableColumns
-                columnResizeMode="fit"
+                columnResizeMode="expand"
                 reorderableColumns
                 :frozenValue="lockedRow"
                 sortField="id"
@@ -406,15 +412,7 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.active }">
-                                <Tag
-                                    :value="data.active ? t('common.labels.active') : t('common.labels.inactive')"
-                                    :severity="data.active ? 'success' : 'danger'"
-                                    :icon="data.active ? 'pi pi-check-circle' : 'pi pi-times-circle'"
-                                    rounded
-                                    size="small"
-                                    :pt="{ root: { class: 'cursor-pointer' } }"
-                                    @click="toggleActive(data.id)"
-                                />
+                                <ActiveToggleButton :active="data.active" entity="plan" variant="button" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
                             </div>
                         </DataCell>
                     </template>

@@ -35,7 +35,7 @@ const initialValues = reactive({
 });
 
 // Values managed separately (not in PrimeVue Form resolver)
-const attributeValues = ref<{ id?: number; value: string; sort_order: number }[]>([]);
+const attributeValues = ref<{ id?: number; value: string; color?: string; sort_order: number }[]>([]);
 const booleanLabels = reactive({ yes: '', no: '' });
 
 // Category tree keys
@@ -52,7 +52,7 @@ interface TypeConfig {
 const typeConfig: Record<string, TypeConfig> = {
     dropdown: { icon: 'pi pi-chevron-down', label: 'attribute.types.dropdown', color: '#3B82F6' },
     text: { icon: 'pi pi-align-left', label: 'attribute.types.text', color: '#64748B' },
-    switches: { icon: 'pi pi-eye', label: 'attribute.types.switches', color: '#10B981' },
+    color: { icon: 'pi pi-palette', label: 'attribute.types.color', color: '#10B981' },
     multiselect: { icon: 'pi pi-check-square', label: 'attribute.types.multiselect', color: '#8B5CF6' },
     date: { icon: 'pi pi-calendar', label: 'attribute.types.date', color: '#F59E0B' },
     numeric: { icon: 'pi pi-hashtag', label: 'attribute.types.numeric', color: '#06B6D4' },
@@ -103,14 +103,16 @@ const treeSelectNodes = computed(() => {
 
 // Whether type supports options
 const supportsValues = computed(() => {
-    return initialValues.type === 'dropdown' || initialValues.type === 'multiselect' || initialValues.type === 'radio';
+    return initialValues.type === 'dropdown' || initialValues.type === 'multiselect' || initialValues.type === 'radio' || initialValues.type === 'color';
 });
+
+const isColor = computed(() => initialValues.type === 'color');
 
 const isBoolean = computed(() => initialValues.type === 'boolean');
 
 // Add value
 function addValue(): void {
-    attributeValues.value.push({ value: '', sort_order: attributeValues.value.length });
+    attributeValues.value.push({ value: '', color: isColor.value ? '000000' : undefined, sort_order: attributeValues.value.length });
 }
 
 // Remove value
@@ -146,6 +148,7 @@ async function loadAttribute(): Promise<void> {
             attributeValues.value = attribute.values.map((v: AttributeValueData) => ({
                 id: v.id,
                 value: v.value,
+                color: v.color ?? undefined,
                 sort_order: v.sort_order ?? 0
             }));
         }
@@ -401,6 +404,14 @@ onMounted(async () => {
                                     <Column :header="t('attribute.form.option_label')" style="min-width: 200px">
                                         <template #body="{ data, index }">
                                             <InputText v-model="data.value" :placeholder="t('attribute.form.value_placeholder')" class="w-full" size="small" :disabled="loading.isFormSending" />
+                                        </template>
+                                    </Column>
+                                    <Column v-if="isColor" :header="t('attribute.form.color_value')" style="width: 140px">
+                                        <template #body="{ data }">
+                                            <div class="flex items-center gap-2">
+                                                <ColorPicker v-model="data.color" format="hex" :disabled="loading.isFormSending" />
+                                                <InputText v-model="data.color" class="w-full" size="small" maxlength="6" placeholder="FF0000" :disabled="loading.isFormSending" />
+                                            </div>
                                         </template>
                                     </Column>
                                     <Column :header="t('attribute.form.actions_col')" style="width: 80px">

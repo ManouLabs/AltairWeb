@@ -160,6 +160,7 @@ onMounted(() => {
                         :options="treeSelectNodes"
                         :placeholder="t('category.placeholders.select_parent')"
                         class="w-full !pl-10"
+                        filter
                         :disabled="loading.isFormSending"
                         :invalid="authStore.errors?.['parent_id']?.[0] ? true : false"
                     />

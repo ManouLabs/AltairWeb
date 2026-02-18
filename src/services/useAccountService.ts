@@ -1,6 +1,6 @@
 // src/services/useAccountService.ts
 import apiClient from '@/services/axios';
-import type { AccountsFilterParams, AccountsResponse, AccountFormData, AccountApiResponse, ToggleActiveAccountResponse, DeleteAccountsResponse } from '@/types/account';
+import type { AccountsFilterParams, AccountsResponse, AccountFormData, AccountApiResponse, DeleteAccountsResponse } from '@/types/account';
 
 export const useAccountService = {
     async getAccounts(params: AccountsFilterParams = {}): Promise<AccountsResponse> {
@@ -26,16 +26,6 @@ export const useAccountService = {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
             const response = await apiClient.put<AccountApiResponse>(`/api/admin/accounts/${accountId}`, updatedData);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    async toggleActiveAccount(accountId: number): Promise<ToggleActiveAccountResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.patch<ToggleActiveAccountResponse>(`/api/admin/accounts/${accountId}/toggle`);
             return response.data;
         } catch (error) {
             throw error;

@@ -141,8 +141,9 @@ const accentColors = ['#3B82F6', '#1D4ED8', '#6366F1', '#4F46E5', '#A855F7', '#8
                     v-for="ic in filteredIcons"
                     :key="ic"
                     type="button"
-                    class="w-full aspect-square border border-surface-200 dark:border-surface-700 rounded-xl bg-surface-0 dark:bg-surface-800 cursor-pointer transition-all flex items-center justify-center hover:border-primary hover:shadow-sm text-surface-600 dark:text-surface-400 group"
-                    :class="{ '!border-primary !bg-primary-50 dark:!bg-primary-900/30 !text-primary !border-2 shadow-sm': icon === ic }"
+                    class="w-full aspect-square rounded-xl bg-surface-0 dark:bg-surface-800 cursor-pointer transition-all flex items-center justify-center hover:shadow-sm group"
+                    :class="icon === ic ? 'border-2' : 'border border-surface-200 dark:border-surface-700 hover:border-primary text-surface-600 dark:text-surface-400'"
+                    :style="icon === ic ? { borderColor: iconColor || '#8B5CF6', color: iconColor || '#8B5CF6', backgroundColor: (iconColor || '#8B5CF6') + '12' } : {}"
                     @click="icon = ic"
                 >
                     <i :class="ic" class="text-xl group-hover:scale-110 transition-transform"></i>

@@ -166,6 +166,7 @@ function confirmDeleteRecord(event: MouseEvent | null, productIds: number[]): vo
         accept: () => {
             isDeleting.value = true;
             loading.startFormSending();
+            loading.startPageLoading();
             useProductService
                 .deleteProducts(productIds)
                 .then(() => {
@@ -187,6 +188,7 @@ function confirmDeleteRecord(event: MouseEvent | null, productIds: number[]): vo
                 .finally(() => {
                     isDeleting.value = false;
                     loading.stopFormSending();
+                    loading.stopPageLoading();
                 });
         }
     });
@@ -194,6 +196,7 @@ function confirmDeleteRecord(event: MouseEvent | null, productIds: number[]): vo
 
 function toggleActive(productId: number): void {
     loadingActiveId.value = productId;
+    loading.startPageLoading();
     useProductService
         .toggleActive(productId)
         .then((response) => {
@@ -209,12 +212,13 @@ function toggleActive(productId: number): void {
         })
         .finally(() => {
             loadingActiveId.value = null;
+            loading.stopPageLoading();
         });
 }
 
 function formatCurrency(value: number | null): string {
     if (value === null || value === undefined) return '—';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    return new Intl.NumberFormat('fr-DZ', { style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + ' DA';
 }
 
 function getStockDisplay(data: ProductData): number {
@@ -295,7 +299,7 @@ onUnmounted(() => {
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
                 :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.products') })"
                 resizableColumns
-                columnResizeMode="fit"
+                columnResizeMode="expand"
                 reorderableColumns
                 :frozenValue="lockedRow"
                 sortField="name"

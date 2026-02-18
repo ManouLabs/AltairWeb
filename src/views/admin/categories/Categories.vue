@@ -119,6 +119,7 @@ function fetchRecords(): void {
         })
         .finally(() => {
             loadingStore.stopDataLoading();
+            loadingStore.stopPageLoading();
             dataLoaded.value = true;
         });
 }

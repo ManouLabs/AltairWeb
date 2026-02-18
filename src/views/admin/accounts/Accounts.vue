@@ -31,20 +31,13 @@ const defaultFiltersConfig = {
     nif: FilterMatchMode.CONTAINS,
     nis: FilterMatchMode.CONTAINS,
     rib: FilterMatchMode.CONTAINS,
-    plan: {
-        matchMode: FilterMatchMode.IN,
-        relation: { name: 'plan', column: 'name' }
-    },
-    active: FilterMatchMode.EQUALS,
     created_at: FilterMatchMode.DATE_IS,
     updated_at: FilterMatchMode.DATE_IS
 };
-const allPlans = ref(null);
 const dataLoaded = ref(false);
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
     (params) =>
         useAccountService.getAccounts(params).then((data) => {
-            allPlans.value = data.plans;
             dataLoaded.value = true;
             return {
                 data: data.accounts,
@@ -61,11 +54,10 @@ const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 const { t } = useI18n();
 const loading = useLoading();
-const loadingActiveId = ref(null);
 
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
-const defaultFields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib', 'plan', 'active', 'created_at', 'updated_at'];
+const defaultFields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib', 'created_at', 'updated_at'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref(null);
@@ -135,8 +127,6 @@ function addRecord() {
         nif: null,
         nis: null,
         rib: null,
-        plan: null,
-        active: true,
         contacts: [{ civility: null, first_name: '', last_name: '', contactMethods: [{ contact_id: null, type: 'mobile', value: '' }] }],
         addresses: [{ street: '', region: null, city: null, main: true }]
     };
@@ -160,7 +150,6 @@ const openDialog = () => {
         },
         data: {
             record: record.value,
-            planOptions: allPlans.value,
             action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE,
             headerProps: computed(() => ({
                 title: isEdit ? t('common.titles.edit', { entity: t('entity.account') }) : t('common.titles.add', { entity: t('entity.account') }),
@@ -191,28 +180,6 @@ const openDialog = () => {
         }
     });
 };
-function toggleActive(accountId) {
-    loadingActiveId.value = accountId;
-    loading.startPageLoading();
-    useAccountService
-        .toggleActiveAccount(accountId)
-        .then((result) => {
-            const index = findRecordIndex(records, accountId);
-            records.value[index].active = !records.value[index].active;
-            markHighlight(accountId, 'updated');
-            showToast('success', ACTIONS.EDIT, 'account', 'tc');
-        })
-        .catch((error) => {
-            if (error?.response?.status === 419 || error?.response?.status === 401) {
-                console.error('Session expired, redirecting to login');
-            }
-            console.error('Error updating account status');
-        })
-        .finally(() => {
-            loadingActiveId.value = null;
-            loading.stopPageLoading();
-        });
-}
 
 function confirmDeleteRecord(event, accountIds) {
     confirm.require({
@@ -292,7 +259,7 @@ onUnmounted(() => {
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
                 :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.account') })"
                 resizableColumns
-                columnResizeMode="fit"
+                columnResizeMode="expand"
                 reorderableColumns
                 :frozenValue="lockedRow"
                 sortField="id"
@@ -581,92 +548,7 @@ onUnmounted(() => {
                         </InputGroup>
                     </template>
                 </Column>
-                <Column
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    columnKey="plan"
-                    :frozen="frozenColumns.plan"
-                    v-if="selectedColumns.some((column) => column.field === 'plan')"
-                    field="plan"
-                    class="min-w-32"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('account.columns.plan')"
-                            :frozen="frozenColumns.plan"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('plan')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <Tag :value="data.plan.name" severity="info" rounded size="small" :class="{ 'font-bold': frozenColumns.plan }" />
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <MultiSelect v-model="filterModel.value" :options="allPlans" optionLabel="name" optionValue="name" :placeholder="t('common.labels.select_plans')" class="w-full" size="small" display="chip" />
-                            <InputGroupAddon>
-                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
-                    </template>
-                </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="active"
-                    field="active"
-                    :frozen="frozenColumns.active"
-                    v-if="selectedColumns.some((column) => column.field === 'active')"
-                    sortable
-                    class="min-w-32"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('account.columns.active')"
-                            :frozen="frozenColumns.active"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('active')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.active }">
-                                <ActiveToggleButton :active="data.active" entity="account" variant="button" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
-                            </div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <Select
-                                v-model="filterModel.value"
-                                :options="[
-                                    { label: t('common.labels.active'), value: true },
-                                    { label: t('common.labels.inactive'), value: false }
-                                ]"
-                                optionLabel="label"
-                                optionValue="value"
-                                :placeholder="t('common.labels.select_status')"
-                                class="w-full"
-                                size="small"
-                            />
-                            <InputGroupAddon>
-                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
-                    </template>
-                </Column>
+
                 <Column
                     :showClearButton="false"
                     :showApplyButton="false"

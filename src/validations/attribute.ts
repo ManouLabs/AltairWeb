@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 const requiredStringMax = (max: number) => z.preprocess((v: unknown) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }).max(max, { message: 'common.messages.max_length' }));
 
-export const ATTRIBUTE_TYPES = ['dropdown', 'text', 'switches', 'multiselect', 'date', 'numeric', 'boolean', 'radio'] as const;
+export const ATTRIBUTE_TYPES = ['dropdown', 'text', 'color', 'multiselect', 'date', 'numeric', 'boolean', 'radio'] as const;
 
 // Schema for PrimeVue Form resolver — only includes fields managed by FormField components
 export const attributeSchema = z.object({
@@ -22,6 +22,7 @@ export const attributeFullSchema = z.object({
             z.object({
                 id: z.number().optional(),
                 value: z.string().min(1),
+                color: z.string().max(6).optional().nullable(),
                 sort_order: z.number().optional()
             })
         )

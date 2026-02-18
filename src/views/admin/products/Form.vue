@@ -53,6 +53,7 @@ const salePrice = ref<number | null>(null);
 const totalStock = ref<number>(0);
 const selectedAttributeIds = ref<number[]>([]);
 const selectedValueIds = reactive<Record<number, number[]>>({});
+const customAttributeValues = reactive<Record<number, any>>({});
 const variants = ref<ProductVariantData[]>([]);
 const variantsOutOfSync = ref<boolean>(false);
 const productImage = ref<File | null>(null);
@@ -105,6 +106,11 @@ const resolvedCategoryId = computed<number | null>(() => {
     }
     return Number(val) || null;
 });
+
+// Whether the attribute type has predefined selectable values
+function hasValues(type: string): boolean {
+    return ['dropdown', 'multiselect', 'color', 'radio'].includes(type);
+}
 
 // Available attributes filtered by selected category
 const availableAttributes = computed(() => {
@@ -302,15 +308,59 @@ async function loadProduct(): Promise<void> {
         for (const attr of product.attributes || []) {
             const attrValueIds = (attr.values || []).map((v: any) => v.id);
             selectedValueIds[attr.id] = attrValueIds.filter((id: number) => selectedSet.has(id));
+
+            // Restore custom attribute values for free-form types
+            if (!hasValues(attr.type)) {
+                const selectedVal = (attr.values || []).find((v: any) => selectedSet.has(v.id));
+                if (selectedVal) {
+                    if (attr.type === 'date') {
+                        customAttributeValues[attr.id] = new Date(selectedVal.value);
+                    } else if (attr.type === 'numeric') {
+                        customAttributeValues[attr.id] = Number(selectedVal.value);
+                    } else if (attr.type === 'boolean') {
+                        customAttributeValues[attr.id] = selectedVal.value === 'true' || selectedVal.value === '1';
+                    } else {
+                        customAttributeValues[attr.id] = selectedVal.value;
+                    }
+                }
+            }
         }
 
-        variants.value = product.variants || [];
+        // Reconstruct attribute_details for each variant from loaded attributes
+        // The API returns attribute_values (IDs) but not attribute_details (needed for TreeTable display)
+        const loadedVariants = product.variants || [];
+        const productAttrs = product.attributes || [];
+        variants.value = loadedVariants.map((v: ProductVariantData) => {
+            if (!v.attribute_details || v.attribute_details.length === 0) {
+                const details: { attribute_id: number; attribute_name: string; value_id: number; value: string }[] = [];
+                for (const valueId of v.attribute_values) {
+                    for (const attr of productAttrs) {
+                        const foundValue = (attr.values || []).find((val: any) => val.id === valueId);
+                        if (foundValue) {
+                            details.push({
+                                attribute_id: attr.id,
+                                attribute_name: attr.name,
+                                value_id: foundValue.id,
+                                value: foundValue.value
+                            });
+                            break;
+                        }
+                    }
+                }
+                return { ...v, attribute_details: details };
+            }
+            return v;
+        });
 
         if (product.image?.url) {
             existingImageUrl.value = product.image.url;
         }
 
         formKey.value++;
+        // Auto-expand variant tree groups after loading
+        if (variants.value.length > 0) {
+            nextTick(() => expandAll());
+        }
     } catch (error) {
         console.error('Error loading product:', error);
         showToast('error', ACTIONS.EDIT, 'product', 'tc');
@@ -439,7 +489,9 @@ async function generateVariantMatrix(): Promise<void> {
 
     if (isEdit.value) {
         try {
-            const response = await useProductService.generateVariants(Number(route.params.id), selectedAttributeIds.value);
+            // Collect all selected value IDs across all attributes
+            const allSelectedValueIds = selectedAttributeIds.value.flatMap((attrId: number) => selectedValueIds[attrId] || []);
+            const response = await useProductService.generateVariants(Number(route.params.id), selectedAttributeIds.value, allSelectedValueIds);
             variants.value = response.variants;
         } catch (e) {
             console.error('Error generating variants');
@@ -582,15 +634,9 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
         if (resolvedCategoryId.value) {
             formData.append('category_id', String(resolvedCategoryId.value));
         }
-        if (purchasePrice.value !== null) {
-            formData.append('purchase_price', String(purchasePrice.value));
-        }
-        if (salePrice.value !== null) {
-            formData.append('sale_price', String(salePrice.value));
-        }
-        if (stockType.value === 'single') {
-            formData.append('total_stock', String(totalStock.value));
-        }
+        formData.append('purchase_price', String(purchasePrice.value ?? 0));
+        formData.append('sale_price', String(salePrice.value ?? 0));
+        formData.append('total_stock', String(totalStock.value ?? 0));
 
         // Attributes
         selectedAttributeIds.value.forEach((id, i) => {
@@ -604,6 +650,17 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
             for (const vid of valueIds) {
                 formData.append(`selected_value_ids[${valIdx}]`, String(vid));
                 valIdx++;
+            }
+        }
+
+        // Custom attribute values (text, numeric, date, boolean)
+        let customIdx = 0;
+        for (const attrId of selectedAttributeIds.value) {
+            if (customAttributeValues[attrId] !== undefined && customAttributeValues[attrId] !== null && customAttributeValues[attrId] !== '') {
+                const val = customAttributeValues[attrId];
+                formData.append(`custom_attribute_values[${customIdx}][attribute_id]`, String(attrId));
+                formData.append(`custom_attribute_values[${customIdx}][value]`, val instanceof Date ? val.toISOString().split('T')[0] : String(val));
+                customIdx++;
             }
         }
 
@@ -916,22 +973,78 @@ onMounted(async () => {
                                         </button>
                                     </div>
 
-                                    <!-- Value chips -->
-                                    <div class="flex flex-wrap gap-2">
-                                        <div
-                                            v-for="val in attr.values || []"
-                                            :key="val.id"
-                                            class="cursor-pointer select-none rounded-full px-4 py-1.5 text-sm border-2 transition-all duration-150"
-                                            :class="
-                                                isValueSelected(attr.id, val.id)
-                                                    ? 'border-primary bg-primary/10 text-primary font-medium'
-                                                    : 'border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 hover:border-surface-300 dark:hover:border-surface-500'
-                                            "
-                                            @click="toggleValue(attr.id, val.id)"
-                                        >
-                                            {{ val.value }}
+                                    <!-- Value-based types: color, dropdown, multiselect, radio -->
+                                    <template v-if="hasValues(attr.type)">
+                                        <div class="flex flex-wrap gap-2">
+                                            <!-- Color swatch design -->
+                                            <template v-if="attr.type === 'color'">
+                                                <div
+                                                    v-for="val in attr.values || []"
+                                                    :key="val.id"
+                                                    class="cursor-pointer select-none flex items-center gap-2 rounded-full pl-1.5 pr-3.5 py-1 border-2 transition-all duration-200"
+                                                    :class="
+                                                        isValueSelected(attr.id, val.id)
+                                                            ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
+                                                            : 'border-surface-200 dark:border-surface-600 hover:border-surface-300 dark:hover:border-surface-500 hover:shadow-sm'
+                                                    "
+                                                    @click="toggleValue(attr.id, val.id)"
+                                                >
+                                                    <span
+                                                        class="relative inline-flex items-center justify-center w-6 h-6 rounded-full border border-surface-200 dark:border-surface-500 shrink-0 transition-transform duration-200"
+                                                        :class="{ 'scale-110': isValueSelected(attr.id, val.id) }"
+                                                        :style="{ backgroundColor: '#' + (val.color || 'ccc') }"
+                                                    >
+                                                        <i v-if="isValueSelected(attr.id, val.id)" class="pi pi-check text-[10px] drop-shadow-sm" :style="{ color: parseInt(val.color || 'ccc', 16) > 0xaaaaaa ? '#1e293b' : '#ffffff' }"></i>
+                                                    </span>
+                                                    <span class="text-sm" :class="isValueSelected(attr.id, val.id) ? 'text-primary font-medium' : 'text-surface-600 dark:text-surface-300'">
+                                                        {{ val.value }}
+                                                    </span>
+                                                </div>
+                                            </template>
+                                            <!-- Default chip design (dropdown, multiselect, radio) -->
+                                            <template v-else>
+                                                <div
+                                                    v-for="val in attr.values || []"
+                                                    :key="val.id"
+                                                    class="cursor-pointer select-none rounded-full px-4 py-1.5 text-sm border-2 transition-all duration-150"
+                                                    :class="
+                                                        isValueSelected(attr.id, val.id)
+                                                            ? 'border-primary bg-primary/10 text-primary font-medium'
+                                                            : 'border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 hover:border-surface-300 dark:hover:border-surface-500'
+                                                    "
+                                                    @click="toggleValue(attr.id, val.id)"
+                                                >
+                                                    {{ val.value }}
+                                                </div>
+                                            </template>
                                         </div>
-                                    </div>
+                                    </template>
+
+                                    <!-- Free-form input types -->
+                                    <template v-else>
+                                        <!-- Date type -->
+                                        <div v-if="attr.type === 'date'" class="w-full">
+                                            <DatePicker v-model="customAttributeValues[attr.id]" dateFormat="yy-mm-dd" showIcon iconDisplay="input" showButtonBar class="w-full" :placeholder="t('product.form.select_date')" />
+                                        </div>
+
+                                        <!-- Text type -->
+                                        <div v-else-if="attr.type === 'text'" class="w-full">
+                                            <InputText v-model="customAttributeValues[attr.id]" class="w-full" :placeholder="t('product.form.enter_value')" />
+                                        </div>
+
+                                        <!-- Numeric type -->
+                                        <div v-else-if="attr.type === 'numeric'" class="w-full">
+                                            <InputNumber v-model="customAttributeValues[attr.id]" class="w-full" :placeholder="t('product.form.enter_value')" :minFractionDigits="0" :maxFractionDigits="2" />
+                                        </div>
+
+                                        <!-- Boolean type -->
+                                        <div v-else-if="attr.type === 'boolean'" class="flex items-center gap-3">
+                                            <ToggleSwitch v-model="customAttributeValues[attr.id]" />
+                                            <span class="text-sm text-surface-600 dark:text-surface-300">
+                                                {{ customAttributeValues[attr.id] ? t('common.labels.yes') : t('common.labels.no') }}
+                                            </span>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
 
@@ -971,18 +1084,17 @@ onMounted(async () => {
                                         </template>
                                     </Select>
                                     <Divider class="!my-0" />
-                                    <Button
-                                        :label="t('product.form.create_attribute')"
-                                        icon="pi pi-sparkles"
-                                        severity="secondary"
-                                        text
-                                        size="small"
-                                        class="w-full"
+                                    <button
+                                        type="button"
+                                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed border-primary/30 bg-primary/[0.03] text-primary text-sm font-medium hover:border-primary/60 hover:bg-primary/[0.07] hover:shadow-sm active:scale-[0.98] transition-all duration-200 cursor-pointer"
                                         @click="
                                             addAttrPopover.hide();
                                             openCreateAttribute();
                                         "
-                                    />
+                                    >
+                                        <i class="pi pi-sparkles text-xs"></i>
+                                        {{ t('product.form.create_attribute') }}
+                                    </button>
                                 </div>
                             </Popover>
                         </template>

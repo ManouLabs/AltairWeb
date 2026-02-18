@@ -44,9 +44,9 @@ const toggleActive = async (id: number): Promise<ProductApiResponse> => {
     return response.data;
 };
 
-const generateVariants = async (productId: number, attributeIds: number[]): Promise<GenerateVariantsResponse> => {
+const generateVariants = async (productId: number, attributeIds: number[], selectedValueIds: number[]): Promise<GenerateVariantsResponse> => {
     await apiClient.get('/sanctum/csrf-cookie');
-    const response = await apiClient.post(`/api/admin/products/${productId}/variants`, { attribute_ids: attributeIds });
+    const response = await apiClient.post(`/api/admin/products/${productId}/variants`, { attribute_ids: attributeIds, selected_value_ids: selectedValueIds });
     return response.data;
 };
 

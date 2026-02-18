@@ -18,9 +18,9 @@ export const productFullSchema = z.object({
     sku_prefix: z.string().max(50).nullable().optional(),
     low_stock_threshold: z.number().min(0).default(10),
     stock_type: z.enum(['single', 'variant']).default('single'),
-    purchase_price: z.number().min(0).nullable().optional(),
-    sale_price: z.number().min(0).nullable().optional(),
-    total_stock: z.number().min(0).default(0),
+    purchase_price: z.number().min(0, { message: 'common.messages.is_required' }),
+    sale_price: z.number().min(0, { message: 'common.messages.is_required' }),
+    total_stock: z.number().min(0, { message: 'common.messages.is_required' }).default(0),
     active: z.boolean().default(false),
     attribute_ids: z.array(z.number()).default([]),
     variants: z

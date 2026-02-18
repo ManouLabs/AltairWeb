@@ -583,7 +583,7 @@
         "types": {
             "dropdown": "Dropdown",
             "text": "Text Field",
-            "switches": "Swatches",
+            "color": "Color",
             "multiselect": "Multi Select",
             "date": "Date Picker",
             "numeric": "Number",
@@ -612,6 +612,7 @@
             "attribute_options": "Attribute Options",
             "add_new_option": "Add New Option",
             "option_label": "Option Label",
+            "color_value": "Color",
             "storefront_preview": "Storefront Preview",
             "select_label": "Select {name}",
             "preview_hint": "Live preview of the customer interface.",
@@ -718,7 +719,9 @@
             "file_too_large": "File is too large. Maximum size: {max}",
             "remove_image": "Remove Image",
             "product_info_tip": "Product Info",
-            "product_info_tip_desc": "Toggle the Active switch to make this product visible to customers. Inactive products are only visible to managers."
+            "product_info_tip_desc": "Toggle the Active switch to make this product visible to customers. Inactive products are only visible to managers.",
+            "select_date": "Select a date...",
+            "enter_value": "Enter a value..."
         },
         "show": {
             "subtitle": "View product details and inventory.",

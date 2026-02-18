@@ -41,12 +41,14 @@ const onBlurField = (path: string) => {
 
 // Whether the selected type supports values
 const supportsValues = computed(() => {
-    return record.value.type === 'dropdown' || record.value.type === 'multiselect';
+    return record.value.type === 'dropdown' || record.value.type === 'multiselect' || record.value.type === 'color';
 });
+
+const isColor = computed(() => record.value.type === 'color');
 
 // Add a new value entry
 function addValue(): void {
-    record.value.values.push({ value: '', sort_order: record.value.values.length });
+    record.value.values.push({ value: '', color: isColor.value ? '000000' : undefined, sort_order: record.value.values.length });
 }
 
 // Remove a value entry
@@ -59,7 +61,7 @@ function removeValue(index: number): void {
 const typeConfig: Record<string, { icon: string; color: string }> = {
     dropdown: { icon: 'pi pi-chevron-down', color: '#3B82F6' },
     text: { icon: 'pi pi-align-left', color: '#64748B' },
-    switches: { icon: 'pi pi-toggle-on', color: '#10B981' },
+    color: { icon: 'pi pi-palette', color: '#10B981' },
     multiselect: { icon: 'pi pi-list-check', color: '#F59E0B' },
     date: { icon: 'pi pi-calendar', color: '#8B5CF6' },
     numeric: { icon: 'pi pi-hashtag', color: '#06B6D4' },
@@ -178,6 +180,10 @@ onMounted(() => {
                         <div v-for="(val, index) in record.values" :key="index" class="flex items-center gap-2">
                             <span class="text-xs text-surface-400 w-6 text-center">{{ index + 1 }}</span>
                             <InputText v-model="val.value" :placeholder="t('attribute.form.value_placeholder')" class="flex-1" size="small" :disabled="loading.isFormSending" />
+                            <template v-if="isColor">
+                                <ColorPicker v-model="val.color" format="hex" :disabled="loading.isFormSending" />
+                                <InputText v-model="val.color" class="w-24" size="small" maxlength="6" placeholder="FF0000" :disabled="loading.isFormSending" />
+                            </template>
                             <Button icon="pi pi-times" severity="danger" text rounded size="small" @click="removeValue(index)" :disabled="loading.isFormSending" />
                         </div>
                     </div>

@@ -9,6 +9,7 @@ import { useRowEffects } from '@/composables/useRowEffects';
 import dayjs from '@/plugins/dayjs';
 import { useAttributeService } from '@/services/useAttributeService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { AttributeData } from '@/types/attribute';
@@ -54,6 +55,7 @@ const { highlights, markHighlight, getRowClass } = useRowEffects();
 const defaultFields = ['name', 'type', 'categories', 'values', 'active', 'created_at'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
+const loading = useLoading();
 const dataLoaded = ref(false);
 const loadingActiveId = ref<number | null>(null);
 
@@ -154,6 +156,7 @@ function confirmDeleteRecord(event: MouseEvent | null, attributeIds: number[]): 
             severity: 'danger'
         },
         accept: () => {
+            loading.startPageLoading();
             useAttributeService
                 .deleteAttributes(attributeIds)
                 .then(() => {
@@ -170,6 +173,9 @@ function confirmDeleteRecord(event: MouseEvent | null, attributeIds: number[]): 
                         console.error('Session expired, redirecting to login');
                     }
                     console.error('Error deleting attributes');
+                })
+                .finally(() => {
+                    loading.stopPageLoading();
                 });
         }
     });
@@ -177,6 +183,7 @@ function confirmDeleteRecord(event: MouseEvent | null, attributeIds: number[]): 
 
 function toggleActive(attributeId: number): void {
     loadingActiveId.value = attributeId;
+    loading.startPageLoading();
     useAttributeService
         .toggleActiveAttribute(attributeId)
         .then((response) => {
@@ -192,6 +199,7 @@ function toggleActive(attributeId: number): void {
         })
         .finally(() => {
             loadingActiveId.value = null;
+            loading.stopPageLoading();
         });
 }
 
@@ -199,7 +207,7 @@ function toggleActive(attributeId: number): void {
 const typeIcons: Record<string, string> = {
     dropdown: 'pi pi-chevron-down',
     text: 'pi pi-align-left',
-    switches: 'pi pi-toggle-on',
+    color: 'pi pi-palette',
     multiselect: 'pi pi-list-check',
     date: 'pi pi-calendar',
     numeric: 'pi pi-hashtag',
@@ -210,7 +218,7 @@ const typeIcons: Record<string, string> = {
 const typeSeverities: Record<string, string> = {
     dropdown: 'info',
     text: 'secondary',
-    switches: 'success',
+    color: 'success',
     multiselect: 'warn',
     date: 'contrast',
     numeric: 'info',
@@ -275,7 +283,7 @@ onUnmounted(() => {
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
                 :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.attributes') })"
                 resizableColumns
-                columnResizeMode="fit"
+                columnResizeMode="expand"
                 reorderableColumns
                 :frozenValue="lockedRow"
                 sortField="name"
@@ -413,7 +421,7 @@ onUnmounted(() => {
                                 :options="[
                                     { label: t('attribute.types.dropdown'), value: 'dropdown' },
                                     { label: t('attribute.types.text'), value: 'text' },
-                                    { label: t('attribute.types.switches'), value: 'switches' },
+                                    { label: t('attribute.types.color'), value: 'color' },
                                     { label: t('attribute.types.multiselect'), value: 'multiselect' },
                                     { label: t('attribute.types.date'), value: 'date' },
                                     { label: t('attribute.types.numeric'), value: 'numeric' },
@@ -471,8 +479,20 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-1 flex-wrap" v-if="data.values && data.values.length">
-                                <Tag v-for="val in data.values.slice(0, 4)" :key="val.id" :value="val.value" severity="info" class="text-xs" />
-                                <span v-if="data.values.length > 4" class="text-xs text-surface-500 font-medium"> +{{ data.values.length - 4 }} {{ t('common.labels.more') }} </span>
+                                <template v-if="data.type === 'color'">
+                                    <div
+                                        v-for="val in data.values.slice(0, 6)"
+                                        :key="val.id"
+                                        v-tooltip.top="val.value"
+                                        class="w-6 h-6 rounded-full border border-surface-200 dark:border-surface-600"
+                                        :style="{ backgroundColor: '#' + (val.color || 'ccc') }"
+                                    />
+                                    <span v-if="data.values.length > 6" class="text-xs text-surface-500 font-medium"> +{{ data.values.length - 6 }} {{ t('common.labels.more') }} </span>
+                                </template>
+                                <template v-else>
+                                    <Tag v-for="val in data.values.slice(0, 4)" :key="val.id" :value="val.value" severity="info" class="text-xs" />
+                                    <span v-if="data.values.length > 4" class="text-xs text-surface-500 font-medium"> +{{ data.values.length - 4 }} {{ t('common.labels.more') }} </span>
+                                </template>
                             </div>
                             <span v-else class="text-surface-400 text-xs italic">—</span>
                         </DataCell>

@@ -1,19 +1,4 @@
 <template>
-    <!-- Skeleton Page Header -->
-    <div class="datatable-page-header">
-        <div class="flex items-center gap-4">
-            <Skeleton width="3rem" height="3rem" borderRadius="12px" />
-            <div class="flex flex-col gap-2">
-                <Skeleton width="16rem" height="1.25rem" />
-                <Skeleton width="22rem" height="0.85rem" />
-            </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <Skeleton width="7rem" height="2.5rem" borderRadius="8px" />
-            <Skeleton width="9rem" height="2.5rem" borderRadius="8px" />
-        </div>
-    </div>
-
     <!-- Skeleton Main Content -->
     <div class="flex flex-col lg:flex-row gap-6 min-h-[600px]">
         <!-- Skeleton Left Panel: Category Tree -->

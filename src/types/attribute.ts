@@ -3,6 +3,7 @@
 export interface AttributeValueData {
     id: number;
     value: string;
+    color?: string;
     sort_order: number;
 }
 
@@ -24,7 +25,7 @@ export interface AttributeFormData {
     type: string | null;
     active: boolean;
     category_ids: number[];
-    values: { id?: number; value: string; sort_order?: number }[];
+    values: { id?: number; value: string; color?: string; sort_order?: number }[];
 }
 
 export interface AttributesResponse {

@@ -22,14 +22,6 @@ export const accountSchema = z.object({
     nif: optionalStringMax(30),
     nis: optionalStringMax(30),
     rib: optionalStringMax(30),
-    plan: z
-        .object({
-            id: z.coerce.number({ invalid_type_error: 'common.messages.is_required', required_error: 'common.messages.is_required' }).int({ message: 'common.messages.is_required' }).positive({ message: 'common.messages.is_required' }),
-            name: optionalString
-        })
-        .nullable()
-        .optional(),
-    active: z.boolean().optional().default(true),
     contacts: z
         .array(
             z.object({
