@@ -1,6 +1,6 @@
 // src/services/usePlanService.ts
 import apiClient from '@/services/axios';
-import type { PlansFilterParams, PlansResponse, PlanFormData, PlanApiResponse, ToggleActivePlanResponse, DeletePlansResponse } from '@/types/plan';
+import type { PlansFilterParams, PlansResponse, PlanFormData, PlanApiResponse, ToggleActivePlanResponse, ToggleRecommendedPlanResponse, DeletePlansResponse } from '@/types/plan';
 
 export const usePlanService = {
     async getPlans(params: PlansFilterParams = {}): Promise<PlansResponse> {
@@ -36,6 +36,16 @@ export const usePlanService = {
         try {
             await apiClient.get('/sanctum/csrf-cookie');
             const response = await apiClient.patch<ToggleActivePlanResponse>(`/api/admin/plans/${planId}/toggle`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async toggleRecommendedPlan(planId: number): Promise<ToggleRecommendedPlanResponse> {
+        try {
+            await apiClient.get('/sanctum/csrf-cookie');
+            const response = await apiClient.patch<ToggleRecommendedPlanResponse>(`/api/admin/plans/${planId}/toggle-recommended`);
             return response.data;
         } catch (error) {
             throw error;

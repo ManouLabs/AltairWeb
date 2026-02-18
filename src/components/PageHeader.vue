@@ -15,7 +15,7 @@ withDefaults(defineProps<Props>(), {
 <template>
     <div class="datatable-page-header">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm" :style="{ backgroundColor: iconColor + '20' }">
+            <div class="w-12 h-12 rounded-3xl flex items-center justify-center shadow-sm" :style="{ backgroundColor: iconColor + '20' }">
                 <i :class="icon" class="text-xl" :style="{ color: iconColor }"></i>
             </div>
             <div>

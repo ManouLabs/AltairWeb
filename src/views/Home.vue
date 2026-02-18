@@ -25,7 +25,7 @@ function smoothScroll(id) {
             <div class="max-w-7xl mx-auto px-6 lg:px-8 py-4 flex items-center justify-between">
                 <!-- Logo -->
                 <a href="#" class="flex items-center gap-3 group">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-codly-purple-500 to-codly-cyan-500 flex items-center justify-center shadow-lg group-hover:shadow-codly-hover transition-shadow duration-300">
+                    <div class="w-10 h-10 rounded-3xl bg-gradient-to-br from-codly-purple-500 to-codly-cyan-500 flex items-center justify-center shadow-lg group-hover:shadow-codly-hover transition-shadow duration-300">
                         <i class="pi pi-box text-white text-lg"></i>
                     </div>
                     <span class="text-2xl font-bold bg-gradient-to-r from-codly-purple-500 to-codly-cyan-500 bg-clip-text text-transparent">Codly</span>
@@ -169,7 +169,7 @@ function smoothScroll(id) {
                         <!-- Floating card: Revenue -->
                         <div class="absolute -bottom-6 -left-6 bg-white dark:bg-surface-900 rounded-2xl shadow-codly-card p-4 border border-surface-200 dark:border-surface-800 hidden lg:block">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center">
+                                <div class="w-10 h-10 rounded-3xl bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center">
                                     <i class="pi pi-arrow-up-right text-white text-sm"></i>
                                 </div>
                                 <div>
@@ -251,7 +251,7 @@ function smoothScroll(id) {
                             <div class="w-3 h-3 rounded-full bg-green-400"></div>
                         </div>
                         <div class="space-y-4">
-                            <div class="flex items-center gap-4 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                            <div class="flex items-center gap-4 p-4 rounded-3xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                                 <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
                                     <i class="pi pi-check text-white text-sm"></i>
                                 </div>
@@ -261,7 +261,7 @@ function smoothScroll(id) {
                                 </div>
                                 <span class="text-xs text-green-600 dark:text-green-400 font-medium">2 min ago</span>
                             </div>
-                            <div class="flex items-center gap-4 p-4 rounded-xl bg-codly-purple-500/5 border border-codly-purple-500/10">
+                            <div class="flex items-center gap-4 p-4 rounded-3xl bg-codly-purple-500/5 border border-codly-purple-500/10">
                                 <div class="w-10 h-10 rounded-full bg-codly-purple-500 flex items-center justify-center">
                                     <i class="pi pi-truck text-white text-sm"></i>
                                 </div>
@@ -271,7 +271,7 @@ function smoothScroll(id) {
                                 </div>
                                 <span class="text-xs text-codly-purple-500 font-medium">5 min ago</span>
                             </div>
-                            <div class="flex items-center gap-4 p-4 rounded-xl bg-codly-cyan-500/5 border border-codly-cyan-500/10">
+                            <div class="flex items-center gap-4 p-4 rounded-3xl bg-codly-cyan-500/5 border border-codly-cyan-500/10">
                                 <div class="w-10 h-10 rounded-full bg-codly-cyan-500 flex items-center justify-center">
                                     <i class="pi pi-box text-white text-sm"></i>
                                 </div>

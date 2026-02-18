@@ -170,15 +170,15 @@ onMounted(loadProduct);
 
                             <!-- Price Cards -->
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-5">
-                                <div class="bg-surface-50 dark:bg-surface-700/30 rounded-xl p-4">
+                                <div class="bg-surface-50 dark:bg-surface-700/30 rounded-3xl p-4">
                                     <p class="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-1">{{ t('product.show.purchase') }}</p>
                                     <p class="text-xl font-extrabold text-surface-800 dark:text-surface-100">{{ formatCurrency(product.purchase_price) }}</p>
                                 </div>
-                                <div class="bg-surface-50 dark:bg-surface-700/30 rounded-xl p-4">
+                                <div class="bg-surface-50 dark:bg-surface-700/30 rounded-3xl p-4">
                                     <p class="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-1">{{ t('product.show.sale') }}</p>
                                     <p class="text-xl font-extrabold text-primary">{{ formatCurrency(product.sale_price) }}</p>
                                 </div>
-                                <div class="bg-surface-50 dark:bg-surface-700/30 rounded-xl p-4">
+                                <div class="bg-surface-50 dark:bg-surface-700/30 rounded-3xl p-4">
                                     <p class="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-1">{{ t('product.show.margin_label') }}</p>
                                     <p class="text-xl font-extrabold" :class="margin ? 'text-emerald-500' : 'text-surface-400'">{{ margin ? margin + '%' : '—' }}</p>
                                 </div>
@@ -186,7 +186,7 @@ onMounted(loadProduct);
                         </div>
 
                         <!-- Stock Bar -->
-                        <div class="bg-surface-50 dark:bg-surface-700/30 rounded-xl p-4">
+                        <div class="bg-surface-50 dark:bg-surface-700/30 rounded-3xl p-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
                                     <i class="pi pi-box text-xs" :class="stockSeverity === 'success' ? 'text-emerald-500' : stockSeverity === 'warn' ? 'text-amber-500' : 'text-red-500'"></i>
@@ -266,7 +266,7 @@ onMounted(loadProduct);
                         </div>
                     </div>
 
-                    <DataTable :value="product.variants" size="small" class="rounded-xl overflow-hidden" :rows="10" :paginator="product.variants.length > 10">
+                    <DataTable :value="product.variants" size="small" class="rounded-3xl overflow-hidden" :rows="10" :paginator="product.variants.length > 10">
                         <Column :header="t('product.show.variants')">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">

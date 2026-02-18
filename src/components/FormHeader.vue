@@ -33,7 +33,7 @@ const iconBgColor = computed(() => {
 <template>
     <div class="flex items-center justify-between gap-4 py-1 w-full">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-colors duration-300" :style="{ backgroundColor: iconBgColor }">
+            <div class="w-12 h-12 rounded-3xl flex items-center justify-center shadow-sm transition-colors duration-300" :style="{ backgroundColor: iconBgColor }">
                 <i :class="headerData.icon || 'pi pi-pencil'" class="text-xl transition-all duration-300" :style="{ color: headerData.iconColor || '#3B82F6' }"></i>
             </div>
             <div class="flex flex-col gap-0.5">

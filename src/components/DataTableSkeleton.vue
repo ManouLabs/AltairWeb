@@ -25,7 +25,7 @@ defineProps({
 
 <template>
     <!-- Skeleton DataTable -->
-    <div class="border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+    <div class="border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden">
         <!-- Skeleton Toolbar -->
         <div class="flex items-center justify-between px-4 py-6 bg-surface-50 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700">
             <div class="flex gap-2">

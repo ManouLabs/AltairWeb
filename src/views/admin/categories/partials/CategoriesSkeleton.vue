@@ -2,7 +2,7 @@
     <!-- Skeleton Main Content -->
     <div class="flex flex-col lg:flex-row gap-6 min-h-[600px]">
         <!-- Skeleton Left Panel: Category Tree -->
-        <Card class="w-full lg:w-[400px] flex-shrink-0 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden shadow-none !p-0" :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }">
+        <Card class="w-full lg:w-[400px] flex-shrink-0 border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden shadow-none !p-0" :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }">
             <template #content>
                 <div class="flex items-center justify-center gap-2 py-6 px-5 border-b border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900">
                     <Skeleton width="1rem" height="1rem" shape="circle" />
@@ -21,7 +21,7 @@
         <!-- Skeleton Right Panel -->
         <div class="flex-1 flex flex-col gap-6">
             <!-- Skeleton Category Header Card -->
-            <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl p-8">
+            <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl p-8">
                 <template #content>
                     <div class="flex justify-between items-start">
                         <div class="flex gap-4">

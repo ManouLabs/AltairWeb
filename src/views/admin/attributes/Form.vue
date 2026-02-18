@@ -300,11 +300,11 @@ onMounted(async () => {
         <!-- Loading Skeleton -->
         <div v-if="isLoading" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 flex flex-col gap-6">
-                <div class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <div class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-3xl p-6">
                     <Skeleton width="150px" height="16px" class="mb-6" />
                     <Skeleton height="48px" class="w-full" />
                 </div>
-                <div class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <div class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-3xl p-6">
                     <Skeleton width="150px" height="16px" class="mb-6" />
                     <div class="grid grid-cols-4 gap-3">
                         <Skeleton height="80px" v-for="i in 8" :key="i" />
@@ -313,11 +313,11 @@ onMounted(async () => {
                 </div>
             </div>
             <div class="flex flex-col gap-6">
-                <div class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <div class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-3xl p-6">
                     <Skeleton width="150px" height="16px" class="mb-6" />
                     <Skeleton height="48px" class="w-full" />
                 </div>
-                <div class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl p-6">
+                <div class="bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-3xl p-6">
                     <Skeleton width="150px" height="16px" class="mb-6" />
                     <Skeleton height="200px" class="w-full" />
                 </div>
@@ -368,7 +368,7 @@ onMounted(async () => {
                             <div
                                 v-for="attrType in ATTRIBUTE_TYPES"
                                 :key="attrType"
-                                class="cursor-pointer border-2 rounded-xl p-4 text-center transition-all duration-200 hover:shadow-md flex flex-col items-center gap-2"
+                                class="cursor-pointer border-2 rounded-3xl p-4 text-center transition-all duration-200 hover:shadow-md flex flex-col items-center gap-2"
                                 :class="[initialValues.type === attrType ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20' : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600']"
                                 @click="handleTypeChange(attrType)"
                             >
@@ -391,11 +391,11 @@ onMounted(async () => {
 
                             <template v-if="supportsValues">
                                 <!-- Options Table -->
-                                <div v-if="attributeValues.length === 0" class="text-center py-6 border border-dashed border-surface-200 dark:border-surface-700 rounded-xl">
+                                <div v-if="attributeValues.length === 0" class="text-center py-6 border border-dashed border-surface-200 dark:border-surface-700 rounded-3xl">
                                     <i class="pi pi-list text-2xl text-surface-300 mb-2"></i>
                                     <p class="text-sm text-surface-400">{{ t('attribute.form.no_values') }}</p>
                                 </div>
-                                <DataTable v-else :value="attributeValues" size="small" class="rounded-xl overflow-hidden">
+                                <DataTable v-else :value="attributeValues" size="small" class="rounded-3xl overflow-hidden">
                                     <Column header="#" style="width: 50px">
                                         <template #body="{ index }">
                                             <span class="text-surface-400 font-medium">{{ index + 1 }}</span>
@@ -431,7 +431,7 @@ onMounted(async () => {
                                     <InputText v-model="booleanLabels.no" :placeholder="t('attribute.form.no_placeholder')" class="w-full" :disabled="loading.isFormSending" />
                                 </div>
                             </div>
-                            <div v-else class="text-center py-6 border border-dashed border-surface-200 dark:border-surface-700 rounded-xl">
+                            <div v-else class="text-center py-6 border border-dashed border-surface-200 dark:border-surface-700 rounded-3xl">
                                 <i class="pi pi-info-circle text-2xl text-surface-300 mb-2"></i>
                                 <p class="text-sm text-surface-400">{{ t('attribute.form.no_options_needed') }}</p>
                             </div>
@@ -450,7 +450,7 @@ onMounted(async () => {
                             <InputIcon>
                                 <i class="pi pi-search text-surface-400" />
                             </InputIcon>
-                            <InputText v-model="categorySearch" :placeholder="t('attribute.form.search_categories')" class="w-full !bg-surface-50 dark:!bg-surface-800/60 !border-surface-200 dark:!border-surface-700 !rounded-xl" />
+                            <InputText v-model="categorySearch" :placeholder="t('attribute.form.search_categories')" class="w-full !bg-surface-50 dark:!bg-surface-800/60 !border-surface-200 dark:!border-surface-700 !rounded-3xl" />
                             <InputIcon v-if="categorySearch" class="cursor-pointer" @click="categorySearch = ''">
                                 <i class="pi pi-times text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors" />
                             </InputIcon>
@@ -482,7 +482,7 @@ onMounted(async () => {
                     </CardSection>
 
                     <!-- Mapping Logic Info -->
-                    <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                    <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-3xl p-6">
                         <div class="flex items-start gap-3">
                             <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <i class="pi pi-info-circle text-white text-sm"></i>

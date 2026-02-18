@@ -744,7 +744,7 @@ onMounted(async () => {
             <!-- TOP ROW: Product Info + Image side by side -->
             <div class="flex flex-col lg:flex-row gap-6">
                 <!-- Product Information Card -->
-                <div class="flex-1 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="flex-1 border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden">
                     <div class="flex items-center gap-2 bg-surface-50 dark:bg-surface-900 py-6 px-5 border-b border-surface-200 dark:border-surface-700">
                         <Skeleton width="16px" height="16px" shape="circle" />
                         <Skeleton width="140px" height="14px" />
@@ -768,7 +768,7 @@ onMounted(async () => {
                 </div>
 
                 <!-- Image Card -->
-                <div class="lg:w-72 flex-shrink-0 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+                <div class="lg:w-72 flex-shrink-0 border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden">
                     <div class="flex items-center gap-2 bg-surface-50 dark:bg-surface-900 py-6 px-5 border-b border-surface-200 dark:border-surface-700">
                         <Skeleton width="16px" height="16px" shape="circle" />
                         <Skeleton width="110px" height="14px" />
@@ -780,7 +780,7 @@ onMounted(async () => {
             </div>
 
             <!-- Attributes Card (full-width) -->
-            <div class="border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+            <div class="border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden">
                 <div class="flex items-center gap-2 bg-surface-50 dark:bg-surface-900 py-6 px-5 border-b border-surface-200 dark:border-surface-700">
                     <Skeleton width="16px" height="16px" shape="circle" />
                     <Skeleton width="85px" height="14px" />
@@ -792,7 +792,7 @@ onMounted(async () => {
             </div>
 
             <!-- Price & Stock Card (full-width) -->
-            <div class="border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden">
+            <div class="border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden">
                 <div class="flex items-center gap-2 bg-surface-50 dark:bg-surface-900 py-6 px-5 border-b border-surface-200 dark:border-surface-700">
                     <Skeleton width="16px" height="16px" shape="circle" />
                     <Skeleton width="100px" height="14px" />
@@ -808,7 +808,7 @@ onMounted(async () => {
                         <Skeleton width="125px" height="10px" />
                         <!-- 3 stock cards -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div class="border-2 border-surface-200 dark:border-surface-700 rounded-xl px-4 py-4 flex items-center gap-3">
+                            <div class="border-2 border-surface-200 dark:border-surface-700 rounded-3xl px-4 py-4 flex items-center gap-3">
                                 <Skeleton width="24px" height="24px" shape="circle" />
                                 <div class="flex-1 flex flex-col gap-1.5">
                                     <Skeleton width="80px" height="12px" />
@@ -816,7 +816,7 @@ onMounted(async () => {
                                 </div>
                                 <Skeleton width="18px" height="18px" shape="circle" />
                             </div>
-                            <div class="border-2 border-surface-200 dark:border-surface-700 rounded-xl px-4 py-4 flex items-center gap-3">
+                            <div class="border-2 border-surface-200 dark:border-surface-700 rounded-3xl px-4 py-4 flex items-center gap-3">
                                 <Skeleton width="24px" height="24px" shape="circle" />
                                 <div class="flex-1 flex flex-col gap-1.5">
                                     <Skeleton width="70px" height="12px" />
@@ -824,7 +824,7 @@ onMounted(async () => {
                                 </div>
                                 <Skeleton width="18px" height="18px" shape="circle" />
                             </div>
-                            <div class="border-2 border-surface-200 dark:border-surface-700 rounded-xl px-4 py-4 flex flex-col gap-2">
+                            <div class="border-2 border-surface-200 dark:border-surface-700 rounded-3xl px-4 py-4 flex flex-col gap-2">
                                 <div class="flex items-center gap-2">
                                     <Skeleton width="14px" height="14px" shape="circle" />
                                     <Skeleton width="70px" height="10px" />
@@ -912,11 +912,11 @@ onMounted(async () => {
                         <CardSection :title="t('product.form.product_image')" icon="pi pi-image">
                             <div class="flex flex-col items-center gap-4">
                                 <div
-                                    class="w-full aspect-square rounded-xl border-2 border-dashed border-surface-200 dark:border-surface-700 flex items-center justify-center overflow-hidden bg-surface-50 dark:bg-surface-800/60 cursor-pointer hover:border-primary/50 transition-colors"
+                                    class="w-full aspect-square rounded-3xl border-2 border-dashed border-surface-200 dark:border-surface-700 flex items-center justify-center overflow-hidden bg-surface-50 dark:bg-surface-800/60 cursor-pointer hover:border-primary/50 transition-colors"
                                     @click="($refs.imageInput as HTMLInputElement)?.click()"
                                 >
-                                    <img v-if="imagePreview" :src="imagePreview" class="w-full h-full object-cover rounded-xl" />
-                                    <img v-else-if="existingImageUrl" :src="existingImageUrl" class="w-full h-full object-cover rounded-xl" />
+                                    <img v-if="imagePreview" :src="imagePreview" class="w-full h-full object-cover rounded-3xl" />
+                                    <img v-else-if="existingImageUrl" :src="existingImageUrl" class="w-full h-full object-cover rounded-3xl" />
                                     <div v-else class="text-center">
                                         <i class="pi pi-cloud-upload text-3xl text-surface-300 mb-2"></i>
                                         <p class="text-sm text-surface-400">{{ t('product.form.upload_image') }}</p>
@@ -956,7 +956,7 @@ onMounted(async () => {
                         <template v-else>
                             <!-- Attribute cards -->
                             <div class="flex flex-wrap gap-4">
-                                <div v-for="(attr, attrIndex) in selectedAttributes" :key="attr.id" class="flex-1 min-w-[220px] border border-surface-200 dark:border-surface-700 rounded-xl p-5 flex flex-col">
+                                <div v-for="(attr, attrIndex) in selectedAttributes" :key="attr.id" class="flex-1 min-w-[220px] border border-surface-200 dark:border-surface-700 rounded-3xl p-5 flex flex-col">
                                     <!-- Header: Name + Grouped by + X -->
                                     <div class="flex items-start justify-between mb-4">
                                         <div class="flex items-center gap-2">
@@ -1050,7 +1050,7 @@ onMounted(async () => {
 
                             <!-- Add another attribute (dashed card) -->
                             <div
-                                class="border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-xl py-6 px-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200 min-h-[80px]"
+                                class="border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-3xl py-6 px-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200 min-h-[80px]"
                                 @click="(e) => addAttrPopover.toggle(e)"
                             >
                                 <i class="pi pi-plus text-surface-400 text-sm"></i>
@@ -1140,7 +1140,7 @@ onMounted(async () => {
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <!-- Single Stock card -->
                                 <div
-                                    class="cursor-pointer border-2 rounded-xl px-4 py-4 flex items-center gap-3 transition-all duration-200 hover:shadow-md"
+                                    class="cursor-pointer border-2 rounded-3xl px-4 py-4 flex items-center gap-3 transition-all duration-200 hover:shadow-md"
                                     :class="[stockType === 'single' ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20' : 'border-surface-200 dark:border-surface-700']"
                                     @click="stockType = 'single'"
                                 >
@@ -1156,7 +1156,7 @@ onMounted(async () => {
 
                                 <!-- Per Variant card -->
                                 <div
-                                    class="cursor-pointer border-2 rounded-xl px-4 py-4 flex items-center gap-3 transition-all duration-200 hover:shadow-md"
+                                    class="cursor-pointer border-2 rounded-3xl px-4 py-4 flex items-center gap-3 transition-all duration-200 hover:shadow-md"
                                     :class="[stockType === 'variant' ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20' : 'border-surface-200 dark:border-surface-700']"
                                     @click="stockType = 'variant'"
                                 >
@@ -1172,7 +1172,7 @@ onMounted(async () => {
 
                                 <!-- Total Stock card (disabled when per variant) -->
                                 <div
-                                    class="border-2 rounded-xl px-4 py-4 flex flex-col gap-2 transition-all duration-200"
+                                    class="border-2 rounded-3xl px-4 py-4 flex flex-col gap-2 transition-all duration-200"
                                     :class="[stockType === 'variant' ? 'border-surface-100 dark:border-surface-800 bg-surface-50 dark:bg-surface-900 opacity-60' : 'border-surface-200 dark:border-surface-700']"
                                 >
                                     <div class="flex items-center gap-2">
@@ -1220,7 +1220,7 @@ onMounted(async () => {
                                 </Message>
 
                                 <!-- TreeTable -->
-                                <TreeTable :value="treeNodes" v-model:expandedKeys="expandedKeys" class="rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700">
+                                <TreeTable :value="treeNodes" v-model:expandedKeys="expandedKeys" class="rounded-3xl overflow-hidden border border-surface-200 dark:border-surface-700">
                                     <!-- Column: Variant Tree (with toggler) -->
                                     <Column :header="t('product.form.variant_tree')" expander style="width: 280px">
                                         <template #body="{ node }">

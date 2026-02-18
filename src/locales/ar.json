@@ -11,7 +11,9 @@
         "shop": "متجر",
         "shops": "المتاجر",
         "customer": "عميل",
-        "customers": "العملاء"
+        "customers": "العملاء",
+        "subscription": "اشتراك",
+        "subscriptions": "الاشتراكات"
     },
     "common": {
         "contents": {
@@ -173,7 +175,8 @@
             "categories": "التصنيفات",
             "attributes": "السمات",
             "profile": "الملف الشخصي",
-            "logout": "تسجيل الخروج"
+            "logout": "تسجيل الخروج",
+            "subscriptions": "الاشتراكات"
         },
         "top_bar": {
             "search": "بحث...",
@@ -353,6 +356,31 @@
             "variants": "المتغيرات",
             "attributes": "السمات",
             "quick_actions": "إجراءات سريعة"
+        }
+    },
+    "subscription": {
+        "columns": {
+            "account_name": "الحساب",
+            "plan_name": "الباقة",
+            "active": "نشط",
+            "starts_at": "تاريخ البدء",
+            "ends_at": "تاريخ الانتهاء",
+            "notes": "ملاحظات",
+            "created_at": "تاريخ الإنشاء",
+            "updated_at": "تاريخ التحديث"
+        },
+        "form": {
+            "subtitle": "إعداد تفاصيل الاشتراك ودورة حياته"
+        },
+        "page": {
+            "subtitle": "مراقبة وإدارة اشتراكات العملاء"
+        },
+        "stats": {
+            "total_active": "الاشتراكات النشطة",
+            "mrr": "الإيرادات الشهرية",
+            "mrr_label": "الإيرادات",
+            "avg_usage": "متوسط استخدام الموارد",
+            "expiring_soon": "قريبة الانتهاء"
         }
     },
     "primevue": {

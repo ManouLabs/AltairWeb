@@ -366,7 +366,7 @@ onMounted(async () => {
             <!-- Region Pricing Skeleton -->
             <div class="card">
                 <Skeleton width="150px" height="16px" class="mb-6" />
-                <div class="bg-surface-50 dark:bg-surface-800 rounded-xl p-4 mb-6">
+                <div class="bg-surface-50 dark:bg-surface-800 rounded-3xl p-4 mb-6">
                     <div class="flex flex-wrap items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
                             <Skeleton width="24px" height="24px" shape="circle" />
@@ -498,7 +498,7 @@ onMounted(async () => {
                 <h2 class="text-xs font-bold text-surface-900 dark:text-white uppercase tracking-wider mb-6">{{ t('shipper.labels.region_pricing') }}</h2>
 
                 <!-- Quick Fill Section -->
-                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-xl p-4 mb-6">
+                <div class="bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-3xl p-4 mb-6">
                     <div class="flex flex-wrap items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
                             <i class="pi pi-bolt text-primary text-lg" />

@@ -371,7 +371,7 @@ onUnmounted(() => {
         <!-- Main Content -->
         <div class="flex flex-col lg:flex-row gap-6 min-h-[600px]">
             <!-- Left Panel: Category Tree -->
-            <Card class="w-full lg:w-[400px] flex-shrink-0 border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden shadow-none !p-0" :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }">
+            <Card class="w-full lg:w-[400px] flex-shrink-0 border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden shadow-none !p-0" :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }">
                 <template #content>
                     <div
                         class="flex items-center justify-center gap-2 font-semibold text-md uppercase tracking-wider text-surface-500 dark:text-surface-400 bg-surface-50 dark:bg-surface-900 py-6 px-5 border-b border-surface-200 dark:border-surface-700"
@@ -386,7 +386,7 @@ onUnmounted(() => {
                             <InputIcon>
                                 <i class="pi pi-search text-surface-400" />
                             </InputIcon>
-                            <InputText v-model="searchQuery" :placeholder="t('category.placeholders.search_categories')" class="w-full !bg-surface-50 dark:!bg-surface-800/60 !border-surface-200 dark:!border-surface-700 !rounded-xl" />
+                            <InputText v-model="searchQuery" :placeholder="t('category.placeholders.search_categories')" class="w-full !bg-surface-50 dark:!bg-surface-800/60 !border-surface-200 dark:!border-surface-700 !rounded-3xl" />
                             <InputIcon v-if="searchQuery" class="cursor-pointer" @click="clearSearch">
                                 <i class="pi pi-times text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors" />
                             </InputIcon>
@@ -428,7 +428,7 @@ onUnmounted(() => {
             <!-- Right Panel: Category Details -->
             <div class="flex-1 flex flex-col gap-6" v-if="record">
                 <!-- Category Header Card -->
-                <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl p-8">
+                <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl p-8">
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div class="flex gap-4">
@@ -538,7 +538,7 @@ onUnmounted(() => {
 
                     <!-- Add New Sub-category Card -->
                     <div
-                        class="flex flex-col items-center justify-center gap-2.5 min-h-[160px] cursor-pointer transition-all border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-xl text-surface-400 dark:text-surface-400 bg-transparent hover:border-primary hover:bg-primary-50 dark:hover:bg-primary-900/20 group"
+                        class="flex flex-col items-center justify-center gap-2.5 min-h-[160px] cursor-pointer transition-all border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-3xl text-surface-400 dark:text-surface-400 bg-transparent hover:border-primary hover:bg-primary-50 dark:hover:bg-primary-900/20 group"
                         @click="addSubCategory"
                         v-if="authStore.hasPermission('create_categories')"
                     >

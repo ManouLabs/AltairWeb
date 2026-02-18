@@ -67,6 +67,12 @@ const adminRoutes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresSuperAdmin: true }
     },
     {
+        path: 'subscriptions',
+        name: 'subscriptions',
+        component: () => import('@/views/admin/subscriptions/Subscriptions.vue'),
+        meta: { requiresAuth: true, requiresSuperAdmin: true }
+    },
+    {
         path: 'regions',
         name: 'regions',
         component: () => import('@/views/admin/regions/Regions.vue'),

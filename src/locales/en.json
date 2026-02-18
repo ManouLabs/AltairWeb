@@ -27,7 +27,9 @@
         "category": "Category",
         "categories": "Categories",
         "attribute": "Attribute",
-        "attributes": "Attributes"
+        "attributes": "Attributes",
+        "subscription": "Subscription",
+        "subscriptions": "Subscriptions"
     },
     "common": {
         "contents": {
@@ -255,7 +257,14 @@
             "customers": "Customers",
             "categories": "Categories",
             "attributes": "Attributes",
-            "products": "Products"
+            "products": "Products",
+            "subscriptions": "Subscriptions"
+        },
+        "sections": {
+            "main_menu": "Main Menu",
+            "products": "Products",
+            "billing": "Billing",
+            "settings": "Settings"
         },
         "top_bar": {
             "search": "Search...",
@@ -471,17 +480,60 @@
     "plan": {
         "columns": {
             "name": "Name",
+            "icon": "Icon",
+            "color": "Color",
+            "description": "Description",
             "active": "Active",
+            "recommended": "Recommended",
             "orders": "Orders",
             "products": "Products",
             "users": "Users",
             "shops": "Shops",
-            "price": "Price",
+            "monthly_price": "Monthly Price",
+            "yearly_price": "Yearly Price",
             "created_at": "Created At",
             "updated_at": "Updated At"
         },
         "form": {
-            "subtitle": "Define feature limits and pricing details"
+            "subtitle": "Define feature limits and pricing details",
+            "section_basic": "Basic Information",
+            "section_visual": "Visual Identity",
+            "section_quotas": "Plan Quotas",
+            "section_pricing": "Pricing"
+        },
+        "page": {
+            "subtitle": "Set up and manage your subscription plans",
+            "no_plans": "No plans yet",
+            "no_plans_hint": "Create your first plan to get started",
+            "per_month": "/mo",
+            "per_year": "/yr",
+            "unlimited": "Unlimited",
+            "features": "Features"
+        }
+    },
+    "subscription": {
+        "columns": {
+            "account_name": "Account",
+            "plan_name": "Plan",
+            "active": "Active",
+            "starts_at": "Starts At",
+            "ends_at": "Ends At",
+            "notes": "Notes",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
+        },
+        "form": {
+            "subtitle": "Configure subscription details and lifecycle"
+        },
+        "page": {
+            "subtitle": "Monitor and manage client subscriptions"
+        },
+        "stats": {
+            "total_active": "Active Subscriptions",
+            "mrr": "Monthly Revenue",
+            "mrr_label": "Revenue",
+            "avg_usage": "Avg. Resource Usage",
+            "expiring_soon": "Expiring Soon"
         }
     },
     "region": {

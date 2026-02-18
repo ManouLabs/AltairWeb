@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     ActiveToggleButton: typeof import('./src/components/ActiveToggleButton.vue')['default']
     Address: typeof import('./src/components/Address.vue')['default']
+    AppButton: typeof import('./src/components/AppButton.vue')['default']
     Avatar: typeof import('primevue/avatar')['default']
     Badge: typeof import('primevue/badge')['default']
     Button: typeof import('primevue/button')['default']
@@ -17,6 +18,7 @@ declare module 'vue' {
     Checkbox: typeof import('primevue/checkbox')['default']
     ColorPicker: typeof import('primevue/colorpicker')['default']
     Column: typeof import('primevue/column')['default']
+    ConfirmDialog: typeof import('primevue/confirmdialog')['default']
     ConfirmPopup: typeof import('primevue/confirmpopup')['default']
     Contact: typeof import('./src/components/Contact.vue')['default']
     DataCell: typeof import('./src/components/DataCell.vue')['default']

@@ -303,10 +303,10 @@ onUnmounted(() => {
 
     <!-- Loading State -->
     <div v-if="loadingStore.isDataLoading" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-        <div v-for="n in 6" :key="n" class="shop-card shop-card-loading">
-            <div class="shop-card-body">
+        <div v-for="n in 6" :key="n" class="flex flex-col rounded-3xl border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 relative overflow-hidden">
+            <div class="p-6 flex-1">
                 <!-- Header: Icon + Name/Date inline, Toggle on right -->
-                <div class="shop-card-header">
+                <div class="flex justify-between items-start">
                     <div class="flex items-center gap-3">
                         <Skeleton width="56px" height="56px" borderRadius="16px" />
                         <div class="flex flex-col gap-2">
@@ -325,7 +325,7 @@ onUnmounted(() => {
                     <Skeleton width="45%" height="16px" />
                 </div>
             </div>
-            <div class="shop-card-footer">
+            <div class="flex items-center justify-between px-6 py-4 border-t border-surface-200 dark:border-surface-700">
                 <div class="flex gap-2">
                     <Skeleton width="28px" height="28px" borderRadius="50%" />
                     <Skeleton width="28px" height="28px" borderRadius="50%" />
@@ -341,20 +341,28 @@ onUnmounted(() => {
 
     <!-- Shops Grid -->
     <div v-else-if="filteredRecords.length > 0" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-        <div v-for="shop in filteredRecords" :key="shop.id" :class="['shop-card group', shop.active ? 'shop-card-active' : 'shop-card-inactive']">
+        <div
+            v-for="shop in filteredRecords"
+            :key="shop.id"
+            class="group flex flex-col rounded-3xl border relative overflow-hidden"
+            :class="[shop.active ? 'bg-[#f0fdf4] border-[#d1fae5] dark:bg-[rgba(16,185,129,0.08)] dark:border-[rgba(16,185,129,0.2)]' : 'bg-[#fff1f2] border-[#ffe4e6] dark:bg-[rgba(244,63,94,0.08)] dark:border-[rgba(244,63,94,0.2)]']"
+        >
             <!-- Card Body -->
-            <div class="shop-card-body">
+            <div class="p-6 flex-1">
                 <!-- Header: Logo + Name/Date on same line, Toggle on right -->
-                <div class="shop-card-header">
+                <div class="flex justify-between items-start">
                     <div class="flex items-center gap-3">
-                        <div :class="['shop-icon', shop.active ? 'shop-icon-active' : 'shop-icon-inactive']">
+                        <div
+                            class="w-14 h-14 rounded-2xl flex items-center justify-center bg-surface-0 dark:bg-surface-900 shadow-sm border"
+                            :class="[shop.active ? 'text-[#10b981] border-[#d1fae5] dark:border-[rgba(16,185,129,0.3)]' : 'text-[#f43f5e] border-[#fecdd3] dark:border-[rgba(244,63,94,0.3)]']"
+                        >
                             <Image v-if="shop.files && shop.files.length > 0" :src="shop.files[0].url" alt="shop logo" width="40" preview class="rounded-lg" />
                             <i v-else class="pi pi-shopping-bag text-2xl"></i>
                         </div>
                         <div class="flex flex-col">
-                            <h3 class="shop-name">{{ shop.name }}</h3>
-                            <p class="shop-date">
-                                <i class="pi pi-calendar text-xs"></i>
+                            <h3 class="text-lg font-bold text-surface-900 dark:text-surface-0 m-0 leading-tight">{{ shop.name }}</h3>
+                            <p class="flex items-center gap-1.5 mt-1 text-[11px] text-surface-500 dark:text-surface-400 font-medium">
+                                <i class="pi pi-calendar text-xs text-surface-400"></i>
                                 {{ t('shop.labels.since') }} {{ humanizeDate(shop.created_at, t) }}
                             </p>
                         </div>
@@ -363,13 +371,13 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Description -->
-                <p v-if="shop.description" class="shop-description">"{{ shop.description }}"</p>
+                <p v-if="shop.description" class="mt-4 text-xs text-surface-500 dark:text-surface-400 italic leading-relaxed">"{{ shop.description }}"</p>
 
                 <!-- Contact Details -->
-                <div class="shop-contacts">
+                <div class="mt-4 flex flex-col gap-2.5">
                     <!-- Address -->
-                    <div v-if="shop.addresses && shop.addresses.length > 0 && shop.addresses[0]" class="shop-contact-item">
-                        <i class="pi pi-map-marker"></i>
+                    <div v-if="shop.addresses && shop.addresses.length > 0 && shop.addresses[0]" class="flex items-start gap-3 text-[13px] text-surface-500 dark:text-surface-400">
+                        <i class="pi pi-map-marker text-lg text-surface-400 mt-px"></i>
                         <span
                             >{{ shop.addresses[0].street }}<template v-if="shop.addresses[0].city && typeof shop.addresses[0].city === 'object' && 'name' in shop.addresses[0].city">, {{ shop.addresses[0].city.name }}</template
                             ><template v-if="shop.addresses[0].region && typeof shop.addresses[0].region === 'object' && 'name' in shop.addresses[0].region">, {{ shop.addresses[0].region.name }}</template></span
@@ -377,44 +385,54 @@ onUnmounted(() => {
                     </div>
                     <!-- Email -->
                     <template v-for="(contact, key) in shop.contactMethods?.filter((c: ContactMethod) => c.type === 'email')" :key="'email-' + key">
-                        <div class="shop-contact-item">
-                            <i class="pi pi-envelope"></i>
+                        <div class="flex items-start gap-3 text-[13px] text-surface-500 dark:text-surface-400">
+                            <i class="pi pi-envelope text-lg text-surface-400 mt-px"></i>
                             <span>{{ contact.value }}</span>
                         </div>
                     </template>
                     <!-- Phone -->
                     <template v-for="(contact, key) in shop.contactMethods?.filter((c: ContactMethod) => c.type === 'phone')" :key="'phone-' + key">
-                        <div class="shop-contact-item shop-contact-phone">
-                            <i class="pi pi-phone"></i>
-                            <span>{{ contact.value }}</span>
+                        <div class="flex items-start gap-3 text-[13px] text-surface-500 dark:text-surface-400">
+                            <i class="pi pi-phone text-lg text-surface-400 mt-px"></i>
+                            <span class="font-medium text-surface-700 dark:text-surface-200">{{ contact.value }}</span>
                         </div>
                     </template>
                 </div>
             </div>
 
             <!-- Card Footer -->
-            <div class="shop-card-footer">
+            <div class="flex items-center justify-between px-6 py-4 border-t" :class="[shop.active ? 'border-[rgba(16,185,129,0.1)]' : 'border-[rgba(244,63,94,0.1)]']">
                 <!-- Left: Social Links -->
-                <div class="shop-footer-left">
-                    <div class="shop-social-links">
+                <div class="flex items-center gap-3">
+                    <div class="flex gap-2">
                         <a
                             v-for="(contact, key) in shop.contactMethods?.filter((c: ContactMethod) => ['whatsapp', 'website', 'linkedin', 'tiktok', 'facebook', 'instagram'].includes(c.type))"
                             :key="key"
                             :href="getSocialLink(contact)"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="shop-social-link"
+                            class="w-7 h-7 flex items-center justify-center text-surface-500 dark:text-surface-400 rounded-full transition-all duration-150 hover:text-primary hover:bg-primary/10"
                             v-tooltip.top="contact.type.charAt(0).toUpperCase() + contact.type.slice(1)"
                         >
-                            <i :class="getSocialIcon(contact.type)"></i>
+                            <i :class="getSocialIcon(contact.type)" class="text-sm"></i>
                         </a>
                     </div>
                 </div>
 
                 <!-- Right: Action Buttons -->
-                <div class="shop-footer-actions">
-                    <Button v-if="authStore.hasPermission('view_shops')" v-tooltip.top="t('common.tooltips.view', { entity: t('entity.shop') })" icon="pi pi-eye" text rounded severity="secondary" @click="editRecord(shop)" :disabled="loading" />
-                    <Button v-if="authStore.hasPermission('update_shops')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.shop') })" icon="pi pi-pencil" text rounded @click="editRecord(shop)" :disabled="loading" />
+                <div class="flex items-center gap-1">
+                    <Button
+                        v-if="authStore.hasPermission('view_shops')"
+                        v-tooltip.top="t('common.tooltips.view', { entity: t('entity.shop') })"
+                        icon="pi pi-eye"
+                        text
+                        rounded
+                        severity="secondary"
+                        class="!w-8 !h-8"
+                        @click="editRecord(shop)"
+                        :disabled="loading"
+                    />
+                    <Button v-if="authStore.hasPermission('update_shops')" v-tooltip.top="t('common.tooltips.edit', { entity: t('entity.shop') })" icon="pi pi-pencil" text rounded class="!w-8 !h-8" @click="editRecord(shop)" :disabled="loading" />
                     <Button
                         v-if="authStore.hasPermission('delete_shops')"
                         v-tooltip.top="t('common.tooltips.delete', { entity: t('entity.shop') })"
@@ -422,6 +440,7 @@ onUnmounted(() => {
                         text
                         rounded
                         severity="danger"
+                        class="!w-8 !h-8"
                         @click="confirmDeleteRecord($event, [shop.id])"
                         :disabled="loading"
                     />
@@ -431,14 +450,14 @@ onUnmounted(() => {
     </div>
 
     <!-- No Results (Search) -->
-    <div v-else-if="dataLoaded && searchQuery && filteredRecords.length === 0" class="shop-empty-state">
+    <div v-else-if="dataLoaded && searchQuery && filteredRecords.length === 0" class="flex flex-col items-center justify-center py-16 px-8 bg-surface-0 dark:bg-surface-900 rounded-3xl border border-surface-200 dark:border-surface-700 shadow-sm">
         <i class="pi pi-search text-4xl text-surface-300 mb-4"></i>
-        <p>{{ t('shop.labels.no_shop_found') }}</p>
+        <p class="text-surface-500 dark:text-surface-400 text-sm">{{ t('shop.labels.no_shop_found') }}</p>
     </div>
 
     <!-- No Shops -->
-    <div v-else-if="dataLoaded && filteredRecords.length === 0" class="shop-empty-state">
+    <div v-else-if="dataLoaded && filteredRecords.length === 0" class="flex flex-col items-center justify-center py-16 px-8 bg-surface-0 dark:bg-surface-900 rounded-3xl border border-surface-200 dark:border-surface-700 shadow-sm">
         <i class="pi pi-shopping-bag text-4xl text-surface-300 mb-4"></i>
-        <p>{{ t('shop.labels.no_shops') }}</p>
+        <p class="text-surface-500 dark:text-surface-400 text-sm">{{ t('shop.labels.no_shops') }}</p>
     </div>
 </template>

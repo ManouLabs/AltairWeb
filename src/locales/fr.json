@@ -11,7 +11,9 @@
         "shop": "Boutique",
         "shops": "Boutiques",
         "customer": "Client",
-        "customers": "Clients"
+        "customers": "Clients",
+        "subscription": "Abonnement",
+        "subscriptions": "Abonnements"
     },
     "common": {
         "contents": {
@@ -168,7 +170,8 @@
             "categories": "Catégories",
             "attributes": "Attributs",
             "profile": "Profil",
-            "logout": "Déconnexion"
+            "logout": "Déconnexion",
+            "subscriptions": "Abonnements"
         },
         "top_bar": {
             "search": "Rechercher...",
@@ -345,6 +348,31 @@
             "variants": "Variantes",
             "attributes": "Attributs",
             "quick_actions": "Actions Rapides"
+        }
+    },
+    "subscription": {
+        "columns": {
+            "account_name": "Compte",
+            "plan_name": "Forfait",
+            "active": "Actif",
+            "starts_at": "Début",
+            "ends_at": "Fin",
+            "notes": "Notes",
+            "created_at": "Créé le",
+            "updated_at": "Mis à jour le"
+        },
+        "form": {
+            "subtitle": "Configurer les détails et le cycle de vie de l'abonnement"
+        },
+        "page": {
+            "subtitle": "Surveiller et gérer les abonnements clients"
+        },
+        "stats": {
+            "total_active": "Abonnements actifs",
+            "mrr": "Revenu mensuel",
+            "mrr_label": "Revenus",
+            "avg_usage": "Utilisation moy. des ressources",
+            "expiring_soon": "Expiration proche"
         }
     },
     "primevue": {

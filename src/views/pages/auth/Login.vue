@@ -44,7 +44,7 @@ const loginUser = async () => {
 
             <!-- Logo -->
             <div class="relative z-10 flex items-center gap-3">
-                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                <div class="w-10 h-10 bg-white rounded-3xl flex items-center justify-center shadow-lg">
                     <i class="pi pi-box text-codly-purple-500 text-lg"></i>
                 </div>
                 <h2 class="text-2xl font-bold tracking-tight text-white">Codly</h2>

@@ -23,12 +23,6 @@ const mainMenu = computed(() => [
         visible: can('view_customers')
     },
     {
-        label: t('navigation.side_bar.accounts'),
-        icon: 'pi pi-fw pi-users',
-        to: '/admin/accounts',
-        visible: authStore.user?.roles?.includes('Super Admin')
-    },
-    {
         label: t('navigation.side_bar.shops'),
         icon: 'pi pi-fw pi-shop',
         to: '/admin/shops',
@@ -39,11 +33,26 @@ const mainMenu = computed(() => [
         icon: 'pi pi-fw pi-truck',
         to: '/admin/shippers',
         visible: can('view_shippers')
+    }
+]);
+
+const saasMenu = computed(() => [
+    {
+        label: t('navigation.side_bar.accounts'),
+        icon: 'pi pi-fw pi-users',
+        to: '/admin/accounts',
+        visible: authStore.user?.roles?.includes('Super Admin')
     },
     {
         label: t('navigation.side_bar.plans'),
         icon: 'pi pi-fw pi-list',
         to: '/admin/plans',
+        visible: authStore.user?.roles?.includes('Super Admin')
+    },
+    {
+        label: t('navigation.side_bar.subscriptions'),
+        icon: 'pi pi-fw pi-credit-card',
+        to: '/admin/subscriptions',
         visible: authStore.user?.roles?.includes('Super Admin')
     }
 ]);
@@ -107,7 +116,7 @@ const settingsMenu = computed(() => [
 <template>
     <div>
         <!-- Main Menu section -->
-        <p class="menu-section-label">Main Menu</p>
+        <p class="menu-section-label">{{ t('navigation.sections.main_menu') }}</p>
         <ul class="layout-menu">
             <template v-for="(item, i) in mainMenu" :key="'main-' + i">
                 <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
@@ -115,15 +124,23 @@ const settingsMenu = computed(() => [
         </ul>
 
         <!-- Products section -->
-        <p class="menu-section-label">Products</p>
+        <p class="menu-section-label">{{ t('navigation.sections.products') }}</p>
         <ul class="layout-menu">
             <template v-for="(item, i) in productsMenu" :key="'products-' + i">
                 <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
             </template>
         </ul>
 
+        <!-- SaaS section -->
+        <p class="menu-section-label">{{ t('navigation.sections.billing') }}</p>
+        <ul class="layout-menu">
+            <template v-for="(item, i) in saasMenu" :key="'saas-' + i">
+                <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
+            </template>
+        </ul>
+
         <!-- Settings section -->
-        <p class="menu-section-label">Settings</p>
+        <p class="menu-section-label">{{ t('navigation.sections.settings') }}</p>
         <ul class="layout-menu">
             <template v-for="(item, i) in settingsMenu" :key="'settings-' + i">
                 <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>

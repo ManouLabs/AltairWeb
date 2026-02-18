@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-    <Card class="border border-surface-200 dark:border-surface-700 rounded-xl overflow-hidden shadow-none !p-0" :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }">
+    <Card class="border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden shadow-none !p-0" :pt="{ body: { class: '!p-0' }, content: { class: '!p-0' } }">
         <template #content>
             <div class="flex items-center gap-2 font-semibold text-md uppercase tracking-wider text-surface-500 dark:text-surface-400 bg-surface-50 dark:bg-surface-900 py-6 px-5 border-b border-surface-200 dark:border-surface-700">
                 <i v-if="icon" :class="icon" class="text-base" :style="{ color: iconColor || 'var(--p-primary-color)' }"></i>

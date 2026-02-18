@@ -3,12 +3,17 @@
 export interface Plan {
     id: number;
     name: string;
+    icon?: string | null;
+    color?: string | null;
+    description?: string | null;
     active: boolean;
+    recommended: boolean;
     orders?: number | null;
     products?: number | null;
     users?: number | null;
     shops?: number | null;
-    price?: number | null;
+    monthly_price?: number | null;
+    yearly_price?: number | null;
     created_at?: string;
     updated_at?: string;
 }
@@ -16,12 +21,17 @@ export interface Plan {
 export interface PlanFormData {
     id?: number;
     name: string;
+    icon?: string | null;
+    color?: string | null;
+    description?: string | null;
     active?: boolean;
+    recommended?: boolean;
     orders?: number | null;
     products?: number | null;
     users?: number | null;
     shops?: number | null;
-    price?: number | null;
+    monthly_price?: number | null;
+    yearly_price?: number | null;
 }
 
 export interface PlansFilterParams {
@@ -52,6 +62,11 @@ export interface DeletePlansResponse {
 }
 
 export interface ToggleActivePlanResponse {
+    data: Plan;
+    message?: string;
+}
+
+export interface ToggleRecommendedPlanResponse {
     data: Plan;
     message?: string;
 }

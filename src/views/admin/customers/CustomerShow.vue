@@ -138,7 +138,7 @@ function editCustomer(): void {
         <template v-if="loading">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="space-y-6">
-                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                         <template #content>
                             <div class="flex flex-col items-center gap-4">
                                 <Skeleton shape="circle" size="6rem" />
@@ -157,7 +157,7 @@ function editCustomer(): void {
                             </div>
                         </template>
                     </Card>
-                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                         <template #content>
                             <Skeleton width="40%" height="1rem" class="mb-4" />
                             <div class="space-y-4">
@@ -173,14 +173,14 @@ function editCustomer(): void {
                 </div>
                 <div class="lg:col-span-2 space-y-6">
                     <div class="grid grid-cols-3 gap-4">
-                        <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl" v-for="n in 3" :key="n">
+                        <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl" v-for="n in 3" :key="n">
                             <template #content>
                                 <Skeleton width="60%" height="0.75rem" class="mb-3" />
                                 <Skeleton width="80%" height="1.5rem" />
                             </template>
                         </Card>
                     </div>
-                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                         <template #content>
                             <Skeleton width="100%" height="16rem" />
                         </template>
@@ -195,7 +195,7 @@ function editCustomer(): void {
                 <!-- LEFT PANEL -->
                 <div class="space-y-6">
                     <!-- Profile Card -->
-                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                         <template #content>
                             <div class="flex flex-col items-center">
                                 <!-- Avatar -->
@@ -252,7 +252,7 @@ function editCustomer(): void {
                     </Card>
 
                     <!-- Reputation Summary Card -->
-                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                         <template #title>
                             <span class="text-sm font-bold uppercase tracking-wider">{{ t('customer.show.reputation_summary') }}</span>
                         </template>
@@ -288,7 +288,7 @@ function editCustomer(): void {
                     <!-- Stats Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <!-- Total Spent -->
-                        <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                        <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                             <template #content>
                                 <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('customer.show.total_spent') }}</span>
                                 <div class="flex items-end gap-2 mt-2">
@@ -299,7 +299,7 @@ function editCustomer(): void {
                         </Card>
 
                         <!-- Success Rate -->
-                        <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                        <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                             <template #content>
                                 <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('customer.show.success_rate') }}</span>
                                 <div class="flex items-end gap-2 mt-2">
@@ -310,7 +310,7 @@ function editCustomer(): void {
                         </Card>
 
                         <!-- Avg Order Value -->
-                        <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                        <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                             <template #content>
                                 <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('customer.show.avg_order_value') }}</span>
                                 <div class="flex items-end gap-2 mt-2">
@@ -321,7 +321,7 @@ function editCustomer(): void {
                     </div>
 
                     <!-- Recent Orders Card -->
-                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-xl">
+                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
                         <template #title>
                             <div class="flex items-center justify-between">
                                 <span class="text-base font-bold">{{ t('customer.show.recent_orders') }}</span>
