@@ -75,6 +75,30 @@ onMounted(() => {
                 {{ t('plan.form.section_basic') }}
             </p>
             <div class="grid grid-cols-2 gap-4">
+                <!-- Level -->
+                <div class="col-span-2">
+                    <FloatLabel variant="on" class="w-full">
+                        <IconField>
+                            <InputIcon class="pi pi-sort-numeric-up" />
+                            <InputNumber
+                                id="level"
+                                v-model="record.level"
+                                :disabled="loading.isFormSending"
+                                autofocus
+                                class="w-full"
+                                :useGrouping="false"
+                                :min="1"
+                                :invalid="authStore.errors?.['level']?.[0] ? true : false"
+                                @blur="() => onBlurField('level')"
+                            />
+                        </IconField>
+                        <label for="level">{{ t('plan.columns.level') }} *</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['level']?.[0]" severity="error" size="small">
+                        {{ t(authStore.errors?.['level']?.[0]) }}
+                    </Message>
+                </div>
+
                 <!-- Name -->
                 <div class="col-span-2">
                     <FloatLabel variant="on" class="w-full">
@@ -126,7 +150,7 @@ onMounted(() => {
             <p class="text-[10px] font-black uppercase tracking-widest text-surface-400 dark:text-surface-500 mb-3">
                 {{ t('plan.form.section_visual') }}
             </p>
-            <IconColorPicker v-model:icon="record.icon" v-model:iconColor="record.color" />
+            <IconColorPicker v-model:icon="record.icon" v-model:iconColor="record.color" :icon-error="authStore.errors?.['icon']?.[0]" :color-error="authStore.errors?.['color']?.[0]" />
         </div>
 
         <!-- Section: Plan Quotas -->
@@ -206,6 +230,112 @@ onMounted(() => {
                     </FloatLabel>
                     <Message v-if="authStore.errors?.['shops']?.[0]" severity="error" size="small">
                         {{ t(authStore.errors?.['shops']?.[0]) }}
+                    </Message>
+                </div>
+
+                <!-- Roles -->
+                <div>
+                    <FloatLabel variant="on" class="w-full">
+                        <IconField>
+                            <InputIcon class="pi pi-id-card" />
+                            <InputNumber id="roles" v-model="record.roles" :disabled="loading.isFormSending" class="w-full" :useGrouping="false" :min="0" :invalid="authStore.errors?.['roles']?.[0] ? true : false" @blur="() => onBlurField('roles')" />
+                        </IconField>
+                        <label for="roles">{{ t('plan.columns.roles') }} *</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['roles']?.[0]" severity="error" size="small">
+                        {{ t(authStore.errors?.['roles']?.[0]) }}
+                    </Message>
+                </div>
+
+                <!-- Categories -->
+                <div>
+                    <FloatLabel variant="on" class="w-full">
+                        <IconField>
+                            <InputIcon class="pi pi-sitemap" />
+                            <InputNumber
+                                id="categories"
+                                v-model="record.categories"
+                                :disabled="loading.isFormSending"
+                                class="w-full"
+                                :useGrouping="false"
+                                :min="0"
+                                :invalid="authStore.errors?.['categories']?.[0] ? true : false"
+                                @blur="() => onBlurField('categories')"
+                            />
+                        </IconField>
+                        <label for="categories">{{ t('plan.columns.categories') }} *</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['categories']?.[0]" severity="error" size="small">
+                        {{ t(authStore.errors?.['categories']?.[0]) }}
+                    </Message>
+                </div>
+
+                <!-- Shippers -->
+                <div>
+                    <FloatLabel variant="on" class="w-full">
+                        <IconField>
+                            <InputIcon class="pi pi-truck" />
+                            <InputNumber
+                                id="shippers"
+                                v-model="record.shippers"
+                                :disabled="loading.isFormSending"
+                                class="w-full"
+                                :useGrouping="false"
+                                :min="0"
+                                :invalid="authStore.errors?.['shippers']?.[0] ? true : false"
+                                @blur="() => onBlurField('shippers')"
+                            />
+                        </IconField>
+                        <label for="shippers">{{ t('plan.columns.shippers') }} *</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['shippers']?.[0]" severity="error" size="small">
+                        {{ t(authStore.errors?.['shippers']?.[0]) }}
+                    </Message>
+                </div>
+
+                <!-- Customers -->
+                <div>
+                    <FloatLabel variant="on" class="w-full">
+                        <IconField>
+                            <InputIcon class="pi pi-user" />
+                            <InputNumber
+                                id="customers"
+                                v-model="record.customers"
+                                :disabled="loading.isFormSending"
+                                class="w-full"
+                                :useGrouping="false"
+                                :min="0"
+                                :invalid="authStore.errors?.['customers']?.[0] ? true : false"
+                                @blur="() => onBlurField('customers')"
+                            />
+                        </IconField>
+                        <label for="customers">{{ t('plan.columns.customers') }} *</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['customers']?.[0]" severity="error" size="small">
+                        {{ t(authStore.errors?.['customers']?.[0]) }}
+                    </Message>
+                </div>
+
+                <!-- Contact Methods -->
+                <div>
+                    <FloatLabel variant="on" class="w-full">
+                        <IconField>
+                            <InputIcon class="pi pi-phone" />
+                            <InputNumber
+                                id="contact_methods"
+                                v-model="record.contact_methods"
+                                :disabled="loading.isFormSending"
+                                class="w-full"
+                                :useGrouping="false"
+                                :min="0"
+                                :invalid="authStore.errors?.['contact_methods']?.[0] ? true : false"
+                                @blur="() => onBlurField('contact_methods')"
+                            />
+                        </IconField>
+                        <label for="contact_methods">{{ t('plan.columns.contact_methods') }} *</label>
+                    </FloatLabel>
+                    <Message v-if="authStore.errors?.['contact_methods']?.[0]" severity="error" size="small">
+                        {{ t(authStore.errors?.['contact_methods']?.[0]) }}
                     </Message>
                 </div>
             </div>

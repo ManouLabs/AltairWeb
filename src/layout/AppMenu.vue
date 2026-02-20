@@ -132,12 +132,14 @@ const settingsMenu = computed(() => [
         </ul>
 
         <!-- SaaS section -->
-        <p class="menu-section-label">{{ t('navigation.sections.billing') }}</p>
-        <ul class="layout-menu">
-            <template v-for="(item, i) in saasMenu" :key="'saas-' + i">
-                <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
-            </template>
-        </ul>
+        <template v-if="authStore.user?.roles?.includes('Super Admin')">
+            <p class="menu-section-label">{{ t('navigation.sections.billing') }}</p>
+            <ul class="layout-menu">
+                <template v-for="(item, i) in saasMenu" :key="'saas-' + i">
+                    <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
+                </template>
+            </ul>
+        </template>
 
         <!-- Settings section -->
         <p class="menu-section-label">{{ t('navigation.sections.settings') }}</p>

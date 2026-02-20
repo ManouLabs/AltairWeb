@@ -45,6 +45,31 @@ apiClient.interceptors.response.use(
             authStore.handleSessionExpired();
         }
 
+        // Handle quota exceeded errors (403 with quota payload)
+        if (status === 403) {
+            const data = error.response?.data as Record<string, unknown> | undefined;
+            if (data?.quota) {
+                const quota = data.quota as { resource: string; used: number; limit: number };
+                try {
+                    const { useToast } = await import('primevue/usetoast');
+                    const toast = useToast();
+                    toast.add({
+                        severity: 'error',
+                        summary: 'Quota Exceeded',
+                        detail: (data.message as string) || `You've reached the limit for ${quota.resource} (${quota.used}/${quota.limit}).`,
+                        life: 8000,
+                        group: 'tc'
+                    });
+                } catch {
+                    // Toast may not be available outside component context
+                }
+                // Refresh quota store to reflect latest state
+                const { useQuotaStore } = await import('@/stores/useQuotaStore');
+                const quotaStore = useQuotaStore();
+                quotaStore.refreshQuotas();
+            }
+        }
+
         return Promise.reject(error);
     }
 );

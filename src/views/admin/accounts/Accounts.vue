@@ -138,6 +138,7 @@ function editRecord(row) {
     openDialog();
 }
 const openDialog = () => {
+    const isEdit = !!record.value?.id;
     dialog.open(formComponent, {
         props: {
             style: { width: '40vw' },

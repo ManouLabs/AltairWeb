@@ -4,6 +4,7 @@ import apiClient from '@/services/axios';
 import { redirectUser } from '@/utilities/auth';
 import { defineStore } from 'pinia';
 import { useSettingStore } from './useSettingStore';
+import { useQuotaStore } from './useQuotaStore';
 import type { AxiosError } from 'axios';
 
 interface User {
@@ -65,6 +66,7 @@ export const useAuthStore = defineStore('auth', {
 
                 await this.fetchUser();
                 await useSettingStore().fetchSettings();
+                useQuotaStore().fetchQuotas();
 
                 this.startSessionTimer();
             } catch (error) {

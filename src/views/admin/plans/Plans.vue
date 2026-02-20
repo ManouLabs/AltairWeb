@@ -102,8 +102,14 @@ function addRecord() {
         products: 0,
         users: 0,
         shops: 0,
+        roles: 0,
+        categories: 0,
+        shippers: 0,
+        customers: 0,
+        contact_methods: 0,
         monthly_price: 0,
-        yearly_price: 0
+        yearly_price: 0,
+        level: 1
     };
     openDialog();
 }
@@ -158,6 +164,7 @@ const openDialog = () => {
 
 function toggleActive(planId) {
     loadingActiveId.value = planId;
+    loadingStore.startPageLoading();
     usePlanService
         .toggleActivePlan(planId)
         .then(() => {
@@ -170,11 +177,13 @@ function toggleActive(planId) {
         })
         .finally(() => {
             loadingActiveId.value = null;
+            loadingStore.stopPageLoading();
         });
 }
 
 function toggleRecommended(planId) {
     loadingRecommendedId.value = planId;
+    loadingStore.startPageLoading();
     usePlanService
         .toggleRecommendedPlan(planId)
         .then((response) => {
@@ -192,6 +201,7 @@ function toggleRecommended(planId) {
         })
         .finally(() => {
             loadingRecommendedId.value = null;
+            loadingStore.stopPageLoading();
         });
 }
 
@@ -260,7 +270,7 @@ onUnmounted(() => {
                 </h1>
                 <p class="text-surface-500 dark:text-surface-400 mt-1 text-sm">{{ t('plan.page.subtitle') }}</p>
             </div>
-            <Button :label="t('common.labels.add')" icon="pi pi-plus" severity="primary" @click="addRecord" />
+            <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.plan') })" :label="`${t('common.labels.new')} ${t('entity.plan')}`" icon="pi pi-plus" :disabled="!dataLoaded" @click="addRecord" />
         </div>
 
         <!-- Skeleton Loader -->
@@ -346,6 +356,12 @@ onUnmounted(() => {
 
                     <!-- Feature List with verified checkmark icons — bigger text -->
                     <div class="space-y-4 mb-7 flex-1">
+                        <div class="flex items-center gap-3">
+                            <i class="pi pi-verified text-lg" :style="{ color: plan.color || '#6366F1' }"></i>
+                            <span class="text-base text-surface-700 dark:text-surface-300">
+                                <strong>Level {{ plan.level }}</strong>
+                            </span>
+                        </div>
                         <div class="flex items-center gap-3">
                             <i class="pi pi-verified text-lg" :style="{ color: plan.color || '#6366F1' }"></i>
                             <span class="text-base text-surface-700 dark:text-surface-300"> {{ formatLimit(plan.orders) }} {{ t('plan.columns.orders') }} / {{ t('plan.page.per_month').replace('/', '').trim() }} </span>

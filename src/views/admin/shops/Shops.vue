@@ -2,6 +2,7 @@
 import { useShopService } from '@/services/useShopService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { useQuotaStore } from '@/stores/useQuotaStore';
 import { findRecordIndex, humanizeDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { ShopData, ShopFormData, ContactMethod } from '@/types/shop';
@@ -11,11 +12,14 @@ import { useDialog } from 'primevue/usedialog';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, markRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
 import FormHeader from '@/components/FormHeader.vue';
+import QuotaBanner from '@/components/QuotaBanner.vue';
 
 const authStore = useAuthStore();
 const confirm = useConfirm();
 const dialog = useDialog();
 const loadingStore = useLoading();
+const quotaStore = useQuotaStore();
+if (!quotaStore.loaded) quotaStore.fetchQuotas();
 const loadingActiveId = ref<number | null>(null);
 const loading = ref<boolean>(false);
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
@@ -292,14 +296,17 @@ onUnmounted(() => {
             </IconField>
             <Button
                 v-if="authStore.hasPermission('create_shops')"
-                v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shop') })"
+                v-tooltip.top="!quotaStore.canCreate('shops') ? t('quota.limit_reached', { entity: t('entity.shop') }) : t('common.tooltips.add', { entity: t('entity.shop') })"
                 :label="`${t('common.labels.new')} ${t('entity.shop')}`"
                 icon="pi pi-plus"
-                :disabled="!dataLoaded"
+                :disabled="!dataLoaded || !quotaStore.canCreate('shops')"
                 @click="addRecord"
             />
         </template>
     </PageHeader>
+
+    <!-- Quota Banner -->
+    <QuotaBanner v-if="quotaStore.getStatus('shops')" resource="shops" :used="quotaStore.getUsage('shops')" :limit="quotaStore.getLimit('shops')" :percentage="quotaStore.getPercentage('shops')" :status="quotaStore.getStatus('shops')" />
 
     <!-- Loading State -->
     <div v-if="loadingStore.isDataLoading" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">

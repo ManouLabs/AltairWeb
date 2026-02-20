@@ -8,6 +8,8 @@ import { useRowEffects } from '@/composables/useRowEffects';
 import dayjs from '@/plugins/dayjs';
 import { useUserService } from '@/services/useUserService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useQuotaStore } from '@/stores/useQuotaStore';
+import QuotaBanner from '@/components/QuotaBanner.vue';
 import { findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { User, Role } from '@/types/user';
@@ -53,6 +55,8 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 );
 
 const authStore = useAuthStore();
+const quotaStore = useQuotaStore();
+if (!quotaStore.loaded) quotaStore.fetchQuotas();
 const confirm = useConfirm();
 const dialog = useDialog();
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
@@ -289,14 +293,17 @@ onUnmounted(() => {
                 />
                 <Button
                     v-if="authStore.hasPermission('create_users')"
-                    v-tooltip.top="t('common.tooltips.add', { entity: t('entity.user') })"
+                    v-tooltip.top="!quotaStore.canCreate('users') ? t('quota.limit_reached', { entity: t('entity.user') }) : t('common.tooltips.add', { entity: t('entity.user') })"
                     :label="'+ ' + t('common.labels.new') + ' ' + t('entity.user')"
                     severity="primary"
-                    :disabled="!dataLoaded"
+                    :disabled="!dataLoaded || !quotaStore.canCreate('users')"
                     @click="addRecord"
                 />
             </template>
         </PageHeader>
+
+        <!-- Quota Banner -->
+        <QuotaBanner v-if="quotaStore.getStatus('users')" resource="users" :used="quotaStore.getUsage('users')" :limit="quotaStore.getLimit('users')" :percentage="quotaStore.getPercentage('users')" :status="quotaStore.getStatus('users')" />
 
         <!-- Skeleton Loading State -->
         <DataTableSkeleton v-if="!dataLoaded" :columns="4" has-avatar has-tag-column />

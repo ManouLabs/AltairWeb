@@ -7,6 +7,7 @@ export interface Subscription {
     plan_id: number;
     plan_name?: string;
     active: boolean;
+    billing_cycle: 'monthly' | 'yearly';
     starts_at: string;
     ends_at?: string | null;
     notes?: string | null;
@@ -18,9 +19,19 @@ export interface SubscriptionFormData {
     id?: number;
     account_id: number | null;
     plan_id: number | null;
+    billing_cycle: 'monthly' | 'yearly';
     starts_at: string;
-    ends_at?: string | null;
     notes?: string | null;
+}
+
+export interface SubscriptionPlan {
+    id: number;
+    name: string;
+    icon: string;
+    color: string;
+    description: string | null;
+    monthly_price: number | null;
+    yearly_price: number | null;
 }
 
 export interface SubscriptionsFilterParams {
@@ -40,7 +51,7 @@ export interface SubscriptionsResponse {
         current_page: number;
     };
     accounts: { id: number; legal_name: string; trade_name: string | null }[];
-    plans: { id: number; name: string; price: number }[];
+    plans: SubscriptionPlan[];
 }
 
 export interface SubscriptionApiResponse {

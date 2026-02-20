@@ -4,6 +4,11 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
+const props = defineProps<{
+    iconError?: string | null;
+    colorError?: string | null;
+}>();
+
 const icon = defineModel<string | null>('icon', { default: null });
 const iconColor = defineModel<string | null>('iconColor', { default: null });
 
@@ -156,24 +161,30 @@ const accentColors = ['#3B82F6', '#1D4ED8', '#6366F1', '#4F46E5', '#A855F7', '#8
                     {{ t('common.icon_picker.no_icons_found') }}
                 </div>
             </div>
+            <Message v-if="props.iconError" severity="error" size="small" variant="simple">
+                {{ t(props.iconError) }}
+            </Message>
         </div>
 
         <!-- Accent Colors -->
         <div class="flex flex-col gap-3 pt-4 border-t border-surface-200 dark:border-surface-700">
             <span class="text-[10px] font-black uppercase tracking-widest text-surface-500 dark:text-surface-400">{{ t('common.icon_picker.accent_color') }} :</span>
             <div class="grid grid-cols-10 gap-2">
-                <Button
+                <button
                     v-for="color in accentColors"
                     :key="color"
-                    :icon="iconColor === color ? 'pi pi-check' : undefined"
-                    rounded
-                    class="!w-7 !h-7 !p-0 !border-surface-200 dark:!border-surface-700 hover:!scale-125 transition-all"
-                    :class="{ '!ring-2 !ring-primary !ring-offset-2 dark:!ring-offset-surface-900 z-10': iconColor === color }"
-                    :style="{ backgroundColor: color, borderColor: color, color: 'white' }"
+                    type="button"
+                    class="w-7 h-7 p-0 border-2 border-transparent rounded-lg cursor-pointer flex items-center justify-center text-white text-[9px] transition-all duration-150 outline-none hover:scale-125"
+                    :class="{ 'ring-2 ring-primary ring-offset-2 dark:ring-offset-surface-900 z-10': iconColor === color }"
+                    :style="{ backgroundColor: color, borderColor: color }"
                     @click="iconColor = color"
-                    :pt="{ icon: { class: '!text-[9px]' } }"
-                />
+                >
+                    <i v-if="iconColor === color" class="pi pi-check" />
+                </button>
             </div>
+            <Message v-if="props.colorError" severity="error" size="small" variant="simple">
+                {{ t(props.colorError) }}
+            </Message>
         </div>
     </div>
 </template>

@@ -489,8 +489,14 @@
             "products": "Products",
             "users": "Users",
             "shops": "Shops",
+            "roles": "Roles",
+            "categories": "Categories",
+            "shippers": "Shippers",
+            "customers": "Customers",
+            "contact_methods": "Contact Methods",
             "monthly_price": "Monthly Price",
             "yearly_price": "Yearly Price",
+            "level": "Hierarchy Level",
             "created_at": "Created At",
             "updated_at": "Updated At"
         },
@@ -516,6 +522,8 @@
             "account_name": "Account",
             "plan_name": "Plan",
             "active": "Active",
+            "billing_cycle": "Billing Cycle",
+            "quotas": "Quotas",
             "starts_at": "Starts At",
             "ends_at": "Ends At",
             "notes": "Notes",
@@ -523,7 +531,22 @@
             "updated_at": "Updated At"
         },
         "form": {
-            "subtitle": "Configure subscription details and lifecycle"
+            "subtitle": "Provision a new service plan for an existing account.",
+            "select_account": "SELECT ACCOUNT",
+            "search_account": "Search account by name or ID...",
+            "choose_plan": "CHOOSE PLAN",
+            "start_date": "START DATE",
+            "renewal_cycle": "RENEWAL CYCLE",
+            "quantity": "Quantity (Months/Years)",
+            "monthly": "Monthly",
+            "yearly": "Yearly",
+            "mo": "mo",
+            "yr": "yr",
+            "status": "STATUS",
+            "active_label": "Active",
+            "active_description": "Enable subscription services immediately",
+            "create_subscription": "Create Subscription",
+            "save_subscription": "Save Subscription"
         },
         "page": {
             "subtitle": "Monitor and manage client subscriptions"
@@ -1022,5 +1045,8 @@
         "aria.zoomOut": "Zoom Out",
         "aria.rotateRight": "Rotate Right",
         "aria.rotateLeft": "Rotate Left"
+    },
+    "quota": {
+        "limit_reached": "You've reached the limit for {entity}. Upgrade your plan."
     }
 }

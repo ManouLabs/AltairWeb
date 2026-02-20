@@ -12,15 +12,6 @@ export const useSubscriptionService = {
         }
     },
 
-    async getStats() {
-        try {
-            const response = await apiClient.get('/api/admin/subscriptions/stats');
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
     async storeSubscription(data: SubscriptionFormData): Promise<SubscriptionApiResponse> {
         try {
             await apiClient.get('/sanctum/csrf-cookie');

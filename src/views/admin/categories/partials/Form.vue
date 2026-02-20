@@ -173,7 +173,7 @@ onMounted(() => {
         </div>
 
         <!-- Icon & Color Section -->
-        <IconColorPicker v-model:icon="record.icon" v-model:icon-color="record.icon_color" />
+        <IconColorPicker v-model:icon="record.icon" v-model:icon-color="record.icon_color" :icon-error="authStore.errors?.['icon']?.[0]" :color-error="authStore.errors?.['icon_color']?.[0]" />
 
         <!-- Visibility Toggle -->
         <div class="flex justify-between items-center py-2 px-1">

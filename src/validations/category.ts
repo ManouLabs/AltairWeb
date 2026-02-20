@@ -10,8 +10,8 @@ export const categorySchema = z.object({
     name: requiredStringMax(150),
     slug: optionalString,
     description: optionalString,
-    icon: optionalString,
-    icon_color: optionalString,
+    icon: requiredStringMax(50),
+    icon_color: requiredStringMax(20),
     sort_order: z.number().min(0).default(0),
     active: z.boolean().default(true),
     publish: z.boolean().default(false)

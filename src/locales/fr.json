@@ -375,6 +375,21 @@
             "expiring_soon": "Expiration proche"
         }
     },
+    "plan": {
+        "columns": {
+            "name": "Nom",
+            "description": "Description",
+            "active": "Actif",
+            "recommended": "Recommandé",
+            "orders": "Commandes",
+            "products": "Produits",
+            "users": "Utilisateurs",
+            "shops": "Boutiques",
+            "monthly_price": "Prix Mensuel",
+            "yearly_price": "Prix Annuel",
+            "level": "Niveau Hiérarchique"
+        }
+    },
     "primevue": {
         "startsWith": "Commence par",
         "contains": "Contient",

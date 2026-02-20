@@ -20,47 +20,18 @@ import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
 
 onMounted(() => {
     initialize();
-    loadStats();
     subscribeToEcho();
 });
 
 const { t } = useI18n();
 const loadingStore = useLoading();
 
-// ── Stats ─────────────────────────────────────────────────
-const stats = ref({ total_active: 0, total: 0, mrr: 0, expiring_soon: 0 });
-const statsLoading = ref(true);
-
-async function loadStats() {
-    try {
-        stats.value = await useSubscriptionService.getStats();
-    } catch (e) {
-        console.error('Failed to load stats', e);
-    } finally {
-        statsLoading.value = false;
-    }
-}
-
-// Compute average resource usage from loaded records
-const avgUsage = computed(() => {
-    const activeRecords = records.value.filter((r) => r.active && r.plan_limits && r.quota_usage);
-    if (!activeRecords.length) return 0;
-    let totalPercent = 0;
-    let count = 0;
-    activeRecords.forEach((r) => {
-        if (r.plan_limits.products && r.plan_limits.products > 0) {
-            totalPercent += (r.quota_usage.products / r.plan_limits.products) * 100;
-            count++;
-        }
-    });
-    return count ? Math.round(totalPercent / count) : 0;
-});
-
 // ── Filters ───────────────────────────────────────────────
 const defaultFiltersConfig = {
     id: FilterMatchMode.CONTAINS,
     account_name: FilterMatchMode.CONTAINS,
     plan_name: FilterMatchMode.CONTAINS,
+    billing_cycle: FilterMatchMode.EQUALS,
     active: FilterMatchMode.EQUALS,
     starts_at: FilterMatchMode.CONTAINS,
     ends_at: FilterMatchMode.CONTAINS
@@ -96,7 +67,7 @@ const { showToast } = useShowToast();
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
 // Row lock + column freezing
-const defaultFields = ['account_name', 'plan_name', 'active', 'starts_at', 'ends_at', 'notes'];
+const defaultFields = ['account_name', 'plan_name', 'billing_cycle', 'active', 'quotas', 'starts_at', 'ends_at', 'notes'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref(null);
@@ -141,7 +112,6 @@ function handleDelete(event) {
             records.value.splice(index, 1);
         }
     });
-    loadStats(); // refresh stats after delete
 }
 
 function handleUpdate(event) {
@@ -158,7 +128,6 @@ function handleStore(event) {
         records.value.unshift(event.data);
         markHighlight(event.data.id, 'new');
     }
-    loadStats(); // refresh stats after new record
 }
 
 // ── CRUD Actions ──────────────────────────────────────────
@@ -167,8 +136,10 @@ function addRecord() {
     record.value = {
         account_id: null,
         plan_id: null,
+        billing_cycle: 'monthly',
+        quantity: 1,
         starts_at: new Date().toISOString().split('T')[0],
-        ends_at: null,
+        active: true,
         notes: null
     };
     openDialog();
@@ -184,7 +155,6 @@ function toggleActive(subscriptionId) {
             records.value[index].active = !records.value[index].active;
             markHighlight(subscriptionId, 'updated');
             showToast('success', ACTIONS.EDIT, 'subscription', 'tc');
-            loadStats();
         })
         .catch((error) => {
             if (error?.response?.status === 419 || error?.response?.status === 401) {
@@ -207,7 +177,7 @@ function editRecord(row) {
 const openDialog = () => {
     dialog.open(formComponent, {
         props: {
-            style: { width: '40vw' },
+            style: { width: '30vw' },
             breakpoints: { '960px': '75vw', '640px': '90vw' },
             modal: true,
             maximizable: true
@@ -234,7 +204,6 @@ const openDialog = () => {
                         records.value.unshift(result.data.record);
                         markHighlight(result.data.record.id, 'new');
                         showToast('success', ACTIONS.CREATE, 'subscription', 'tc');
-                        loadStats();
                         break;
                     case ACTIONS.EDIT: {
                         const index = findRecordIndex(records, result.data.record.id);
@@ -280,7 +249,6 @@ function confirmDeleteRecord(event, subscriptionIds) {
                         }
                     });
                     showToast('success', ACTIONS.DELETE, 'subscription', 'tc');
-                    loadStats();
                 })
                 .catch((error) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
@@ -295,12 +263,12 @@ function confirmDeleteRecord(event, subscriptionIds) {
 // ── Helpers ───────────────────────────────────────────────
 
 function getPlanBadgeClass(planName) {
-    if (!planName) return 'plan-badge-default';
+    if (!planName) return 'bg-gray-500/10 text-gray-500';
     const name = planName.toLowerCase();
-    if (name.includes('enterprise') || name.includes('cargo')) return 'plan-badge-enterprise';
-    if (name.includes('pro') || name.includes('parcel')) return 'plan-badge-pro';
-    if (name.includes('express')) return 'plan-badge-express';
-    return 'plan-badge-basic';
+    if (name.includes('enterprise') || name.includes('cargo')) return 'bg-violet-500/12 text-violet-600';
+    if (name.includes('pro') || name.includes('parcel')) return 'bg-blue-500/12 text-blue-600';
+    if (name.includes('express')) return 'bg-orange-500/12 text-orange-600';
+    return 'bg-gray-500/12 text-gray-600';
 }
 
 function formatDate(dateStr) {
@@ -309,31 +277,49 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function getQuotaPercent(data) {
-    if (!data.plan_limits || !data.quota_usage) return 0;
-    const limit = data.plan_limits.products;
-    const used = data.quota_usage.products;
+function formatQuotaNumber(value) {
+    if (value >= 10000) return `${(value / 1000).toFixed(1)}k`;
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+    return value?.toString() || '0';
+}
+
+function getQuotaPercent(used, limit) {
     if (!limit || limit <= 0) return 0;
     return Math.min(100, Math.round((used / limit) * 100));
 }
 
-function getQuotaBarClass(percent) {
-    if (percent >= 90) return 'quota-bar-danger';
-    if (percent >= 70) return 'quota-bar-warning';
-    return 'quota-bar-normal';
+function getQuotaBarColor(percent) {
+    if (percent >= 100) return 'bg-red-500';
+    if (percent >= 80) return 'bg-orange-500';
+    if (percent >= 50) return 'bg-yellow-500';
+    return 'bg-blue-500';
 }
 
-function formatQuotaLabel(data) {
-    if (!data.plan_limits || !data.quota_usage) return '—';
-    const limit = data.plan_limits.products;
-    const used = data.quota_usage.products;
-    if (!limit) return `${used} / ∞`;
-    return `${used} / ${limit}`;
+function getQuotaPercentColor(percent) {
+    if (percent >= 100) return 'text-red-500';
+    if (percent >= 80) return 'text-orange-500';
+    return 'text-surface-500';
 }
 
-function formatMRR(value) {
-    if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
-    return value?.toString() || '0';
+function getQuotaItems(data) {
+    if (!data.plan_limits) return [];
+    const items = [];
+    const limits = data.plan_limits;
+    const usage = data.quota_usage || {};
+
+    if (limits.orders && limits.orders > 0) {
+        items.push({ label: 'orders', used: usage.orders || 0, limit: limits.orders });
+    }
+    if (limits.products && limits.products > 0) {
+        items.push({ label: 'products', used: usage.products || 0, limit: limits.products });
+    }
+    if (limits.users && limits.users > 0) {
+        items.push({ label: 'users', used: usage.users || 0, limit: limits.users });
+    }
+    if (limits.shops && limits.shops > 0) {
+        items.push({ label: 'shops', used: usage.shops || 0, limit: limits.shops });
+    }
+    return items;
 }
 
 onUnmounted(() => {
@@ -344,68 +330,21 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="subscription-page">
+    <div class="flex flex-col gap-5">
         <!-- ═══ Header ═══ -->
-        <div class="page-header-row">
-            <div class="header-left">
-                <div class="header-icon-wrap">
-                    <i class="pi pi-credit-card"></i>
+        <div class="flex justify-between items-center flex-wrap gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-400 to-indigo-500 shadow-lg shadow-indigo-500/30">
+                    <i class="pi pi-credit-card text-xl text-white"></i>
                 </div>
                 <div>
-                    <h1 class="page-title">{{ t('common.titles.manage', { entity: t('entity.subscriptions') }) }}</h1>
-                    <p class="page-subtitle">{{ t('subscription.page.subtitle') }}</p>
+                    <h1 class="text-2xl font-bold text-surface-800 dark:text-surface-100 m-0 leading-tight">{{ t('common.titles.manage', { entity: t('entity.subscriptions') }) }}</h1>
+                    <p class="text-sm text-surface-400 dark:text-surface-500 m-0">{{ t('subscription.page.subtitle') }}</p>
                 </div>
             </div>
-            <div class="header-actions">
+            <div class="flex gap-2 items-center">
                 <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.subscriptions') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
                 <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.subscription') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.subscription')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
-            </div>
-        </div>
-
-        <!-- ═══ KPI Stats Cards ═══ -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-card-top">
-                    <div class="stat-icon stat-icon-blue">
-                        <i class="pi pi-users"></i>
-                    </div>
-                    <span class="stat-trend trend-up" v-if="stats.total_active > 0"> <i class="pi pi-arrow-up"></i> {{ stats.total_active }} </span>
-                </div>
-                <p class="stat-label">{{ t('subscription.stats.total_active') }}</p>
-                <p class="stat-value" :class="{ 'stat-loading': statsLoading }">{{ statsLoading ? '—' : stats.total_active }}</p>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-card-top">
-                    <div class="stat-icon stat-icon-purple">
-                        <i class="pi pi-chart-bar"></i>
-                    </div>
-                    <span class="stat-trend trend-up" v-if="stats.mrr > 0"> <i class="pi pi-arrow-up"></i> {{ t('subscription.stats.mrr_label') }} </span>
-                </div>
-                <p class="stat-label">{{ t('subscription.stats.mrr') }}</p>
-                <p class="stat-value" :class="{ 'stat-loading': statsLoading }">{{ statsLoading ? '—' : formatMRR(stats.mrr) + ' DA' }}</p>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-card-top">
-                    <div class="stat-icon stat-icon-cyan">
-                        <i class="pi pi-sync"></i>
-                    </div>
-                    <span class="stat-trend-neutral">{{ avgUsage }}%</span>
-                </div>
-                <p class="stat-label">{{ t('subscription.stats.avg_usage') }}</p>
-                <p class="stat-value" :class="{ 'stat-loading': statsLoading }">{{ avgUsage }}%</p>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-card-top">
-                    <div class="stat-icon stat-icon-orange">
-                        <i class="pi pi-calendar-clock"></i>
-                    </div>
-                    <Badge v-if="stats.expiring_soon > 0" :value="stats.expiring_soon" severity="danger" />
-                </div>
-                <p class="stat-label">{{ t('subscription.stats.expiring_soon') }}</p>
-                <p class="stat-value" :class="{ 'stat-loading': statsLoading }">{{ statsLoading ? '—' : stats.expiring_soon }}</p>
             </div>
         </div>
 
@@ -491,13 +430,6 @@ onUnmounted(() => {
 
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
 
-                <!-- ═══ ID ═══ -->
-                <Column columnKey="id" field="id" header="ID" sortable class="min-w-24">
-                    <template #body="{ data }">
-                        <span class="id-cell">{{ data.id }}</span>
-                    </template>
-                </Column>
-
                 <!-- ═══ Account (Rich) ═══ -->
                 <Column columnKey="account_name" field="account_name" :frozen="frozenColumns.account_name" v-if="selectedColumns.some((column) => column.field === 'account_name')" sortable class="min-w-56">
                     <template #header>
@@ -511,17 +443,20 @@ onUnmounted(() => {
                         />
                     </template>
                     <template #body="{ data }">
-                        <div class="account-cell">
-                            <div class="account-avatar" :style="{ backgroundColor: `hsl(${(data.account_id * 47) % 360}, 65%, 88%)`, color: `hsl(${(data.account_id * 47) % 360}, 70%, 35%)` }">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-9 h-9 rounded-lg flex items-center justify-center text-[0.7rem] font-bold tracking-tight shrink-0"
+                                :style="{ backgroundColor: `hsl(${(data.account_id * 47) % 360}, 65%, 88%)`, color: `hsl(${(data.account_id * 47) % 360}, 70%, 35%)` }"
+                            >
                                 {{ data.account_initials || '??' }}
                             </div>
-                            <div class="account-info">
-                                <div class="account-name" :class="{ 'font-bold': frozenColumns.account_name || highlights[data.id] }">
+                            <div class="flex flex-col min-w-0">
+                                <span class="text-sm font-semibold text-surface-800 dark:text-surface-100 whitespace-nowrap overflow-hidden text-ellipsis" :class="{ 'font-bold': frozenColumns.account_name || highlights[data.id] }">
                                     {{ data.account_name }}
                                     <Tag v-if="highlights[data.id] === 'new'" value="NEW" severity="success" rounded size="small" class="ml-1" />
                                     <Tag v-else-if="highlights[data.id] === 'updated'" value="UPDATED" severity="info" rounded size="small" class="ml-1" />
-                                </div>
-                                <span class="account-id-display">{{ data.account_id_display }}</span>
+                                </span>
+                                <span v-if="data.account_secondary_name" class="text-[0.7rem] text-surface-400 dark:text-surface-500">{{ data.account_secondary_name }}</span>
                             </div>
                         </div>
                     </template>
@@ -540,9 +475,26 @@ onUnmounted(() => {
                         />
                     </template>
                     <template #body="{ data }">
-                        <span class="plan-badge" :class="getPlanBadgeClass(data.plan_name)">
+                        <span class="inline-block px-2.5 py-0.5 rounded-md text-[0.65rem] font-bold tracking-wide" :class="getPlanBadgeClass(data.plan_name)">
                             {{ data.plan_name?.toUpperCase() }}
                         </span>
+                    </template>
+                </Column>
+
+                <!-- ═══ Billing Cycle ═══ -->
+                <Column columnKey="billing_cycle" field="billing_cycle" :frozen="frozenColumns.billing_cycle" v-if="selectedColumns.some((column) => column.field === 'billing_cycle')" sortable class="min-w-32">
+                    <template #header>
+                        <HeaderCell
+                            :text="t('subscription.columns.billing_cycle')"
+                            :frozen="frozenColumns.billing_cycle"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('billing_cycle')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <span class="text-sm text-surface-800 dark:text-surface-100 capitalize">{{ data.billing_cycle }}</span>
                     </template>
                 </Column>
 
@@ -576,7 +528,7 @@ onUnmounted(() => {
                         />
                     </template>
                     <template #body="{ data }">
-                        <span class="date-cell">{{ formatDate(data.starts_at) }}</span>
+                        <span class="text-[0.82rem] text-surface-800 dark:text-surface-100 whitespace-nowrap">{{ formatDate(data.starts_at) }}</span>
                     </template>
                 </Column>
 
@@ -593,7 +545,7 @@ onUnmounted(() => {
                         />
                     </template>
                     <template #body="{ data }">
-                        <span class="date-cell">{{ formatDate(data.ends_at) }}</span>
+                        <span class="text-[0.82rem] text-surface-800 dark:text-surface-100 whitespace-nowrap">{{ formatDate(data.ends_at) }}</span>
                     </template>
                 </Column>
 
@@ -610,7 +562,35 @@ onUnmounted(() => {
                         />
                     </template>
                     <template #body="{ data }">
-                        <span class="notes-cell">{{ data.notes || '—' }}</span>
+                        <span class="text-[0.82rem] text-surface-400 dark:text-surface-500 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap block">{{ data.notes || '—' }}</span>
+                    </template>
+                </Column>
+
+                <!-- ═══ Quotas (Progress Bars) ═══ -->
+                <Column columnKey="quotas" field="quotas" :frozen="frozenColumns.quotas" v-if="selectedColumns.some((column) => column.field === 'quotas')" class="min-w-64">
+                    <template #header>
+                        <HeaderCell
+                            :text="t('subscription.columns.quotas')"
+                            :frozen="frozenColumns.quotas"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('quotas')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <div v-if="getQuotaItems(data).length" class="flex flex-col gap-2.5 w-full min-w-[200px]">
+                            <div v-for="item in getQuotaItems(data)" :key="item.label" class="flex flex-col gap-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[0.75rem] text-surface-600 dark:text-surface-400"> {{ formatQuotaNumber(item.used) }} / {{ formatQuotaNumber(item.limit) }} {{ item.label }} </span>
+                                    <span class="text-[0.7rem] font-bold" :class="getQuotaPercentColor(getQuotaPercent(item.used, item.limit))"> {{ getQuotaPercent(item.used, item.limit) }}% </span>
+                                </div>
+                                <div class="w-full h-1.5 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-300" :class="getQuotaBarColor(getQuotaPercent(item.used, item.limit))" :style="{ width: `${Math.min(100, getQuotaPercent(item.used, item.limit))}%` }"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <span v-else class="text-[0.82rem] text-surface-400 dark:text-surface-500">—</span>
                     </template>
                 </Column>
 
@@ -641,275 +621,3 @@ onUnmounted(() => {
         <ConfirmPopup />
     </div>
 </template>
-
-<style scoped>
-/* ═══ Page Header ═══ */
-.subscription-page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.page-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.header-icon-wrap {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.header-icon-wrap i {
-    font-size: 1.25rem;
-    color: #fff;
-}
-
-.page-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--p-text-color);
-    margin: 0;
-    line-height: 1.3;
-}
-
-.page-subtitle {
-    font-size: 0.85rem;
-    color: var(--p-text-muted-color);
-    margin: 0;
-}
-
-.header-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-/* ═══ KPI Stats Grid ═══ */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-}
-
-@media (max-width: 1024px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 640px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.stat-card {
-    background: var(--p-content-background);
-    border: 1px solid var(--p-content-border-color);
-    border-radius: 1rem;
-    padding: 1.25rem 1.5rem;
-    transition: all 0.2s ease;
-}
-
-.stat-card:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    transform: translateY(-1px);
-}
-
-.stat-card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.stat-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-}
-
-.stat-icon-blue {
-    background: rgba(59, 130, 246, 0.12);
-    color: #3b82f6;
-}
-
-.stat-icon-purple {
-    background: rgba(139, 92, 246, 0.12);
-    color: #8b5cf6;
-}
-
-.stat-icon-cyan {
-    background: rgba(6, 182, 212, 0.12);
-    color: #06b6d4;
-}
-
-.stat-icon-orange {
-    background: rgba(249, 115, 22, 0.12);
-    color: #f97316;
-}
-
-.stat-trend {
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.2rem;
-}
-
-.trend-up {
-    color: #22c55e;
-    background: rgba(34, 197, 94, 0.1);
-    padding: 0.2rem 0.5rem;
-    border-radius: 999px;
-}
-
-.stat-trend-neutral {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #06b6d4;
-    background: rgba(6, 182, 212, 0.1);
-    padding: 0.2rem 0.5rem;
-    border-radius: 999px;
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: var(--p-text-muted-color);
-    margin: 0 0 0.25rem 0;
-    font-weight: 500;
-}
-
-.stat-value {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--p-text-color);
-    margin: 0;
-    line-height: 1;
-}
-
-.stat-loading {
-    opacity: 0.3;
-}
-
-/* ═══ Account Cell ═══ */
-.account-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.account-avatar {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    flex-shrink: 0;
-}
-
-.account-info {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.account-name {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--p-text-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.account-id-display {
-    font-size: 0.7rem;
-    color: var(--p-text-muted-color);
-    font-family: 'SF Mono', 'Cascadia Code', monospace;
-}
-
-/* ═══ Plan Badge ═══ */
-.plan-badge {
-    display: inline-block;
-    padding: 0.2rem 0.65rem;
-    border-radius: 0.35rem;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-}
-
-.plan-badge-enterprise {
-    background: rgba(139, 92, 246, 0.12);
-    color: #7c3aed;
-}
-
-.plan-badge-pro {
-    background: rgba(59, 130, 246, 0.12);
-    color: #2563eb;
-}
-
-.plan-badge-express {
-    background: rgba(249, 115, 22, 0.12);
-    color: #ea580c;
-}
-
-.plan-badge-basic {
-    background: rgba(107, 114, 128, 0.12);
-    color: #4b5563;
-}
-
-.plan-badge-default {
-    background: rgba(107, 114, 128, 0.08);
-    color: #6b7280;
-}
-
-/* ═══ Date Cell ═══ */
-.date-cell {
-    font-size: 0.82rem;
-    color: var(--p-text-color);
-    white-space: nowrap;
-}
-
-/* ═══ Notes Cell ═══ */
-.notes-cell {
-    font-size: 0.82rem;
-    color: var(--p-text-muted-color);
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: block;
-}
-
-/* ═══ ID Cell ═══ */
-.id-cell {
-    font-weight: 700;
-    font-size: 0.82rem;
-    color: var(--p-text-color);
-}
-</style>

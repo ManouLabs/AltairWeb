@@ -10,6 +10,8 @@ import dayjs from '@/plugins/dayjs';
 import { useProductService } from '@/services/useProductService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { useQuotaStore } from '@/stores/useQuotaStore';
+import QuotaBanner from '@/components/QuotaBanner.vue';
 import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { ProductData } from '@/types/product';
@@ -49,6 +51,8 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 
 const authStore = useAuthStore();
 const loading = useLoading();
+const quotaStore = useQuotaStore();
+if (!quotaStore.loaded) quotaStore.fetchQuotas();
 const confirm = useConfirm();
 const router = useRouter();
 const { showToast } = useShowToast();
@@ -266,14 +270,24 @@ onUnmounted(() => {
                 />
                 <Button
                     v-if="authStore.hasPermission('create_products')"
-                    v-tooltip.top="t('common.tooltips.add', { entity: t('entity.product') })"
+                    v-tooltip.top="!quotaStore.canCreate('products') ? t('quota.limit_reached', { entity: t('entity.product') }) : t('common.tooltips.add', { entity: t('entity.product') })"
                     :label="'+ ' + t('common.labels.new') + ' ' + t('entity.product')"
                     severity="primary"
-                    :disabled="!dataLoaded"
+                    :disabled="!dataLoaded || !quotaStore.canCreate('products')"
                     @click="addRecord"
                 />
             </template>
         </PageHeader>
+
+        <!-- Quota Banner -->
+        <QuotaBanner
+            v-if="quotaStore.getStatus('products')"
+            resource="products"
+            :used="quotaStore.getUsage('products')"
+            :limit="quotaStore.getLimit('products')"
+            :percentage="quotaStore.getPercentage('products')"
+            :status="quotaStore.getStatus('products')"
+        />
 
         <!-- Skeleton Loading State -->
         <DataTableSkeleton v-if="!dataLoaded" :columns="6" />
