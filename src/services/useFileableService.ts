@@ -1,18 +1,14 @@
 // src/services/useFileableService.ts
 import apiClient from '@/services/axios';
-
-interface ProfilePictureResponse {
-    profile_image: string | null;
-    message?: string;
-}
+import type { UploadProfilePictureResponse } from '@/types/myaccount';
 
 export const useFileableService = {
-    async uploadProfilePicture(file: File): Promise<ProfilePictureResponse> {
+    async uploadProfilePicture(file: File): Promise<UploadProfilePictureResponse> {
         try {
             const formData = new FormData();
             formData.append('file', file);
 
-            const response = await apiClient.post<ProfilePictureResponse>('/api/admin/myaccount/profilepicture/upload', formData, {
+            const response = await apiClient.post<UploadProfilePictureResponse>('/api/admin/myaccount/profilepicture/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

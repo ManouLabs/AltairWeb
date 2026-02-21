@@ -70,6 +70,7 @@ interface EchoEvent {
 }
 
 function subscribeToEcho(): void {
+    if (!authStore.user) return;
     const shopsChannel = Echo.private(`data-stream.shops${authStore.user.account_id}`);
     subscription.value = shopsChannel.listen('DataStream', (event: EchoEvent) => {
         console.log('Received Echo event for shops:', event);
@@ -370,7 +371,7 @@ onUnmounted(() => {
                             <h3 class="text-lg font-bold text-surface-900 dark:text-surface-0 m-0 leading-tight">{{ shop.name }}</h3>
                             <p class="flex items-center gap-1.5 mt-1 text-[11px] text-surface-500 dark:text-surface-400 font-medium">
                                 <i class="pi pi-calendar text-xs text-surface-400"></i>
-                                {{ t('shop.labels.since') }} {{ humanizeDate(shop.created_at, t) }}
+                                {{ t('shop.labels.since') }} {{ humanizeDate(shop.created_at || '', t) }}
                             </p>
                         </div>
                     </div>

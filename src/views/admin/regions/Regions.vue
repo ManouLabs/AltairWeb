@@ -1,4 +1,5 @@
-<script setup>
+<script setup lang="ts">
+import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -9,6 +10,7 @@ import { useRegionService } from '@/services/useRegionService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
+import type { Region, RegionFormData } from '@/types/region';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
@@ -36,12 +38,12 @@ const defaultFiltersConfig = {
 };
 
 // Initialize DataTable composable with region service
-const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
+const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable<Region>(
     (params) =>
         useRegionService.getRegions(params).then((data) => {
             dataLoaded.value = true;
             return {
-                data: data.regions,
+                data: data.data,
                 meta: data.meta
             };
         }),
@@ -61,9 +63,19 @@ const { highlights, markHighlight, getRowClass } = useRowEffects();
 const defaultFields = ['name', 'name_fr', 'name_ar', 'code', 'created_at', 'updated_at'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
-const record = ref(null);
+interface Column {
+    field: string;
+    header: string;
+}
+
+interface EchoEvent {
+    action: string;
+    data: Region | number[];
+}
+
+const record = ref<Region | RegionFormData | null>(null);
 const dataLoaded = ref(false);
-const defaultColumns = computed(() =>
+const defaultColumns = computed<Column[]>(() =>
     defaultFields.map((field) => ({
         field,
         header: t(`region.columns.${field}`)
@@ -71,15 +83,15 @@ const defaultColumns = computed(() =>
 );
 
 const { selectedColumns, columnChanged } = useDynamicColumns('regionsColumns', defaultFields, 'region.columns');
-const subscription = ref(null);
+const subscription = ref<ReturnType<typeof Echo.private> | null>(null);
 
-function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.regions').listen('DataStream', (event) => {
+function subscribeToEcho(): void {
+    subscription.value = Echo.private('data-stream.regions').listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: EchoEvent): void {
     switch (event.action) {
         case ACTIONS.DELETE:
             handleDelete(event);
@@ -95,32 +107,34 @@ function handleEchoEvent(event) {
     }
 }
 
-function handleDelete(event) {
-    event.data.forEach((id) => {
+function handleDelete(event: EchoEvent): void {
+    for (const id of event.data as number[]) {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
         }
-    });
+    }
 }
 
-function handleUpdate(event) {
-    const index = findRecordIndex(records, event.data.id);
+function handleUpdate(event: EchoEvent): void {
+    const data = event.data as Region;
+    const index = findRecordIndex(records, data.id);
     if (index !== -1) {
-        records.value[index] = event.data;
-        markHighlight(event.data.id, 'updated');
+        records.value[index] = data;
+        markHighlight(data.id, 'updated');
     }
 }
 
-function handleStore(event) {
-    const exists = records.value.some((r) => r.id === event.data.id);
+function handleStore(event: EchoEvent): void {
+    const data = event.data as Region;
+    const exists = records.value.some((r: Region) => r.id === data.id);
     if (!exists) {
-        records.value.unshift(event.data);
-        markHighlight(event.data.id, 'new');
+        records.value.unshift(data);
+        markHighlight(data.id, 'new');
     }
 }
 
-function addRecord() {
+function addRecord(): void {
     authStore.errors = {};
     record.value = {
         name: '',
@@ -129,15 +143,17 @@ function addRecord() {
         code: null,
         longitude: null,
         latitude: null
-    };
+    } as unknown as RegionFormData;
     openDialog();
 }
-function editRecord(row) {
+
+function editRecord(row: Region): void {
     authStore.errors = {};
     record.value = row;
     openDialog();
 }
-const openDialog = () => {
+
+const openDialog = (): void => {
     dialog.open(formComponent, {
         props: {
             style: { width: '40vw' },
@@ -150,15 +166,15 @@ const openDialog = () => {
         },
         data: {
             record: record.value,
-            action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE,
+            action: record.value?.id ? ACTIONS.EDIT : ACTIONS.CREATE,
             headerProps: computed(() => ({
-                title: record.value.id ? t('common.titles.edit', { entity: t('entity.region') }) : t('common.titles.add', { entity: t('entity.region') }),
+                title: record.value?.id ? t('common.titles.edit', { entity: t('entity.region') }) : t('common.titles.add', { entity: t('entity.region') }),
                 description: t('region.form.subtitle'),
-                icon: record.value.id ? 'pi pi-map-marker' : 'pi pi-plus-circle',
+                icon: record.value?.id ? 'pi pi-map-marker' : 'pi pi-plus-circle',
                 iconColor: '#3B82F6'
             }))
         },
-        onClose: (result) => {
+        onClose: (result: any) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
@@ -181,10 +197,10 @@ const openDialog = () => {
     });
 };
 
-function confirmDeleteRecord(event, regionIds) {
+function confirmDeleteRecord(event: MouseEvent | null, regionIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget,
+        target: event?.currentTarget as HTMLElement,
         message: regionIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.regions') }) : t('common.confirmations.delete.message', { entity: t('entity.region') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -203,15 +219,15 @@ function confirmDeleteRecord(event, regionIds) {
             useRegionService
                 .deleteRegions(regionIds)
                 .then(() => {
-                    regionIds.forEach((id) => {
+                    for (const id of regionIds) {
                         const index = findRecordIndex(records, id);
                         if (index !== -1) {
                             records.value.splice(index, 1);
                         }
-                    });
+                    }
                     showToast('success', ACTIONS.DELETE, 'region', 'tc');
                 })
-                .catch((error) => {
+                .catch((error: any) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
                         console.error('Session expired, redirecting to login');
                     }
@@ -232,7 +248,7 @@ onUnmounted(() => {
     <div>
         <PageHeader icon="pi pi-map" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.regions') })" :description="t('common.subtitles.manage', { entity: t('entity.regions').toLowerCase() })">
             <template #actions>
-                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.regions') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
+                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.regions') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
                 <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.region') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.region')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
             </template>
         </PageHeader>
@@ -249,7 +265,7 @@ onUnmounted(() => {
                 @filter="onFilter($event)"
                 v-model:filters="filters"
                 filterDisplay="menu"
-                :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+                :globalFilterFields="['id', ...defaultColumns.map((column) => column.field)]"
                 paginator
                 @page="onPage($event)"
                 :rows="rows"
@@ -270,7 +286,7 @@ onUnmounted(() => {
                 size="small"
                 :pt="{
                     table: { style: 'min-width: 50rem' },
-                    bodyrow: ({ props }) => ({
+                    bodyrow: ({ props }: { props: { frozenRow: boolean } }) => ({
                         class: [{ 'font-bold': props.frozenRow }]
                     })
                 }"
@@ -283,11 +299,11 @@ onUnmounted(() => {
                                     v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.region') })"
                                     :label="t('common.labels.delete_selected')"
                                     icon="pi pi-trash"
-                                    severity="danger"
+                                    severity="success"
                                     @click="
                                         confirmDeleteRecord(
                                             $event,
-                                            selectedRecords.map((record) => record.id)
+                                            selectedRecords.map((record: Region) => record.id)
                                         )
                                     "
                                     outlined
@@ -330,7 +346,7 @@ onUnmounted(() => {
                     columnKey="name"
                     field="name"
                     :frozen="frozenColumns.name"
-                    v-if="selectedColumns.some((column) => column.field === 'name')"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'name')"
                     sortable
                     class="min-w-32"
                 >
@@ -348,8 +364,7 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
                                 <span>{{ data.name }}</span>
-                                <Tag v-if="highlights[data.id] === 'new'" value="NEW" severity="success" rounded size="small" />
-                                <Tag v-else-if="highlights[data.id] === 'updated'" value="UPDATED" severity="info" rounded size="small" />
+                                <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
                         </DataCell>
                     </template>
@@ -371,7 +386,7 @@ onUnmounted(() => {
                     columnKey="name_fr"
                     field="name_fr"
                     :frozen="frozenColumns.name_fr"
-                    v-if="selectedColumns.some((column) => column.field === 'name_fr')"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'name_fr')"
                     sortable
                     class="min-w-32"
                 >
@@ -408,7 +423,7 @@ onUnmounted(() => {
                     columnKey="name_ar"
                     field="name_ar"
                     :frozen="frozenColumns.name_ar"
-                    v-if="selectedColumns.some((column) => column.field === 'name_ar')"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'name_ar')"
                     sortable
                     class="min-w-32"
                 >
@@ -445,7 +460,7 @@ onUnmounted(() => {
                     columnKey="code"
                     field="code"
                     :frozen="frozenColumns.code"
-                    v-if="selectedColumns.some((column) => column.field === 'code')"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'code')"
                     sortable
                     class="min-w-32"
                 >
@@ -483,7 +498,7 @@ onUnmounted(() => {
                     columnKey="created_at"
                     field="created_at"
                     :frozen="frozenColumns.created_at"
-                    v-if="selectedColumns.some((column) => column.field === 'created_at')"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'created_at')"
                     sortable
                     class="min-w-40"
                 >
@@ -518,7 +533,7 @@ onUnmounted(() => {
                                 placeholder="Filter Mode"
                             />
                             <InputGroup>
-                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e: Date) => formatDate(e, filterModel)" />
                                 <InputGroupAddon>
                                     <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
                                     <Button
@@ -548,7 +563,7 @@ onUnmounted(() => {
                     columnKey="updated_at"
                     field="updated_at"
                     :frozen="frozenColumns.updated_at"
-                    v-if="selectedColumns.some((column) => column.field === 'updated_at')"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'updated_at')"
                     sortable
                     class="min-w-40"
                 >
@@ -583,7 +598,7 @@ onUnmounted(() => {
                                 placeholder="Filter Mode"
                             />
                             <InputGroup>
-                                <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e: Date) => formatDate(e, filterModel)" />
                                 <InputGroupAddon>
                                     <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
                                     <Button

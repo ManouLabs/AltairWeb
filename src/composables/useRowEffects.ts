@@ -9,7 +9,6 @@ interface Highlights {
 
 interface RowData {
     id: number | string;
-    [key: string]: unknown;
 }
 
 interface RowClass {

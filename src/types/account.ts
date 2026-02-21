@@ -1,18 +1,5 @@
 // src/types/account.ts
 
-export interface Plan {
-    id: number;
-    name: string;
-    active?: boolean;
-    orders?: number | null;
-    products?: number | null;
-    users?: number | null;
-    shops?: number | null;
-    price?: number | null;
-    created_at?: string;
-    updated_at?: string;
-}
-
 export interface ContactMethod {
     id?: number | null;
     contact_id?: number | null;

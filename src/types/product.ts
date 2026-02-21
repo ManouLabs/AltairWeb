@@ -72,6 +72,7 @@ export interface ProductsFilterParams {
 
 export interface ProductsResponse {
     products: ProductData[];
+    categories: { id: number; name: string }[];
     meta: {
         current_page: number;
         per_page: number;

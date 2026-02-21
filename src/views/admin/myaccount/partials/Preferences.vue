@@ -5,6 +5,7 @@ import { useLoading } from '@/stores/useLoadingStore';
 import { useSettingStore } from '@/stores/useSettingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
+import type { FormSubmitEvent } from '@primevue/forms/form';
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { z } from 'zod';
@@ -65,13 +66,9 @@ const resolver = zodResolver(
     })
 );
 
-interface FormSubmitEvent {
-    valid: boolean;
-    values: PreferencesFormData;
-}
-
 const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
     if (valid) {
+        const data = values as PreferencesFormData;
         // Theme is already updated via onChange in the SelectButton
         showToast('success', ACTIONS.EDIT, 'preferences', 'br');
     }
@@ -87,9 +84,8 @@ const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
                     name="theme"
                     v-bind="$field"
                     @input="
-                        (val: string) => {
-                            $field.handleChange(val);
-                            authStore.clearErrors([$field.name]);
+                        () => {
+                            authStore.clearErrors(['theme']);
                         }
                     "
                     @change="

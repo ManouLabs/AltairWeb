@@ -26,7 +26,12 @@ const loginUser = async () => {
         await authStore.login(email.value, password.value);
         authStore.redirectUser();
     } catch (error) {
-        showToast('error', 'error', 'login', 'tc');
+        // If it's a specific validation error pushed by backend check
+        if (authStore.errors.email && authStore.errors.email[0].includes('subscription')) {
+            showToast('error', authStore.errors.email[0], 'login', 'tc');
+        } else {
+            showToast('error', 'error', 'login', 'tc');
+        }
     } finally {
         loading.stopFormSending();
     }

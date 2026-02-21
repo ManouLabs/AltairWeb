@@ -307,6 +307,7 @@
             "current_password": "Current Password",
             "new_password": "New Password",
             "confirm_new_password": "Confirm New Password",
+            "account": "Account",
             "roles": "Roles",
             "email_verified_at": "Email Verified At",
             "phone": "Phone",

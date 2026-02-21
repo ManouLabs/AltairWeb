@@ -3,7 +3,6 @@ import { ref, type Ref } from 'vue';
 
 interface RowData {
     id: number | string;
-    [key: string]: unknown;
 }
 
 interface FrozenColumns {

@@ -16,7 +16,7 @@ interface FilterConfig {
 }
 
 interface Filter {
-    value: unknown;
+    value: any;
     matchMode: string;
     relation?: {
         name: string;
@@ -31,6 +31,7 @@ interface Filters {
 }
 
 interface LazyParams {
+    [key: string]: unknown;
     page?: number;
     first?: number;
     rows?: number;
@@ -131,7 +132,7 @@ export function useDataTable<T extends { id: number | string }>(dataFetcher: Dat
 
     const onPage = (event: DataTablePageEvent): void => {
         loading.startDataLoading();
-        lazyParams.value = extractLazyParams(event);
+        lazyParams.value = extractLazyParams(event as any) as any;
         if (lazyParams.value.filters) {
             lazyParams.value.filters = attachFilterMeta(lazyParams.value.filters);
         }
@@ -140,7 +141,7 @@ export function useDataTable<T extends { id: number | string }>(dataFetcher: Dat
 
     const onSort = (event: DataTableSortEvent): void => {
         loading.startDataLoading();
-        lazyParams.value = extractLazyParams(event);
+        lazyParams.value = extractLazyParams(event as any) as any;
         resetPages();
         if (recordDataTable.value) {
             recordDataTable.value.resetPage();
@@ -153,7 +154,7 @@ export function useDataTable<T extends { id: number | string }>(dataFetcher: Dat
 
     const onFilter = (event: DataTableFilterEvent): void => {
         loading.startDataLoading();
-        lazyParams.value = extractLazyParams(event);
+        lazyParams.value = extractLazyParams(event as any) as any;
         resetPages();
         if (lazyParams.value.filters) {
             lazyParams.value.filters = attachFilterMeta(lazyParams.value.filters);

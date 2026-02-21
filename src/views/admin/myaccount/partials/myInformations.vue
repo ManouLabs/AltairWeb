@@ -5,6 +5,7 @@ import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { UpdateMyInformationData, UpdateMyInformationResponse } from '@/types/myaccount';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
+import type { FormSubmitEvent } from '@primevue/forms';
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { z } from 'zod';
@@ -17,8 +18,8 @@ const loading = useLoading();
 const isSubmitting = ref<boolean>(false);
 
 const initialValues = reactive<UpdateMyInformationData>({
-    name: authStore.user.name,
-    email: authStore.user.email
+    name: authStore.user!.name,
+    email: authStore.user!.email
 });
 
 const resolver = zodResolver(
@@ -32,20 +33,18 @@ const resolver = zodResolver(
     })
 );
 
-interface FormSubmitEvent {
-    valid: boolean;
-    values: UpdateMyInformationData;
-}
-
 const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
     if (valid) {
+        const data = values as UpdateMyInformationData;
         isSubmitting.value = true;
         loading.startPageLoading();
         useMyAccountService
-            .updateMyInformation(values)
+            .updateMyInformation(data)
             .then((response: UpdateMyInformationResponse) => {
-                authStore.user.name = response.user.name;
-                authStore.user.email = response.user.email;
+                if (authStore.user) {
+                    authStore.user.name = response.user.name;
+                    authStore.user.email = response.user.email;
+                }
                 showToast('success', ACTIONS.EDIT, 'my_informations', 'tc');
             })
             .catch((error: any) => {
@@ -67,7 +66,7 @@ const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon><i class="pi pi-user" /></InputIcon>
-                        <InputText id="name" name="name" @input="() => authStore.clearErrors([$field.name])" v-bind="$field" class="w-full" :disabled="isSubmitting" />
+                        <InputText id="name" name="name" @input="() => authStore.clearErrors(['name'])" v-bind="$field" class="w-full" :disabled="isSubmitting" />
                     </IconField>
                     <label for="name">{{ t('user.columns.name') }}</label>
                 </FloatLabel>
@@ -79,7 +78,7 @@ const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
                 <FloatLabel variant="on" class="w-full">
                     <IconField class="w-full">
                         <InputIcon><i class="pi pi-envelope" /></InputIcon>
-                        <InputText id="email" name="email" type="email" v-bind="$field" @input="() => authStore.clearErrors([$field.name])" class="w-full" :autocomplete="false" :disabled="isSubmitting" />
+                        <InputText id="email" name="email" type="email" v-bind="$field" @input="() => authStore.clearErrors(['email'])" class="w-full" autocomplete="off" :disabled="isSubmitting" />
                     </IconField>
                     <label for="email">{{ t('user.columns.email') }}</label>
                 </FloatLabel>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -81,6 +82,7 @@ interface EchoEvent {
 
 // Echo subscription
 function subscribeToEcho(): void {
+    if (!authStore.user) return;
     subscription.value = Echo.private(`data-stream.shippers${authStore.user.account_id}`).listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
     });
@@ -203,7 +205,7 @@ onUnmounted(() => {
         <!-- Page Header (always visible) -->
         <PageHeader icon="pi pi-truck" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.shippers') })" :description="t('common.subtitles.manage', { entity: t('entity.shippers').toLowerCase() })">
             <template #actions>
-                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.shippers') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
+                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.shippers') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
                 <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shipper') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.shipper')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
             </template>
         </PageHeader>
@@ -316,8 +318,7 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
                                 <span>{{ data.name }}</span>
-                                <Tag v-if="highlights[data.id] === 'new'" value="NEW" severity="success" rounded size="small" />
-                                <Tag v-else-if="highlights[data.id] === 'updated'" value="UPDATED" severity="info" rounded size="small" />
+                                <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
                         </DataCell>
                     </template>

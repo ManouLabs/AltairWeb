@@ -12,6 +12,12 @@ export interface Plan {
     products?: number | null;
     users?: number | null;
     shops?: number | null;
+    roles?: number | null;
+    categories?: number | null;
+    shippers?: number | null;
+    customers?: number | null;
+    contact_methods?: number | null;
+    level: number;
     monthly_price?: number | null;
     yearly_price?: number | null;
     created_at?: string;
@@ -30,6 +36,12 @@ export interface PlanFormData {
     products?: number | null;
     users?: number | null;
     shops?: number | null;
+    roles?: number | null;
+    categories?: number | null;
+    shippers?: number | null;
+    customers?: number | null;
+    contact_methods?: number | null;
+    level?: number;
     monthly_price?: number | null;
     yearly_price?: number | null;
 }

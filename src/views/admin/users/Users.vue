@@ -42,7 +42,7 @@ const defaultFiltersConfig = {
 const dataLoaded = ref(false);
 
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
-    (params: Parameters<typeof useUserService.getUsers>[0]) =>
+    (params) =>
         useUserService.getUsers(params).then((data) => {
             allRoles.value = [data.roles, []];
             dataLoaded.value = true;
@@ -66,6 +66,10 @@ const { t } = useI18n();
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
 const defaultFields = ['name', 'email', 'email_verified_at', 'roles', 'created_at', 'updated_at'];
+if (authStore.user?.roles?.includes('Super Admin')) {
+    defaultFields.splice(2, 0, 'account');
+}
+
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref<User | null>(null);
@@ -120,6 +124,7 @@ interface EchoEvent {
 }
 
 function subscribeToEcho(): void {
+    if (!authStore.user) return;
     const usersChannel = Echo.private(`data-stream.users${authStore.user.account_id}`);
     subscription.value = usersChannel.listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
@@ -289,7 +294,7 @@ onUnmounted(() => {
                     icon="pi pi-upload"
                     outlined
                     severity="info"
-                    @click="exportCSV($event)"
+                    @click="exportCSV()"
                 />
                 <Button
                     v-if="authStore.hasPermission('create_users')"
@@ -306,7 +311,7 @@ onUnmounted(() => {
         <QuotaBanner v-if="quotaStore.getStatus('users')" resource="users" :used="quotaStore.getUsage('users')" :limit="quotaStore.getLimit('users')" :percentage="quotaStore.getPercentage('users')" :status="quotaStore.getStatus('users')" />
 
         <!-- Skeleton Loading State -->
-        <DataTableSkeleton v-if="!dataLoaded" :columns="4" has-avatar has-tag-column />
+        <DataTableSkeleton v-if="!dataLoaded" :columns="6" has-avatar has-tag-column />
 
         <!-- DataTable -->
         <template v-else>
@@ -320,7 +325,7 @@ onUnmounted(() => {
                 @filter="onFilter($event)"
                 v-model:filters="filters"
                 filterDisplay="menu"
-                :globalFilterFields="['id', ...defaultColumns.map((column) => column.field)]"
+                :globalFilterFields="['id', ...defaultColumns.map((column: Column) => column.field)]"
                 paginator
                 @page="onPage($event)"
                 :rows="rows"
@@ -461,6 +466,43 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div :class="{ 'font-bold': frozenColumns.email }">{{ data.email }}</div>
+                        </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
+                </Column>
+
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="account"
+                    field="account.name"
+                    :frozen="frozenColumns.account"
+                    v-if="selectedColumns.some((column: Column) => column.field === 'account')"
+                    class="min-w-32"
+                >
+                    <template #header>
+                        <HeaderCell
+                            :text="t('user.columns.account')"
+                            :frozen="frozenColumns.account"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('account')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div :class="{ 'font-bold': frozenColumns.account }">{{ data.account ? data.account.name : '-' }}</div>
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">

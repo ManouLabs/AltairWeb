@@ -55,9 +55,8 @@ const { t } = useI18n();
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 const defaultFields = ['name', 'permissions'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
-
-const record = ref<RoleData | null>(null);
 const dataLoaded = ref(false);
+const record = ref<RoleData | null>(null);
 
 interface Column {
     field: string;
@@ -82,6 +81,7 @@ interface EchoEvent {
 }
 
 function subscribeToEcho(): void {
+    if (!authStore.user) return;
     const rolesChannel = Echo.private(`data-stream.roles${authStore.user.account_id}`);
     subscription.value = rolesChannel.listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
@@ -251,7 +251,7 @@ onUnmounted(() => {
                     icon="pi pi-upload"
                     outlined
                     severity="info"
-                    @click="exportCSV($event)"
+                    @click="exportCSV()"
                 />
                 <Button
                     v-if="authStore.hasPermission('create_roles')"

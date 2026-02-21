@@ -1,4 +1,5 @@
-<script setup>
+<script setup lang="ts">
+import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -36,11 +37,11 @@ const defaultFiltersConfig = {
 };
 const dataLoaded = ref(false);
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
-    (params) =>
-        useAccountService.getAccounts(params).then((data) => {
+    (params: any) =>
+        useAccountService.getAccounts(params).then((data: any) => {
             dataLoaded.value = true;
             return {
-                data: data.accounts,
+                data: data.data,
                 meta: data.meta
             };
         }),
@@ -57,27 +58,52 @@ const loading = useLoading();
 
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
-const defaultFields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib', 'created_at', 'updated_at'];
+const defaultFields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib'];
+
+const avatarColors = ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#9333EA'];
+
+const hashString = (s: string) => {
+    if (!s) return 0;
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+        h = (h << 5) - h + s.charCodeAt(i);
+        h |= 0;
+    }
+    return Math.abs(h);
+};
+
+const getInitials = (name: string | null) => {
+    if (!name) return '';
+    const parts = String(name).trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+};
+
+const getAvatarColor = (name: string | null) => {
+    const idx = hashString(name || '') % avatarColors.length;
+    return avatarColors[idx];
+};
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
-const record = ref(null);
+const record = ref<any>(null);
 const defaultColumns = computed(() =>
-    defaultFields.map((field) => ({
+    defaultFields.map((field: string) => ({
         field,
         header: t(`account.columns.${field}`)
     }))
 );
 
 const { selectedColumns, columnChanged } = useDynamicColumns('accountsColumns', defaultFields, 'account.columns');
-const subscription = ref(null);
+const subscription = ref<any>(null);
 
 function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.accounts').listen('DataStream', (event) => {
+    subscription.value = (window as any).Echo.private('data-stream.accounts').listen('DataStream', (event: any) => {
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: any) {
     switch (event.action) {
         case ACTIONS.DELETE:
             handleDelete(event);
@@ -93,8 +119,8 @@ function handleEchoEvent(event) {
     }
 }
 
-function handleDelete(event) {
-    event.data.forEach((id) => {
+function handleDelete(event: any) {
+    event.data.forEach((id: any) => {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
@@ -102,7 +128,7 @@ function handleDelete(event) {
     });
 }
 
-function handleUpdate(event) {
+function handleUpdate(event: any) {
     const index = findRecordIndex(records, event.data.id);
     if (index !== -1) {
         records.value[index] = event.data;
@@ -110,8 +136,8 @@ function handleUpdate(event) {
     }
 }
 
-function handleStore(event) {
-    const exists = records.value.some((record) => record.id === event.data.id);
+function handleStore(event: any) {
+    const exists = records.value.some((record: any) => record.id === event.data.id);
     if (!exists) {
         records.value.unshift(event.data);
         markHighlight(event.data.id, 'new');
@@ -132,7 +158,7 @@ function addRecord() {
     };
     openDialog();
 }
-function editRecord(row) {
+function editRecord(row: any) {
     authStore.errors = {};
     record.value = row;
     openDialog();
@@ -159,7 +185,7 @@ const openDialog = () => {
                 iconColor: '#3B82F6'
             }))
         },
-        onClose: (result) => {
+        onClose: (result: any) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
@@ -175,17 +201,17 @@ const openDialog = () => {
                         break;
                     }
                     default:
-                        console.error(`Unhandled action: ${result.action}`);
+                        console.error(`Unhandled action: ${result.data?.action}`);
                 }
             }
         }
     });
 };
 
-function confirmDeleteRecord(event, accountIds) {
+function confirmDeleteRecord(event: any, accountIds: any[]) {
     confirm.require({
         modal: true,
-        target: event.currentTarget,
+        target: event?.currentTarget,
         message: accountIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.accounts') }) : t('common.confirmations.delete.message', { entity: t('entity.account') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -205,7 +231,7 @@ function confirmDeleteRecord(event, accountIds) {
             useAccountService
                 .deleteAccounts(accountIds)
                 .then(() => {
-                    accountIds.forEach((id) => {
+                    accountIds.forEach((id: any) => {
                         const index = findRecordIndex(records, id);
                         if (index !== -1) {
                             records.value.splice(index, 1);
@@ -213,7 +239,7 @@ function confirmDeleteRecord(event, accountIds) {
                     });
                     showToast('success', ACTIONS.DELETE, 'account', 'tc');
                 })
-                .catch((error) => {
+                .catch((error: any) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
                         console.error('Session expired, redirecting to login');
                     }
@@ -234,12 +260,12 @@ onUnmounted(() => {
     <div>
         <PageHeader icon="pi pi-users" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.accounts') })" :description="t('common.subtitles.manage', { entity: t('entity.accounts').toLowerCase() })">
             <template #actions>
-                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.accounts') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
+                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.accounts') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
                 <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.account') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.account')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
             </template>
         </PageHeader>
         <!-- Skeleton Loading State -->
-        <DataTableSkeleton v-if="!dataLoaded" :columns="10" has-tag-column />
+        <DataTableSkeleton v-if="!dataLoaded" :columns="6" />
         <template v-else>
             <DataTable
                 ref="recordDataTable"
@@ -251,7 +277,7 @@ onUnmounted(() => {
                 @filter="onFilter($event)"
                 v-model:filters="filters"
                 filterDisplay="menu"
-                :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+                :globalFilterFields="['id', ...defaultColumns.map((column) => column.field)]"
                 paginator
                 @page="onPage($event)"
                 :rows="rows"
@@ -272,7 +298,7 @@ onUnmounted(() => {
                 size="small"
                 :pt="{
                     table: { style: 'min-width: 50rem' },
-                    bodyrow: ({ props }) => ({
+                    bodyrow: ({ props }: any) => ({
                         class: [{ 'font-bold': props.frozenRow }]
                     })
                 }"
@@ -289,7 +315,7 @@ onUnmounted(() => {
                                     @click="
                                         confirmDeleteRecord(
                                             $event,
-                                            selectedRecords.map((record) => record.id)
+                                            selectedRecords.map((record: any) => record.id)
                                         )
                                     "
                                     outlined
@@ -318,11 +344,6 @@ onUnmounted(() => {
                     </Toolbar>
                 </template>
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
-                <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
-                    <template #body="{ data }">
-                        <DataCell>{{ data.id }}</DataCell>
-                    </template>
-                </Column>
                 <Column
                     :showClearButton="false"
                     :showApplyButton="false"
@@ -331,7 +352,7 @@ onUnmounted(() => {
                     columnKey="legal_name"
                     field="legal_name"
                     :frozen="frozenColumns.legal_name"
-                    v-if="selectedColumns.some((column) => column.field === 'legal_name')"
+                    v-if="selectedColumns.some((column: any) => column.field === 'legal_name')"
                     sortable
                     class="min-w-32"
                 >
@@ -348,9 +369,9 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.legal_name || highlights[data.id] }">
+                                <Avatar :label="getInitials(data.trade_name || data.legal_name)" shape="circle" :style="{ backgroundColor: getAvatarColor(data.trade_name || data.legal_name), color: '#fff' }" class="shrink-0" />
                                 <span>{{ data.legal_name }}</span>
-                                <Tag v-if="highlights[data.id] === 'new'" value="NEW" severity="success" rounded size="small" />
-                                <Tag v-else-if="highlights[data.id] === 'updated'" value="UPDATED" severity="info" rounded size="small" />
+                                <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
                         </DataCell>
                     </template>
@@ -372,7 +393,7 @@ onUnmounted(() => {
                     columnKey="trade_name"
                     field="trade_name"
                     :frozen="frozenColumns.trade_name"
-                    v-if="selectedColumns.some((column) => column.field === 'trade_name')"
+                    v-if="selectedColumns.some((column: any) => column.field === 'trade_name')"
                     sortable
                     class="min-w-32"
                 >
@@ -409,7 +430,7 @@ onUnmounted(() => {
                     columnKey="rc_number"
                     field="rc_number"
                     :frozen="frozenColumns.rc_number"
-                    v-if="selectedColumns.some((column) => column.field === 'rc_number')"
+                    v-if="selectedColumns.some((column: any) => column.field === 'rc_number')"
                     sortable
                     class="min-w-32"
                 >
@@ -446,7 +467,7 @@ onUnmounted(() => {
                     columnKey="nif"
                     field="nif"
                     :frozen="frozenColumns.nif"
-                    v-if="selectedColumns.some((column) => column.field === 'nif')"
+                    v-if="selectedColumns.some((column: any) => column.field === 'nif')"
                     sortable
                     class="min-w-32"
                 >
@@ -483,7 +504,7 @@ onUnmounted(() => {
                     columnKey="nis"
                     field="nis"
                     :frozen="frozenColumns.nis"
-                    v-if="selectedColumns.some((column) => column.field === 'nis')"
+                    v-if="selectedColumns.some((column: any) => column.field === 'nis')"
                     sortable
                     class="min-w-32"
                 >
@@ -520,7 +541,7 @@ onUnmounted(() => {
                     columnKey="rib"
                     field="rib"
                     :frozen="frozenColumns.rib"
-                    v-if="selectedColumns.some((column) => column.field === 'rib')"
+                    v-if="selectedColumns.some((column: any) => column.field === 'rib')"
                     sortable
                     class="min-w-32"
                 >
@@ -550,140 +571,6 @@ onUnmounted(() => {
                     </template>
                 </Column>
 
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    dataType="date"
-                    columnKey="created_at"
-                    field="created_at"
-                    :frozen="frozenColumns.created_at"
-                    v-if="selectedColumns.some((column) => column.field === 'created_at')"
-                    sortable
-                    class="min-w-40"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('user.columns.created_at')"
-                            :frozen="frozenColumns.created_at"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('created_at')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.created_at }">{{ dayjs(data.created_at).format('l') }}</div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <div class="flex flex-col gap-2">
-                            <!-- Match Mode Selector -->
-                            <Select
-                                v-model="filterModel.matchMode"
-                                :options="[
-                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
-                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
-                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
-                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
-                                ]"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-full"
-                                placeholder="Filter Mode"
-                            />
-
-                            <!-- Date Input + Apply/Clear -->
-                            <InputGroup>
-                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
-                                <InputGroupAddon>
-                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                    <Button
-                                        size="small"
-                                        icon="pi pi-times"
-                                        severity="danger"
-                                        outlined
-                                        :disabled="!filterModel.value"
-                                        @click="
-                                            (() => {
-                                                filterModel.value = null;
-                                                applyFilter();
-                                            })()
-                                        "
-                                    />
-                                </InputGroupAddon>
-                            </InputGroup>
-                        </div>
-                    </template>
-                </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    dataType="date"
-                    columnKey="updated_at"
-                    field="updated_at"
-                    :frozen="frozenColumns.updated_at"
-                    v-if="selectedColumns.some((column) => column.field === 'updated_at')"
-                    sortable
-                    class="min-w-40"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('user.columns.updated_at')"
-                            :frozen="frozenColumns.updated_at"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('updated_at')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.updated_at }">{{ dayjs(data.updated_at).format('l') }}</div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <div class="flex flex-col gap-2">
-                            <Select
-                                v-model="filterModel.matchMode"
-                                :options="[
-                                    { label: t('primevue.dateIs'), value: FilterMatchMode.DATE_IS },
-                                    { label: t('primevue.dateBefore'), value: FilterMatchMode.DATE_BEFORE },
-                                    { label: t('primevue.dateAfter'), value: FilterMatchMode.DATE_AFTER },
-                                    { label: t('primevue.dateIsNot'), value: FilterMatchMode.DATE_IS_NOT }
-                                ]"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-full"
-                                placeholder="Filter Mode"
-                            />
-
-                            <InputGroup>
-                                <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e) => formatDate(e, filterModel)" />
-                                <InputGroupAddon>
-                                    <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                    <Button
-                                        size="small"
-                                        icon="pi pi-times"
-                                        severity="danger"
-                                        outlined
-                                        :disabled="!filterModel.value"
-                                        @click="
-                                            (() => {
-                                                filterModel.value = null;
-                                                applyFilter();
-                                            })()
-                                        "
-                                    />
-                                </InputGroupAddon>
-                            </InputGroup>
-                        </div>
-                    </template>
-                </Column>
                 <Column columnKey="actions" :exportable="false" style="min-width: 5rem" :header="t('common.columns.actions')">
                     <template #body="{ data, frozenRow, index }">
                         <DataCell>

@@ -48,19 +48,16 @@ const resolver = zodResolver(
     })
 );
 
-interface FormSubmitEvent {
-    valid: boolean;
-    values: { file: File };
-}
-
-const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
+const onFormSubmit = ({ valid, values }: { valid: boolean; values: Record<string, any> }): void => {
     if (valid) {
         isUploading.value = true;
         loading.startPageLoading();
         useFileableService
-            .uploadProfilePicture(values.file)
+            .uploadProfilePicture(values.file as File)
             .then((response: UploadProfilePictureResponse) => {
-                authStore.user.profile_image = response.profile_image;
+                if (authStore.user) {
+                    authStore.user.profile_image = response.profile_image;
+                }
 
                 showToast('success', ACTIONS.EDIT, 'profile_image', 'tc');
             })
@@ -86,7 +83,7 @@ onMounted(async () => {
 });
 </script>
 <template>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div v-if="user" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Profile Panel -->
         <div class="space-y-6">
             <!-- Profile Card -->
@@ -270,6 +267,84 @@ onMounted(async () => {
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
                                 <span v-if="user.last_login_ip">{{ t('myaccount.labels.logged_from_ip') }}: {{ user.last_login_ip }}</span>
                             </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skeleton Loading State -->
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Panel Skeleton -->
+        <div class="space-y-6">
+            <!-- Profile Card Skeleton -->
+            <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
+                <div class="flex flex-col items-center">
+                    <Skeleton shape="circle" size="6rem" />
+                    <Skeleton width="10rem" height="1.25rem" class="mt-4" />
+                    <Skeleton width="7rem" height="0.85rem" class="mt-2" />
+                    <div class="flex gap-2 mt-3">
+                        <Skeleton width="5rem" height="1.5rem" borderRadius="9999px" />
+                        <Skeleton width="4rem" height="1.5rem" borderRadius="9999px" />
+                    </div>
+                    <div class="w-full h-px bg-surface-200 dark:bg-surface-700 my-5"></div>
+                    <div class="w-full space-y-3">
+                        <div class="flex items-center gap-3">
+                            <Skeleton width="1rem" height="1rem" shape="circle" />
+                            <Skeleton width="4rem" height="0.75rem" />
+                            <Skeleton width="8rem" height="0.75rem" />
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <Skeleton width="1rem" height="1rem" shape="circle" />
+                            <Skeleton width="4rem" height="0.75rem" />
+                            <Skeleton width="12rem" height="0.75rem" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan Usage Card Skeleton -->
+            <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
+                <Skeleton width="8rem" height="0.85rem" class="mb-4" />
+                <div class="space-y-4">
+                    <div v-for="i in 5" :key="i">
+                        <div class="flex justify-between items-center mb-2">
+                            <Skeleton width="4rem" height="0.7rem" />
+                            <Skeleton width="5rem" height="0.7rem" />
+                        </div>
+                        <Skeleton height="0.375rem" borderRadius="9999px" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel Skeleton -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Tabs Card Skeleton -->
+            <div class="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 overflow-hidden">
+                <div class="flex gap-1 px-4 pt-4 border-b border-surface-200 dark:border-surface-700">
+                    <Skeleton v-for="i in 5" :key="i" :width="i === 5 ? '6rem' : '8rem'" height="2.25rem" borderRadius="8px 8px 0 0" />
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="space-y-4">
+                        <Skeleton height="3rem" class="w-full" />
+                        <Skeleton height="3rem" class="w-full" />
+                        <Skeleton height="3rem" class="w-1/2" />
+                    </div>
+                    <Skeleton width="7rem" height="2.25rem" borderRadius="8px" />
+                </div>
+            </div>
+
+            <!-- Status Cards Row Skeleton -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-for="i in 2" :key="i" class="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-200 dark:border-surface-700">
+                    <div class="flex items-start gap-4">
+                        <Skeleton width="3rem" height="3rem" shape="circle" />
+                        <div class="flex-1">
+                            <Skeleton width="8rem" height="0.85rem" class="mb-2" />
+                            <Skeleton width="12rem" height="0.7rem" class="mb-3" />
+                            <Skeleton width="100%" height="0.7rem" />
                         </div>
                     </div>
                 </div>

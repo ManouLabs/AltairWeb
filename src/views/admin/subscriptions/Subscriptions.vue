@@ -1,4 +1,5 @@
-<script setup>
+<script setup lang="ts">
+import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import ActiveToggleButton from '@/components/ActiveToggleButton.vue';
 import { useDataTable } from '@/composables/useDataTable';
@@ -38,13 +39,13 @@ const defaultFiltersConfig = {
 };
 
 // Auxiliary data from the API
-const accounts = ref([]);
-const plans = ref([]);
-const loadingActiveId = ref(null);
+const accounts = ref<any[]>([]);
+const plans = ref<any[]>([]);
+const loadingActiveId = ref<number | null>(null);
 
 // ── DataTable ─────────────────────────────────────────────
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
-    (params) =>
+    (params: any) =>
         useSubscriptionService.getSubscriptions(params).then((data) => {
             accounts.value = data.accounts || [];
             plans.value = data.plans || [];
@@ -67,10 +68,10 @@ const { showToast } = useShowToast();
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
 // Row lock + column freezing
-const defaultFields = ['account_name', 'plan_name', 'billing_cycle', 'active', 'quotas', 'starts_at', 'ends_at', 'notes'];
+const defaultFields = ['account_name', 'plan_name', 'billing_cycle', 'starts_at', 'ends_at', 'notes', 'quotas', 'active'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
-const record = ref(null);
+const record = ref<Record<string, any> | null>(null);
 const dataLoaded = ref(false);
 const defaultColumns = computed(() =>
     defaultFields.map((field) => ({
@@ -80,16 +81,16 @@ const defaultColumns = computed(() =>
 );
 
 const { selectedColumns, columnChanged } = useDynamicColumns('subscriptionsColumns', defaultFields, 'subscription.columns');
-const echoSubscription = ref(null);
+const echoSubscription = ref<any>(null);
 
 // ── Echo ──────────────────────────────────────────────────
 function subscribeToEcho() {
-    echoSubscription.value = Echo.private('data-stream.subscriptions').listen('DataStream', (event) => {
+    echoSubscription.value = Echo.private('data-stream.subscriptions').listen('DataStream', (event: Record<string, any>) => {
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: Record<string, any>) {
     switch (event.action) {
         case ACTIONS.DELETE:
             handleDelete(event);
@@ -105,8 +106,8 @@ function handleEchoEvent(event) {
     }
 }
 
-function handleDelete(event) {
-    event.data.forEach((id) => {
+function handleDelete(event: Record<string, any>) {
+    event.data.forEach((id: number) => {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
@@ -114,7 +115,7 @@ function handleDelete(event) {
     });
 }
 
-function handleUpdate(event) {
+function handleUpdate(event: Record<string, any>) {
     const index = findRecordIndex(records, event.data.id);
     if (index !== -1) {
         records.value[index] = event.data;
@@ -122,7 +123,7 @@ function handleUpdate(event) {
     }
 }
 
-function handleStore(event) {
+function handleStore(event: Record<string, any>) {
     const exists = records.value.some((r) => r.id === event.data.id);
     if (!exists) {
         records.value.unshift(event.data);
@@ -145,7 +146,7 @@ function addRecord() {
     openDialog();
 }
 
-function toggleActive(subscriptionId) {
+function toggleActive(subscriptionId: number) {
     loadingActiveId.value = subscriptionId;
     loadingStore.startPageLoading();
     useSubscriptionService
@@ -168,13 +169,15 @@ function toggleActive(subscriptionId) {
         });
 }
 
-function editRecord(row) {
+function editRecord(row: Record<string, any>) {
     authStore.errors = {};
     record.value = { ...row };
     openDialog();
 }
 
 const openDialog = () => {
+    if (!record.value) return;
+    const currentRecord = record.value;
     dialog.open(formComponent, {
         props: {
             style: { width: '30vw' },
@@ -186,14 +189,14 @@ const openDialog = () => {
             header: markRaw(FormHeader)
         },
         data: {
-            record: record.value,
-            action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE,
+            record: currentRecord,
+            action: currentRecord.id ? ACTIONS.EDIT : ACTIONS.CREATE,
             accounts: accounts.value,
             plans: plans.value,
             headerProps: computed(() => ({
-                title: record.value.id ? t('common.titles.edit', { entity: t('entity.subscription') }) : t('common.titles.add', { entity: t('entity.subscription') }),
+                title: currentRecord.id ? t('common.titles.edit', { entity: t('entity.subscription') }) : t('common.titles.add', { entity: t('entity.subscription') }),
                 description: t('subscription.form.subtitle'),
-                icon: record.value.id ? 'pi pi-book' : 'pi pi-plus-circle',
+                icon: currentRecord.id ? 'pi pi-book' : 'pi pi-plus-circle',
                 iconColor: '#8B5CF6'
             }))
         },
@@ -213,17 +216,17 @@ const openDialog = () => {
                         break;
                     }
                     default:
-                        console.error(`Unhandled action: ${result.action}`);
+                        console.error(`Unhandled action: ${result.data?.action}`);
                 }
             }
         }
     });
 };
 
-function confirmDeleteRecord(event, subscriptionIds) {
+function confirmDeleteRecord(event: Event | null, subscriptionIds: number[]) {
     confirm.require({
         modal: true,
-        target: event?.currentTarget,
+        target: (event?.currentTarget as HTMLElement) ?? undefined,
         message: subscriptionIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.subscriptions') }) : t('common.confirmations.delete.message', { entity: t('entity.subscription') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -262,62 +265,72 @@ function confirmDeleteRecord(event, subscriptionIds) {
 
 // ── Helpers ───────────────────────────────────────────────
 
-function getPlanBadgeClass(planName) {
+function getPlanBadgeClass(planName: string | null | undefined) {
     if (!planName) return 'bg-gray-500/10 text-gray-500';
     const name = planName.toLowerCase();
-    if (name.includes('enterprise') || name.includes('cargo')) return 'bg-violet-500/12 text-violet-600';
-    if (name.includes('pro') || name.includes('parcel')) return 'bg-blue-500/12 text-blue-600';
-    if (name.includes('express')) return 'bg-orange-500/12 text-orange-600';
-    return 'bg-gray-500/12 text-gray-600';
+    if (name.includes('enterprise') || name.includes('cargo')) return 'bg-violet-500/20 text-violet-700 dark:text-violet-400';
+    if (name.includes('pro') || name.includes('parcel')) return 'bg-blue-500/20 text-blue-700 dark:text-blue-400';
+    if (name.includes('express')) return 'bg-orange-500/20 text-orange-700 dark:text-orange-400';
+    return 'bg-gray-500/20 text-gray-700 dark:text-gray-400';
 }
 
-function formatDate(dateStr) {
+function getPlanIcon(planName: string | null | undefined) {
+    if (!planName) return 'pi pi-question-circle';
+    const name = planName.toLowerCase();
+    if (name.includes('enterprise') || name.includes('cargo')) return 'pi pi-briefcase';
+    if (name.includes('pro') || name.includes('parcel')) return 'pi pi-box';
+    if (name.includes('express')) return 'pi pi-bolt';
+    return 'pi pi-tag';
+}
+
+function formatDate(dateStr: string | null | undefined) {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function formatQuotaNumber(value) {
+function formatQuotaNumber(value: number | null | undefined) {
+    if (value == null) return '0';
     if (value >= 10000) return `${(value / 1000).toFixed(1)}k`;
     if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
-    return value?.toString() || '0';
+    return value.toString();
 }
 
-function getQuotaPercent(used, limit) {
+function getQuotaPercent(used: number, limit: number) {
     if (!limit || limit <= 0) return 0;
     return Math.min(100, Math.round((used / limit) * 100));
 }
 
-function getQuotaBarColor(percent) {
+function getQuotaBarColor(percent: number) {
     if (percent >= 100) return 'bg-red-500';
     if (percent >= 80) return 'bg-orange-500';
     if (percent >= 50) return 'bg-yellow-500';
     return 'bg-blue-500';
 }
 
-function getQuotaPercentColor(percent) {
+function getQuotaPercentColor(percent: number) {
     if (percent >= 100) return 'text-red-500';
     if (percent >= 80) return 'text-orange-500';
     return 'text-surface-500';
 }
 
-function getQuotaItems(data) {
+function getQuotaItems(data: Record<string, any>) {
     if (!data.plan_limits) return [];
     const items = [];
     const limits = data.plan_limits;
     const usage = data.quota_usage || {};
 
     if (limits.orders && limits.orders > 0) {
-        items.push({ label: 'orders', used: usage.orders || 0, limit: limits.orders });
+        items.push({ label: t('entity.orders', 2), used: usage.orders || 0, limit: limits.orders, icon: 'pi pi-shopping-cart', colorClass: 'text-cyan-500' });
     }
     if (limits.products && limits.products > 0) {
-        items.push({ label: 'products', used: usage.products || 0, limit: limits.products });
+        items.push({ label: t('entity.products', 2), used: usage.products || 0, limit: limits.products, icon: 'pi pi-box', colorClass: 'text-blue-500' });
     }
     if (limits.users && limits.users > 0) {
-        items.push({ label: 'users', used: usage.users || 0, limit: limits.users });
+        items.push({ label: t('entity.users', 2), used: usage.users || 0, limit: limits.users, icon: 'pi pi-user', colorClass: 'text-indigo-500' });
     }
     if (limits.shops && limits.shops > 0) {
-        items.push({ label: 'shops', used: usage.shops || 0, limit: limits.shops });
+        items.push({ label: t('entity.shops', 2), used: usage.shops || 0, limit: limits.shops, icon: 'pi pi-shop', colorClass: 'text-purple-500' });
     }
     return items;
 }
@@ -343,13 +356,13 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="flex gap-2 items-center">
-                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.subscriptions') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
+                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.subscriptions') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
                 <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.subscription') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.subscription')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
             </div>
         </div>
 
         <!-- ═══ DataTable ═══ -->
-        <DataTableSkeleton v-if="!dataLoaded" :columns="6" />
+        <DataTableSkeleton v-if="!dataLoaded" :columns="8" />
         <template v-else>
             <DataTable
                 ref="recordDataTable"
@@ -361,7 +374,7 @@ onUnmounted(() => {
                 @filter="onFilter($event)"
                 v-model:filters="filters"
                 filterDisplay="menu"
-                :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+                :globalFilterFields="['id', ...defaultColumns.map((column) => column.field)]"
                 paginator
                 @page="onPage($event)"
                 :rows="rows"
@@ -382,7 +395,7 @@ onUnmounted(() => {
                 size="small"
                 :pt="{
                     table: { style: 'min-width: 50rem' },
-                    bodyrow: ({ props }) => ({
+                    bodyrow: ({ props }: { props: { frozenRow: boolean } }) => ({
                         class: [{ 'font-bold': props.frozenRow }]
                     })
                 }"
@@ -453,8 +466,7 @@ onUnmounted(() => {
                             <div class="flex flex-col min-w-0">
                                 <span class="text-sm font-semibold text-surface-800 dark:text-surface-100 whitespace-nowrap overflow-hidden text-ellipsis" :class="{ 'font-bold': frozenColumns.account_name || highlights[data.id] }">
                                     {{ data.account_name }}
-                                    <Tag v-if="highlights[data.id] === 'new'" value="NEW" severity="success" rounded size="small" class="ml-1" />
-                                    <Tag v-else-if="highlights[data.id] === 'updated'" value="UPDATED" severity="info" rounded size="small" class="ml-1" />
+                                    <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" class="ml-1" />
                                 </span>
                                 <span v-if="data.account_secondary_name" class="text-[0.7rem] text-surface-400 dark:text-surface-500">{{ data.account_secondary_name }}</span>
                             </div>
@@ -475,7 +487,8 @@ onUnmounted(() => {
                         />
                     </template>
                     <template #body="{ data }">
-                        <span class="inline-block px-2.5 py-0.5 rounded-md text-[0.65rem] font-bold tracking-wide" :class="getPlanBadgeClass(data.plan_name)">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold tracking-wide" :class="getPlanBadgeClass(data.plan_name)">
+                            <i :class="getPlanIcon(data.plan_name)" style="font-size: 0.75rem"></i>
                             {{ data.plan_name?.toUpperCase() }}
                         </span>
                     </template>
@@ -495,23 +508,6 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <span class="text-sm text-surface-800 dark:text-surface-100 capitalize">{{ data.billing_cycle }}</span>
-                    </template>
-                </Column>
-
-                <!-- ═══ Active (Toggle) ═══ -->
-                <Column columnKey="active" field="active" :frozen="frozenColumns.active" v-if="selectedColumns.some((column) => column.field === 'active')" sortable class="min-w-32">
-                    <template #header>
-                        <HeaderCell
-                            :text="t('subscription.columns.active')"
-                            :frozen="frozenColumns.active"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('active')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <ActiveToggleButton :active="data.active" entity="subscription" variant="button" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
                     </template>
                 </Column>
 
@@ -579,18 +575,48 @@ onUnmounted(() => {
                         />
                     </template>
                     <template #body="{ data }">
-                        <div v-if="getQuotaItems(data).length" class="flex flex-col gap-2.5 w-full min-w-[200px]">
-                            <div v-for="item in getQuotaItems(data)" :key="item.label" class="flex flex-col gap-1">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[0.75rem] text-surface-600 dark:text-surface-400"> {{ formatQuotaNumber(item.used) }} / {{ formatQuotaNumber(item.limit) }} {{ item.label }} </span>
-                                    <span class="text-[0.7rem] font-bold" :class="getQuotaPercentColor(getQuotaPercent(item.used, item.limit))"> {{ getQuotaPercent(item.used, item.limit) }}% </span>
-                                </div>
-                                <div class="w-full h-1.5 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full transition-all duration-300" :class="getQuotaBarColor(getQuotaPercent(item.used, item.limit))" :style="{ width: `${Math.min(100, getQuotaPercent(item.used, item.limit))}%` }"></div>
+                        <div v-if="getQuotaItems(data).length" class="flex items-center gap-3 flex-wrap">
+                            <div
+                                v-for="item in getQuotaItems(data)"
+                                :key="item.label"
+                                class="relative w-[38px] h-[38px] cursor-help"
+                                :class="item.colorClass"
+                                v-tooltip.top="`${formatQuotaNumber(item.used)} / ${formatQuotaNumber(item.limit)} ${item.label} (${getQuotaPercent(item.used, item.limit)}%)`"
+                            >
+                                <svg class="w-full h-full transform -rotate-90 pointer-events-none drop-shadow-sm" viewBox="0 0 36 36">
+                                    <path class="opacity-20" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path
+                                        :stroke-dasharray="`${getQuotaPercent(item.used, item.limit)}, 100`"
+                                        stroke-width="3.5"
+                                        stroke-linecap="round"
+                                        stroke="currentColor"
+                                        fill="none"
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i :class="item.icon" class="text-surface-400 dark:text-surface-500" style="font-size: 0.75rem"></i>
                                 </div>
                             </div>
                         </div>
                         <span v-else class="text-[0.82rem] text-surface-400 dark:text-surface-500">—</span>
+                    </template>
+                </Column>
+
+                <!-- ═══ Active (Toggle) ═══ -->
+                <Column columnKey="active" field="active" :frozen="frozenColumns.active" v-if="selectedColumns.some((column) => column.field === 'active')" sortable class="min-w-32">
+                    <template #header>
+                        <HeaderCell
+                            :text="t('subscription.columns.active')"
+                            :frozen="frozenColumns.active"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('active')"
+                        />
+                    </template>
+                    <template #body="{ data }">
+                        <ActiveToggleButton :active="data.active" entity="subscription" variant="button" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
                     </template>
                 </Column>
 

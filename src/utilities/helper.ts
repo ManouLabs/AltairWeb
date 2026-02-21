@@ -32,7 +32,7 @@ interface LazyParams {
 
 type TranslateFunction = (key: string, params?: Record<string, unknown>) => string;
 
-function findRecordIndex(records: Ref<DataRecord[]>, id: number | string): number {
+function findRecordIndex<T extends { id: number | string }>(records: Ref<T[]>, id: number | string): number {
     return records.value.findIndex((record) => record.id === id);
 }
 

@@ -341,7 +341,7 @@ onMounted(() => {
                             </IconField>
                             <label :for="key">{{ t(`shop.columns.${key}`) }}</label>
                         </FloatLabel>
-                        <Message v-if="authStore.errors?.[`contactMethods.${key}.value`]?.[0]" severity="error" size="small">{{ t(authStore.errors?.[`contactMethods.${key}.value`]?.[0]) }}</Message>
+                        <Message v-if="authStore.errors?.[`contactMethods.${key}.value`]?.[0]" severity="error" size="small">{{ t(authStore.errors?.[`contactMethods.${key}.value`]?.[0] ?? '') }}</Message>
                     </div>
                 </div>
             </div>

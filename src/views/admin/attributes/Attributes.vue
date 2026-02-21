@@ -32,8 +32,8 @@ const defaultFiltersConfig = {
     created_at: FilterMatchMode.DATE_IS
 };
 
-const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable<AttributeData>(
-    (params: Record<string, unknown>) =>
+const { total, rows, records, selectedRecords, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable<AttributeData>(
+    (params: any) =>
         useAttributeService.getAttributes(params).then((data) => {
             dataLoaded.value = true;
             return {
@@ -81,7 +81,7 @@ interface EchoEvent {
 }
 
 function subscribeToEcho(): void {
-    const channel = Echo.private(`data-stream.attribute${authStore.user.account_id}`);
+    const channel = Echo.private(`data-stream.attribute${authStore.user?.account_id}`);
     subscription.value = channel.listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
     });
@@ -246,7 +246,7 @@ onUnmounted(() => {
                     outlined
                     severity="info"
                     :disabled="!dataLoaded"
-                    @click="exportCSV($event)"
+                    @click="exportCSV()"
                 />
                 <Button
                     v-if="authStore.hasPermission('create_attributes')"

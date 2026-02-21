@@ -37,7 +37,7 @@ const defaultFiltersConfig = {
 };
 
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable<ProductData>(
-    (params: Record<string, unknown>) =>
+    (params) =>
         useProductService.getProducts(params).then((data) => {
             allCategories.value = data.categories;
             dataLoaded.value = true;
@@ -90,6 +90,7 @@ interface EchoEvent {
 }
 
 function subscribeToEcho(): void {
+    if (!authStore.user) return;
     const channel = Echo.private(`data-stream.product${authStore.user.account_id}`);
     subscription.value = channel.listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
@@ -266,7 +267,7 @@ onUnmounted(() => {
                     outlined
                     severity="info"
                     :disabled="!dataLoaded"
-                    @click="exportCSV($event)"
+                    @click="exportCSV()"
                 />
                 <Button
                     v-if="authStore.hasPermission('create_products')"
@@ -592,7 +593,7 @@ onUnmounted(() => {
 
                 <!-- Actions Column -->
                 <Column key="actions" :exportable="false" style="width: 3rem">
-                    <template #body="{ data }">
+                    <template #body="{ data, frozenRow, index }">
                         <div class="flex items-center gap-1">
                             <RowActionMenu
                                 :actions="[
@@ -607,7 +608,7 @@ onUnmounted(() => {
                                 text
                                 rounded
                                 size="small"
-                                @click="toggleLock(data)"
+                                @click="toggleLock(data, frozenRow, index)"
                                 severity="secondary"
                             />
                         </div>

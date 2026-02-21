@@ -1,6 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import ActiveToggleButton from '@/components/ActiveToggleButton.vue';
 import { usePlanService } from '@/services/usePlanService';
+import type { Plan, PlanFormData } from '@/types/plan';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex } from '@/utilities/helper';
@@ -24,18 +25,18 @@ const dialog = useDialog();
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 const { showToast } = useShowToast();
 
-const records = ref([]);
-const record = ref(null);
+const records = ref<Plan[]>([]);
+const record = ref<Plan | PlanFormData | null>(null);
 const dataLoaded = ref(false);
-const loadingActiveId = ref(null);
-const loadingRecommendedId = ref(null);
-const subscription = ref(null);
+const loadingActiveId = ref<number | null>(null);
+const loadingRecommendedId = ref<number | null>(null);
+const subscription = ref<ReturnType<typeof Echo.private> | null>(null);
 
 async function initialize() {
     loadingStore.startPageLoading();
     try {
-        const data = await usePlanService.getPlans({ rows: 100, page: 1, sortField: 'id', sortOrder: 1 });
-        records.value = data.plans;
+        const response = await usePlanService.getPlans({ rows: 100, page: 1, sortField: 'id', sortOrder: 1 });
+        records.value = response.data;
         dataLoaded.value = true;
     } catch (error) {
         console.error('Error loading plans:', error);
@@ -45,12 +46,12 @@ async function initialize() {
 }
 
 function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.plans').listen('DataStream', (event) => {
+    subscription.value = Echo.private('data-stream.plans').listen('DataStream', (event: any) => {
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: any) {
     switch (event.action) {
         case ACTIONS.DELETE:
             handleDelete(event);
@@ -66,8 +67,8 @@ function handleEchoEvent(event) {
     }
 }
 
-function handleDelete(event) {
-    event.data.forEach((id) => {
+function handleDelete(event: any) {
+    event.data.forEach((id: number) => {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
@@ -75,14 +76,14 @@ function handleDelete(event) {
     });
 }
 
-function handleUpdate(event) {
+function handleUpdate(event: any) {
     const index = findRecordIndex(records, event.data.id);
     if (index !== -1) {
         records.value[index] = event.data;
     }
 }
 
-function handleStore(event) {
+function handleStore(event: any) {
     const exists = records.value.some((r) => r.id === event.data.id);
     if (!exists) {
         records.value.unshift(event.data);
@@ -110,11 +111,11 @@ function addRecord() {
         monthly_price: 0,
         yearly_price: 0,
         level: 1
-    };
+    } as PlanFormData;
     openDialog();
 }
 
-function editRecord(plan) {
+function editRecord(plan: Plan) {
     authStore.errors = {};
     record.value = { ...plan };
     openDialog();
@@ -133,15 +134,15 @@ const openDialog = () => {
         },
         data: {
             record: record.value,
-            action: record.value.id ? ACTIONS.EDIT : ACTIONS.CREATE,
+            action: record.value?.id ? ACTIONS.EDIT : ACTIONS.CREATE,
             headerProps: computed(() => ({
-                title: record.value.id ? t('common.titles.edit', { entity: t('entity.plan') }) : t('common.titles.add', { entity: t('entity.plan') }),
+                title: record.value?.id ? t('common.titles.edit', { entity: t('entity.plan') }) : t('common.titles.add', { entity: t('entity.plan') }),
                 description: t('plan.form.subtitle'),
-                icon: record.value.id ? 'pi pi-book' : 'pi pi-plus-circle',
+                icon: record.value?.id ? 'pi pi-book' : 'pi pi-plus-circle',
                 iconColor: '#3B82F6'
             }))
         },
-        onClose: (result) => {
+        onClose: (result: any) => {
             if (result && result.data?.record?.id) {
                 switch (result.data?.action) {
                     case ACTIONS.CREATE:
@@ -162,7 +163,7 @@ const openDialog = () => {
     });
 };
 
-function toggleActive(planId) {
+function toggleActive(planId: number) {
     loadingActiveId.value = planId;
     loadingStore.startPageLoading();
     usePlanService
@@ -181,7 +182,7 @@ function toggleActive(planId) {
         });
 }
 
-function toggleRecommended(planId) {
+function toggleRecommended(planId: number) {
     loadingRecommendedId.value = planId;
     loadingStore.startPageLoading();
     usePlanService
@@ -205,9 +206,9 @@ function toggleRecommended(planId) {
         });
 }
 
-function confirmDeleteRecord(event, planId) {
+function confirmDeleteRecord(event: MouseEvent, planId: number) {
     confirm.require({
-        target: event.currentTarget,
+        target: event.currentTarget as HTMLElement,
         message: t('common.confirmations.delete.message', { entity: t('entity.plan') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -238,12 +239,12 @@ function confirmDeleteRecord(event, planId) {
     });
 }
 
-function formatPrice(value) {
+function formatPrice(value: number | null | undefined): string {
     if (value === null || value === undefined) return '—';
     return new Intl.NumberFormat('en-US').format(value);
 }
 
-function formatLimit(value) {
+function formatLimit(value: number | null | undefined): string {
     if (value === null || value === undefined) return t('plan.page.unlimited');
     return value.toLocaleString();
 }

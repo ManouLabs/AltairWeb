@@ -1,5 +1,6 @@
-<script setup>
+<script setup lang="ts">
 import HeaderCell from '@/components/HeaderCell.vue';
+import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -17,6 +18,7 @@ import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, markRaw } 
 import { useI18n } from 'vue-i18n';
 import FormHeader from '@/components/FormHeader.vue';
 import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
+import type { Region } from '@/types/region';
 
 onMounted(() => {
     initialize();
@@ -38,7 +40,7 @@ const defaultFiltersConfig = {
     created_at: FilterMatchMode.DATE_IS,
     updated_at: FilterMatchMode.DATE_IS
 };
-const allRegions = ref(null);
+const allRegions = ref<Region[] | undefined | null>(null);
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
     (params) =>
         useCityService.getCities(params).then((data) => {
@@ -63,7 +65,7 @@ const { highlights, markHighlight, getRowClass } = useRowEffects();
 const defaultFields = ['name', 'name_fr', 'name_ar', 'postal_code', 'region', 'created_at', 'updated_at'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
-const record = ref(null);
+const record = ref<any>(null);
 const dataLoaded = ref(false);
 const defaultColumns = computed(() =>
     defaultFields.map((field) => ({
@@ -73,15 +75,15 @@ const defaultColumns = computed(() =>
 );
 
 const { selectedColumns, columnChanged } = useDynamicColumns('citiesColumns', defaultFields, 'city.columns');
-const subscription = ref(null);
+const subscription = ref<any>(null);
 
 function subscribeToEcho() {
-    subscription.value = Echo.private('data-stream.cities').listen('DataStream', (event) => {
+    subscription.value = Echo.private('data-stream.cities').listen('DataStream', (event: any) => {
         handleEchoEvent(event);
     });
 }
 
-function handleEchoEvent(event) {
+function handleEchoEvent(event: any) {
     switch (event.action) {
         case ACTIONS.DELETE:
             handleDelete(event);
@@ -97,8 +99,8 @@ function handleEchoEvent(event) {
     }
 }
 
-function handleDelete(event) {
-    event.data.forEach((id) => {
+function handleDelete(event: any) {
+    event.data.forEach((id: number) => {
         const index = findRecordIndex(records, id);
         if (index !== -1) {
             records.value.splice(index, 1);
@@ -106,7 +108,7 @@ function handleDelete(event) {
     });
 }
 
-function handleUpdate(event) {
+function handleUpdate(event: any) {
     const index = findRecordIndex(records, event.data.id);
     if (index !== -1) {
         records.value[index] = event.data;
@@ -114,7 +116,7 @@ function handleUpdate(event) {
     }
 }
 
-function handleStore(event) {
+function handleStore(event: any) {
     const exists = records.value.some((r) => r.id === event.data.id);
     if (!exists) {
         records.value.unshift(event.data);
@@ -136,7 +138,7 @@ function addRecord() {
     openDialog();
 }
 
-function editRecord(row) {
+function editRecord(row: any) {
     authStore.errors = {};
     record.value = row;
     openDialog();
@@ -180,17 +182,17 @@ const openDialog = () => {
                         break;
                     }
                     default:
-                        console.error(`Unhandled action: ${result.action}`);
+                        console.error(`Unhandled action: ${result.data?.action}`);
                 }
             }
         }
     });
 };
 
-function confirmDeleteRecord(event, cityIds) {
+function confirmDeleteRecord(event: any, cityIds: any[]) {
     confirm.require({
         modal: true,
-        target: event.currentTarget,
+        target: event?.currentTarget,
         message: cityIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.cities') }) : t('common.confirmations.delete.message', { entity: t('entity.city') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -238,7 +240,7 @@ onUnmounted(() => {
     <div>
         <PageHeader icon="pi pi-building" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.cities') })" :description="t('common.subtitles.manage', { entity: t('entity.cities').toLowerCase() })">
             <template #actions>
-                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.cities') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV($event)" />
+                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.cities') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
                 <Button
                     v-if="authStore.hasPermission('createcity')"
                     v-tooltip.top="t('common.tooltips.add', { entity: t('entity.city') })"
@@ -262,7 +264,7 @@ onUnmounted(() => {
                 @filter="onFilter($event)"
                 v-model:filters="filters"
                 filterDisplay="menu"
-                :globalFilterFields="('id', defaultColumns.map((column) => column.field))"
+                :globalFilterFields="['id', ...defaultColumns.map((column) => column.field)]"
                 paginator
                 @page="onPage($event)"
                 :rows="rows"
@@ -283,7 +285,7 @@ onUnmounted(() => {
                 size="small"
                 :pt="{
                     table: { style: 'min-width: 50rem' },
-                    bodyrow: ({ props }) => ({
+                    bodyrow: ({ props }: any) => ({
                         class: [{ 'font-bold': props.frozenRow }]
                     })
                 }"
@@ -361,8 +363,7 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
                                 <span>{{ data.name }}</span>
-                                <Tag v-if="highlights[data.id] === 'new'" value="NEW" severity="success" rounded size="small" />
-                                <Tag v-else-if="highlights[data.id] === 'updated'" value="UPDATED" severity="info" rounded size="small" />
+                                <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
                         </DataCell>
                     </template>
@@ -515,7 +516,7 @@ onUnmounted(() => {
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
                         <InputGroup>
-                            <MultiSelect v-model="filterModel.value" :options="allRegions" optionLabel="name" optionValue="name" :placeholder="t('common.placeholders.select')" class="w-full" size="small" display="chip" />
+                            <MultiSelect v-model="filterModel.value" :options="allRegions || []" optionLabel="name" optionValue="name" :placeholder="t('common.placeholders.select')" class="w-full" size="small" display="chip" />
                             <InputGroupAddon>
                                 <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
                                 <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
@@ -568,7 +569,7 @@ onUnmounted(() => {
                                 placeholder="Filter Mode"
                             />
                             <InputGroup>
-                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <DatePicker v-model="filterModel.value" dateFormat="yy-mm-dd" :showClear="false" :manualInput="false" @dateSelect="(e: any) => formatDate(e, filterModel)" />
                                 <InputGroupAddon>
                                     <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
                                     <Button
@@ -633,7 +634,7 @@ onUnmounted(() => {
                                 placeholder="Filter Mode"
                             />
                             <InputGroup>
-                                <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e) => formatDate(e, filterModel)" />
+                                <DatePicker v-model="filterModel.value" :showClear="false" @dateSelect="(e: any) => formatDate(e, filterModel)" />
                                 <InputGroupAddon>
                                     <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
                                     <Button

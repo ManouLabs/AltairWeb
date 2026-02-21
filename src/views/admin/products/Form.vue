@@ -380,7 +380,7 @@ function onImageSelect(event: any): void {
             event.target.value = '';
             return;
         }
-        authStore.errors = { ...authStore.errors, file: undefined };
+        authStore.errors = { ...authStore.errors, file: null };
         productImage.value = file;
         removeFileFlag.value = false;
         const reader = new FileReader();

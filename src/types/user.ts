@@ -16,6 +16,10 @@ export interface User {
     created_at?: string;
     updated_at?: string;
     account_id?: number;
+    account?: {
+        id: number;
+        name: string;
+    };
 }
 
 export interface UserFormData {

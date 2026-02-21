@@ -337,6 +337,7 @@ function handleEchoEvent(event: EchoEvent): void {
 }
 
 function subscribeToEcho(): void {
+    if (!authStore.user) return;
     const categoriesChannel = Echo.private(`data-stream.categories${authStore.user.account_id}`);
     subscription.value = categoriesChannel.listen('DataStream', (event: EchoEvent) => {
         console.log('Received Echo event for categories:', event);

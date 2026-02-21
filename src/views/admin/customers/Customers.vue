@@ -33,7 +33,7 @@ const defaultFiltersConfig = {
 };
 
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable<CustomerData>(
-    (params: Record<string, unknown>) =>
+    (params: any) =>
         useCustomerService.getCustomers(params).then((data) => {
             regions.value = data.regions || [];
             dataLoaded.value = true;
@@ -84,6 +84,7 @@ interface EchoEvent {
 }
 
 function subscribeToEcho(): void {
+    if (!authStore.user) return;
     const customersChannel = Echo.private(`data-stream.customers${authStore.user.account_id}`);
     subscription.value = customersChannel.listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
@@ -243,12 +244,11 @@ function confirmDeleteRecord(event: MouseEvent | null, customerIds: number[]): v
 }
 
 // Custom row class to apply blocked customer styling
-function getRowClass(data: CustomerData): string {
-    const baseClass = baseGetRowClass(data);
-    if (data.status === 'blocked') {
-        return baseClass ? `${baseClass} customer-row-blocked` : 'customer-row-blocked';
-    }
-    return baseClass;
+function getRowClass(data: CustomerData): any {
+    return {
+        ...baseGetRowClass(data),
+        'customer-row-blocked': data.status === 'blocked'
+    };
 }
 
 // Helper to extract address display text
@@ -362,7 +362,7 @@ onUnmounted(() => {
                     icon="pi pi-upload"
                     outlined
                     severity="info"
-                    @click="exportCSV($event)"
+                    @click="exportCSV()"
                 />
                 <Button
                     v-if="authStore.hasPermission('create_customers')"
