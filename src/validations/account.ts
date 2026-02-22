@@ -22,6 +22,16 @@ export const accountSchema = z.object({
     nif: optionalStringMax(30),
     nis: optionalStringMax(30),
     rib: optionalStringMax(30),
+    addresses: z
+        .array(
+            z.object({
+                street: requiredStringMax(255),
+                region: z.number().nullable().optional(),
+                city: z.number().nullable().optional(),
+                main: z.boolean().optional().default(false)
+            })
+        )
+        .min(1, { message: 'common.messages.is_required' }),
     contacts: z
         .array(
             z.object({
@@ -81,6 +91,34 @@ export const accountSchema = z.object({
                     .optional()
                     .default([])
             })
+        )
+        .optional()
+        .default([]),
+    subscription: z
+        .object({
+            plan_id: z.preprocess((v) => (v === null || v === undefined || v === '' ? undefined : Number(v)), z.number({ required_error: 'common.messages.is_required', invalid_type_error: 'common.messages.is_required' })),
+            billing_period: z.enum(['month', 'year']).default('month'),
+            quantity: z.preprocess((v) => (v === null || v === undefined ? 1 : Number(v)), z.number().min(1, { message: 'common.messages.min_value' })),
+            starts_at: z.preprocess((v) => (v === null || v === undefined ? '' : String(v)), z.string().min(1, { message: 'common.messages.is_required' }))
+        })
+        .optional(),
+    users: z
+        .array(
+            z
+                .object({
+                    name: requiredString,
+                    email: z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }).email({ message: 'common.messages.invalid_email' })),
+                    role: z.enum(['Admin', 'Staff'], {
+                        required_error: 'common.messages.is_required',
+                        invalid_type_error: 'common.messages.is_required'
+                    }),
+                    password: z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(8, { message: 'common.messages.min_length' })),
+                    password_confirmation: z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }))
+                })
+                .refine((data) => data.password === data.password_confirmation, {
+                    message: 'common.messages.passwords_dont_match',
+                    path: ['password_confirmation']
+                })
         )
         .optional()
         .default([])

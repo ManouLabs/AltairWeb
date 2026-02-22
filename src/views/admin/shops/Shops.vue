@@ -465,7 +465,9 @@ onUnmounted(() => {
 
     <!-- No Shops -->
     <div v-else-if="dataLoaded && filteredRecords.length === 0" class="flex flex-col items-center justify-center py-16 px-8 bg-surface-0 dark:bg-surface-900 rounded-3xl border border-surface-200 dark:border-surface-700 shadow-sm">
-        <i class="pi pi-shopping-bag text-4xl text-surface-300 mb-4"></i>
-        <p class="text-surface-500 dark:text-surface-400 text-sm">{{ t('shop.labels.no_shops') }}</p>
+        <i class="pi pi-shopping-bag text-5xl text-surface-300 dark:text-surface-600 mb-4"></i>
+        <h3 class="text-lg font-semibold text-surface-700 dark:text-surface-200 mb-2">{{ t('common.messages.no_data_title', { entity: t('entity.shops').toLowerCase() }) }}</h3>
+        <p class="text-surface-500 dark:text-surface-400 text-sm mb-6">{{ t('common.messages.no_data_description', { entity: t('entity.shop').toLowerCase() }) }}</p>
+        <Button v-if="authStore.hasPermission('create_shops')" :label="`${t('common.labels.new')} ${t('entity.shop')}`" icon="pi pi-plus" severity="primary" :disabled="!quotaStore.canCreate('shops')" @click="addRecord" />
     </div>
 </template>

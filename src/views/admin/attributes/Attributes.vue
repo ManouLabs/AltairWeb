@@ -600,6 +600,15 @@ onUnmounted(() => {
                         </DataCell>
                     </template>
                 </Column>
+
+                <template #empty>
+                    <div class="flex flex-col items-center justify-center py-12">
+                        <i class="pi pi-sliders-h text-5xl text-surface-300 dark:text-surface-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-surface-700 dark:text-surface-200 mb-2">{{ t('common.messages.no_data_title', { entity: t('entity.attributes').toLowerCase() }) }}</h3>
+                        <p class="text-surface-500 dark:text-surface-400 text-sm mb-6">{{ t('common.messages.no_data_description', { entity: t('entity.attribute').toLowerCase() }) }}</p>
+                        <Button v-if="authStore.hasPermission('create_attributes')" :label="t('common.labels.new') + ' ' + t('entity.attribute')" icon="pi pi-plus" severity="primary" @click="addRecord" />
+                    </div>
+                </template>
             </DataTable>
         </template>
     </div>

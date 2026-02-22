@@ -36,7 +36,7 @@ async function initialize() {
     loadingStore.startPageLoading();
     try {
         const response = await usePlanService.getPlans({ rows: 100, page: 1, sortField: 'id', sortOrder: 1 });
-        records.value = response.data;
+        records.value = response.plans;
         dataLoaded.value = true;
     } catch (error) {
         console.error('Error loading plans:', error);

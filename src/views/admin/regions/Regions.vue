@@ -43,7 +43,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
         useRegionService.getRegions(params).then((data) => {
             dataLoaded.value = true;
             return {
-                data: data.data,
+                data: data.regions,
                 meta: data.meta
             };
         }),

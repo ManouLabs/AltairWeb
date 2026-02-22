@@ -1,7 +1,5 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore';
-import { customerSchema } from '@/validations/customer';
-import { validateField } from '@/validations/validate';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -22,10 +20,10 @@ const emit = defineEmits(['update:modelValue', 'change']);
 
 // Contact method types based on API enum
 const contactMethodOptions = [
-    { value: 'email', label: t('contact.types.email'), icon: 'pi-envelope', validation: 'email' },
-    { value: 'landline', label: t('contact.types.landline'), icon: 'pi-phone', validation: 'landline' },
-    { value: 'mobile', label: t('contact.types.mobile'), icon: 'pi-mobile', validation: 'mobile' },
-    { value: 'url', label: t('contact.types.url'), icon: 'pi-globe', validation: 'url' }
+    { value: 'email', label: t('contact.types.email'), icon: 'pi pi-envelope' },
+    { value: 'landline', label: t('contact.types.landline'), icon: 'pi pi-phone' },
+    { value: 'mobile', label: t('contact.types.mobile'), icon: 'pi pi-mobile' },
+    { value: 'url', label: t('contact.types.url'), icon: 'pi pi-globe' }
 ];
 
 // Civility options
@@ -86,10 +84,10 @@ const removeContact = (index) => {
     }
 };
 
-const addContactMethod = (contactIndex) => {
+const addContactMethod = (contactIndex, type) => {
     const newMethod = {
         contact_id: null,
-        type: 'email',
+        type: type,
         value: ''
     };
     localContacts.value[contactIndex].contactMethods.push(newMethod);
@@ -99,51 +97,37 @@ const removeContactMethod = (contactIndex, methodIndex) => {
     localContacts.value[contactIndex].contactMethods.splice(methodIndex, 1);
 };
 
-// Field-level validation on blur for contact fields (civility, first_name, last_name)
-const validateContactField = (contactIndex, fieldKey) => {
-    const fieldPath = `contacts.${contactIndex}.${fieldKey}`;
-    const data = { contacts: localContacts.value };
-    const { ok, errors } = validateField(customerSchema, data, fieldPath);
-    if (ok) {
-        authStore.clearErrors([fieldPath]);
-    } else {
-        authStore.errors = { ...authStore.errors, ...errors };
-    }
+const getMethodIcon = (type) => {
+    const option = contactMethodOptions.find((o) => o.value === type);
+    return option ? option.icon : 'pi pi-info-circle';
 };
 
-// Field-level validation on blur for contact method value
-const validateContactMethodValue = (contactIndex, methodIndex) => {
-    const fieldPath = `contacts.${contactIndex}.contactMethods.${methodIndex}.value`;
-    const data = { contacts: localContacts.value };
-    const { ok, errors } = validateField(customerSchema, data, fieldPath);
-    if (ok) {
-        authStore.clearErrors([fieldPath]);
-    } else {
-        authStore.errors = { ...authStore.errors, ...errors };
-    }
+// Popover toggling for "add method" type picker
+const addMethodPopoverRefs = ref({});
+const toggleAddMethodPopover = (contactIndex, event) => {
+    const popover = addMethodPopoverRefs.value[contactIndex];
+    if (popover) popover.toggle(event);
+};
+
+const onFieldBlur = (contactIndex, field) => {
+    authStore.clearErrors([`contacts.${contactIndex}.${field}`]);
+};
+
+const onMethodFieldBlur = (contactIndex, methodIndex) => {
+    authStore.clearErrors([`contacts.${contactIndex}.contactMethods.${methodIndex}.value`]);
 };
 </script>
 
 <template>
     <div class="contacts-component">
-        <!-- Add Contact Button -->
-        <div class="flex justify-end mb-6">
-            <Button icon="pi pi-plus" :label="t('contact.buttons.add_contact')" @click="addContact" outlined />
-        </div>
-
-        <!-- Contacts List -->
         <div class="space-y-6">
-            <div v-for="(contact, contactIndex) in localContacts" :key="contactIndex" class="contact-card border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900 shadow-sm">
-                <!-- Remove Contact Button (for contacts beyond the first) -->
-                <div v-if="localContacts.length > 1" class="flex justify-end mb-4">
-                    <Button icon="pi pi-trash" @click="removeContact(contactIndex)" severity="danger" size="small" outlined :title="t('contact.buttons.remove_contact')" />
-                </div>
-
-                <!-- Contact Details -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- Contact cards -->
+            <div v-for="(contact, contactIndex) in localContacts" :key="contactIndex" class="border border-surface-200 dark:border-surface-700 rounded-xl p-6 bg-surface-0 dark:bg-surface-900">
+                <!-- Contact details: Civility / First Name / Last Name -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
                     <!-- Civility -->
-                    <div class="flex flex-col">
-                        <FloatLabel variant="on">
+                    <div>
+                        <FloatLabel variant="on" class="w-full">
                             <Select
                                 :id="`civility_${contactIndex}`"
                                 v-model="contact.civility"
@@ -152,10 +136,9 @@ const validateContactMethodValue = (contactIndex, methodIndex) => {
                                 optionValue="value"
                                 optionLabel="label"
                                 class="w-full"
-                                :placeholder="t('contact.labels.civility')"
                                 :invalid="authStore.errors?.[`contacts.${contactIndex}.civility`]?.[0] ? true : false"
-                                @input="() => authStore.clearErrors([`contacts.${contactIndex}.civility`])"
-                                @blur="() => validateContactField(contactIndex, 'civility')"
+                                @change="() => authStore.clearErrors([`contacts.${contactIndex}.civility`])"
+                                @blur="() => onFieldBlur(contactIndex, 'civility')"
                             />
                             <label :for="`civility_${contactIndex}`">{{ t('contact.labels.civility') }} *</label>
                         </FloatLabel>
@@ -165,8 +148,8 @@ const validateContactMethodValue = (contactIndex, methodIndex) => {
                     </div>
 
                     <!-- First Name -->
-                    <div class="flex flex-col">
-                        <FloatLabel variant="on">
+                    <div>
+                        <FloatLabel variant="on" class="w-full">
                             <InputText
                                 :id="`firstName_${contactIndex}`"
                                 v-model="contact.first_name"
@@ -174,7 +157,7 @@ const validateContactMethodValue = (contactIndex, methodIndex) => {
                                 :invalid="authStore.errors?.[`contacts.${contactIndex}.first_name`]?.[0] ? true : false"
                                 :disabled="disabled"
                                 @input="() => authStore.clearErrors([`contacts.${contactIndex}.first_name`])"
-                                @blur="() => validateContactField(contactIndex, 'first_name')"
+                                @blur="() => onFieldBlur(contactIndex, 'first_name')"
                             />
                             <label :for="`firstName_${contactIndex}`">{{ t('contact.labels.first_name') }} *</label>
                         </FloatLabel>
@@ -183,98 +166,109 @@ const validateContactMethodValue = (contactIndex, methodIndex) => {
                         </Message>
                     </div>
 
-                    <!-- Last Name -->
-                    <div class="flex flex-col">
-                        <FloatLabel variant="on">
-                            <InputText
-                                :id="`lastName_${contactIndex}`"
-                                v-model="contact.last_name"
-                                class="w-full"
-                                :disabled="disabled"
-                                :invalid="authStore.errors?.[`contacts.${contactIndex}.last_name`]?.[0] ? true : false"
-                                @input="() => authStore.clearErrors([`contacts.${contactIndex}.last_name`])"
-                                @blur="() => validateContactField(contactIndex, 'last_name')"
-                            />
-                            <label :for="`lastName_${contactIndex}`">{{ t('contact.labels.last_name') }} *</label>
-                        </FloatLabel>
-                        <Message v-if="authStore.errors?.[`contacts.${contactIndex}.last_name`]?.[0]" severity="error" size="small">
-                            {{ t(authStore.errors?.[`contacts.${contactIndex}.last_name`]?.[0]) }}
-                        </Message>
+                    <!-- Last Name + Delete button -->
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <FloatLabel variant="on" class="w-full">
+                                <InputText
+                                    :id="`lastName_${contactIndex}`"
+                                    v-model="contact.last_name"
+                                    class="w-full"
+                                    :disabled="disabled"
+                                    :invalid="authStore.errors?.[`contacts.${contactIndex}.last_name`]?.[0] ? true : false"
+                                    @input="() => authStore.clearErrors([`contacts.${contactIndex}.last_name`])"
+                                    @blur="() => onFieldBlur(contactIndex, 'last_name')"
+                                />
+                                <label :for="`lastName_${contactIndex}`">{{ t('contact.labels.last_name') }} *</label>
+                            </FloatLabel>
+                            <Message v-if="authStore.errors?.[`contacts.${contactIndex}.last_name`]?.[0]" severity="error" size="small">
+                                {{ t(authStore.errors?.[`contacts.${contactIndex}.last_name`]?.[0]) }}
+                            </Message>
+                        </div>
+                        <Button v-if="localContacts.length > 1" icon="pi pi-trash" @click="removeContact(contactIndex)" severity="danger" text rounded size="small" class="mt-1" :title="t('contact.buttons.remove_contact')" />
                     </div>
                 </div>
 
-                <!-- Contact Methods Section -->
-                <div class="contact-methods">
-                    <div class="flex justify-between items-center mb-4">
-                        <Button icon="pi pi-plus" :label="t('contact.buttons.add_contact_method')" @click="addContactMethod(contactIndex)" size="small" outlined />
-                    </div>
+                <!-- Contact Methods section -->
+                <div class="border border-surface-200 dark:border-surface-700 rounded-xl p-4 bg-surface-50 dark:bg-surface-800">
+                    <span class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">{{ t('contact.labels.contact_methods') }}</span>
 
-                    <div v-if="contact.contactMethods.length === 0" class="text-muted-color text-center py-4">
-                        {{ t('contact.messages.no_contact_methods') }}
-                    </div>
+                    <!-- Methods chips + inline add pill -->
+                    <div class="flex flex-wrap items-center gap-2 mt-3">
+                        <!-- Existing method chips (FloatLabel + IconField inside chip) -->
+                        <div
+                            v-for="(contactMethod, methodIndex) in contact.contactMethods"
+                            :key="methodIndex"
+                            class="flex items-center gap-1 bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-md pl-1 pr-2 py-0.5"
+                        >
+                            <FloatLabel variant="on">
+                                <IconField>
+                                    <InputIcon :class="getMethodIcon(contactMethod.type)" />
+                                    <InputText
+                                        :id="`method_${contactIndex}_${methodIndex}`"
+                                        v-model="contactMethod.value"
+                                        :disabled="disabled"
+                                        class="border-0 bg-transparent shadow-none text-sm w-44 dark:!bg-transparent"
+                                        :invalid="authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.value`]?.[0] ? true : false"
+                                        @input="() => authStore.clearErrors([`contacts.${contactIndex}.contactMethods.${methodIndex}.value`])"
+                                        @blur="() => onMethodFieldBlur(contactIndex, methodIndex)"
+                                    />
+                                </IconField>
+                                <label :for="`method_${contactIndex}_${methodIndex}`">{{ contactMethodOptions.find((o) => o.value === contactMethod.type)?.label || contactMethod.type }}</label>
+                            </FloatLabel>
+                            <button v-if="contact.contactMethods.length > 1" class="text-surface-400 hover:text-red-500 transition-colors cursor-pointer" @click="removeContactMethod(contactIndex, methodIndex)">
+                                <i class="pi pi-times text-xs" />
+                            </button>
+                        </div>
 
-                    <Fieldset :legend="t('contact.labels.contact_methods')" class="mb-4 p-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800">
-                        <div v-if="contact.contactMethods.length > 0" class="space-y-3">
-                            <div v-for="(contactMethod, methodIndex) in contact.contactMethods" :key="methodIndex">
-                                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-                                    <!-- Contact Type -->
-                                    <div class="md:col-span-3">
-                                        <div class="flex flex-col">
-                                            <FloatLabel variant="on">
-                                                <Select
-                                                    :id="`contact_method_type_${contactIndex}_${methodIndex}`"
-                                                    v-model="contactMethod.type"
-                                                    :disabled="disabled"
-                                                    :options="contactMethodOptions"
-                                                    optionValue="value"
-                                                    optionLabel="label"
-                                                    class="w-full"
-                                                    :invalid="authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.type`]?.[0] ? true : false"
-                                                    @input="() => authStore.clearErrors([`contacts.${contactIndex}.contactMethods.${methodIndex}.type`])"
-                                                    @blur="() => validateContactMethodValue(contactIndex, methodIndex)"
-                                                />
-                                                <label :for="`contact_method_type_${contactIndex}_${methodIndex}`">{{ t('contact.labels.type') }} *</label>
-                                            </FloatLabel>
-                                            <Message v-if="authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.type`]?.[0]" severity="error" size="small">
-                                                {{ t(authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.type`]?.[0]) }}
-                                            </Message>
-                                        </div>
-                                    </div>
+                        <!-- Inline add pill (same size as chips) -->
+                        <div
+                            class="flex items-center gap-1.5 border border-dashed border-surface-300 dark:border-surface-600 rounded-md px-3 py-3 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-200"
+                            @click="(e) => toggleAddMethodPopover(contactIndex, e)"
+                        >
+                            <i class="pi pi-plus text-xs text-primary" />
+                            <span class="text-xs font-semibold text-primary uppercase tracking-wider">{{ t('contact.buttons.add_contact_method') }}</span>
+                        </div>
 
-                                    <!-- Contact Value -->
-                                    <div class="md:col-span-7">
-                                        <div class="flex flex-col">
-                                            <FloatLabel variant="on">
-                                                <InputText
-                                                    :id="`contact_method_value_${contactIndex}_${methodIndex}`"
-                                                    v-model="contactMethod.value"
-                                                    :disabled="disabled"
-                                                    :placeholder="t(`contact.placeholders.${contactMethod.type}`)"
-                                                    class="w-full"
-                                                    :invalid="authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.value`]?.[0] ? true : false"
-                                                    @input="() => authStore.clearErrors([`contacts.${contactIndex}.contactMethods.${methodIndex}.value`])"
-                                                    @blur="() => validateContactMethodValue(contactIndex, methodIndex)"
-                                                />
-                                            </FloatLabel>
-                                            <Message v-if="authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.value`]?.[0]" severity="error" size="small">
-                                                {{ t(authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.value`]?.[0]) }}
-                                            </Message>
-                                        </div>
-                                    </div>
-
-                                    <!-- Remove Button -->
-                                    <div class="md:col-span-2 flex items-center justify-center">
-                                        <Button icon="pi pi-trash" @click="removeContactMethod(contactIndex, methodIndex)" severity="danger" size="small" outlined :title="t('contact.buttons.remove')" v-if="contact.contactMethods.length > 1" />
-                                    </div>
+                        <!-- Popover type picker -->
+                        <Popover :ref="(el) => (addMethodPopoverRefs[contactIndex] = el)">
+                            <div class="flex flex-col gap-1 p-1 min-w-[140px]">
+                                <div
+                                    v-for="opt in contactMethodOptions"
+                                    :key="opt.value"
+                                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"
+                                    @click="
+                                        addContactMethod(contactIndex, opt.value);
+                                        toggleAddMethodPopover(contactIndex, $event);
+                                    "
+                                >
+                                    <i :class="opt.icon" class="text-sm text-primary" />
+                                    <span class="text-sm text-surface-700 dark:text-surface-200">{{ opt.label }}</span>
                                 </div>
                             </div>
-                        </div>
-                        <div v-else class="text-muted-color text-center py-4">
-                            {{ t('contact.messages.no_contact_methods') }}
-                        </div>
-                    </Fieldset>
+                        </Popover>
+                    </div>
+
+                    <!-- Validation errors for methods -->
+                    <template v-for="(contactMethod, methodIndex) in contact.contactMethods" :key="`err_${methodIndex}`">
+                        <Message v-if="authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.value`]?.[0]" severity="error" size="small" class="mt-2">
+                            {{ t(authStore.errors?.[`contacts.${contactIndex}.contactMethods.${methodIndex}.value`]?.[0]) }}
+                        </Message>
+                    </template>
                 </div>
             </div>
+        </div>
+
+        <!-- Add another contact -->
+        <div
+            class="mt-6 flex flex-col items-center justify-center border-2 border-dashed border-surface-200 dark:border-surface-700 rounded-xl py-6 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-200"
+            @click="addContact"
+        >
+            <div class="w-12 h-12 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center mb-3">
+                <i class="pi pi-user-plus text-lg text-surface-400" />
+            </div>
+            <span class="text-sm font-bold text-surface-700 dark:text-surface-300">{{ t('contact.buttons.add_contact') }}</span>
+            <span class="text-xs text-surface-400 uppercase tracking-wider mt-1">{{ t('contact.labels.add_contact_hint') }}</span>
         </div>
     </div>
 </template>

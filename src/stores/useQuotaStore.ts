@@ -10,8 +10,23 @@ interface QuotaItem {
     canCreate: boolean;
 }
 
+interface PlanInfo {
+    name: string;
+    level: number;
+}
+
+interface NextPlanInfo {
+    name: string;
+    orders: number | null;
+    products: number | null;
+    users: number | null;
+    shops: number | null;
+}
+
 interface QuotaState {
     quotas: QuotaItem[];
+    plan: PlanInfo | null;
+    nextPlan: NextPlanInfo | null;
     loaded: boolean;
     loading: boolean;
 }
@@ -19,6 +34,8 @@ interface QuotaState {
 export const useQuotaStore = defineStore('quota', {
     state: (): QuotaState => ({
         quotas: [],
+        plan: null,
+        nextPlan: null,
         loaded: false,
         loading: false
     }),
@@ -68,6 +85,16 @@ export const useQuotaStore = defineStore('quota', {
                 if (quota.percentage >= 100) return 'danger';
                 if (quota.percentage >= 80) return 'warning';
                 return null;
+            },
+
+        /**
+         * Get what the next plan offers for a specific resource
+         */
+        getNextPlanLimit:
+            (state) =>
+            (resource: string): number | null => {
+                if (!state.nextPlan) return null;
+                return (state.nextPlan as Record<string, any>)[resource] ?? null;
             }
     },
 
@@ -78,6 +105,8 @@ export const useQuotaStore = defineStore('quota', {
             try {
                 const response = await apiClient.get('/api/admin/quotas');
                 this.quotas = response.data.quotas ?? [];
+                this.plan = response.data.plan ?? null;
+                this.nextPlan = response.data.nextPlan ?? null;
                 this.loaded = true;
             } catch (error) {
                 console.error('Failed to fetch quotas', error);
@@ -91,6 +120,8 @@ export const useQuotaStore = defineStore('quota', {
             try {
                 const response = await apiClient.get('/api/admin/quotas');
                 this.quotas = response.data.quotas ?? [];
+                this.plan = response.data.plan ?? null;
+                this.nextPlan = response.data.nextPlan ?? null;
             } catch {
                 // Silently fail on refresh
             }

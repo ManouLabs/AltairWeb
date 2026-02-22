@@ -15,7 +15,7 @@ const requiredUnsignedInt = z.preprocess((v) => (v === null || v === undefined |
 export const subscriptionSchema = z.object({
     account_id: requiredId,
     plan_id: requiredId,
-    billing_cycle: z.enum(['monthly', 'yearly'], { required_error: 'common.messages.is_required' }),
+    billing_period: z.enum(['month', 'year'], { required_error: 'common.messages.is_required' }),
     quantity: requiredUnsignedInt,
     starts_at: requiredDate,
     notes: z.preprocess((v) => (v === null || v === undefined || v === '' ? null : v), z.string().max(1000).nullable().optional())

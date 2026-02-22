@@ -15,6 +15,45 @@ export interface Contact {
     contactMethods?: ContactMethod[];
 }
 
+export interface Address {
+    id?: number | null;
+    street: string;
+    region?: number | null | Record<string, unknown>;
+    city?: number | null | Record<string, unknown>;
+    main?: boolean;
+}
+
+export interface SubscriptionFormData {
+    plan_id: number | null;
+    billing_period: 'month' | 'year';
+    quantity: number;
+    starts_at: string;
+}
+
+export interface AccountSubscription extends SubscriptionFormData {
+    id?: number;
+    ends_at?: string | null;
+    active?: boolean;
+    notes?: string | null;
+    plan?: {
+        id: number;
+        name: string;
+        icon?: string;
+        color?: string;
+        monthly_price?: number;
+        yearly_price?: number;
+    };
+}
+
+export interface AccountUser {
+    id?: number;
+    name: string;
+    email: string;
+    role?: string | null;
+    password?: string;
+    password_confirmation?: string;
+}
+
 export interface Account {
     id: number;
     legal_name: string;
@@ -24,6 +63,9 @@ export interface Account {
     nis?: string | null;
     rib?: string | null;
     contacts?: Contact[];
+    addresses?: Address[];
+    subscription?: AccountSubscription | null;
+    users?: AccountUser[];
     created_at?: string;
     updated_at?: string;
 }
@@ -36,7 +78,11 @@ export interface AccountFormData {
     nif?: string | null;
     nis?: string | null;
     rib?: string | null;
+    active?: boolean;
     contacts?: Contact[];
+    addresses?: Address[];
+    subscription?: SubscriptionFormData;
+    users?: AccountUser[];
 }
 
 export interface AccountsFilterParams {

@@ -12,6 +12,15 @@ export const useAccountService = {
         }
     },
 
+    async getAccount(accountId: number): Promise<AccountApiResponse> {
+        try {
+            const response = await apiClient.get<AccountApiResponse>(`/api/admin/accounts/${accountId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async storeAccount(accountData: AccountFormData): Promise<AccountApiResponse> {
         try {
             await apiClient.get('/sanctum/csrf-cookie');

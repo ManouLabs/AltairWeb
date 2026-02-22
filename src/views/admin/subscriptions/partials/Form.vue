@@ -52,10 +52,10 @@ const accountLabel = (item) => {
     return name;
 };
 
-// Billing cycle options
-const billingCycleOptions = ref([
-    { label: 'subscription.form.monthly', value: 'monthly' },
-    { label: 'subscription.form.yearly', value: 'yearly' }
+// Billing period options
+const billingPeriodOptions = ref([
+    { label: 'subscription.form.monthly', value: 'month' },
+    { label: 'subscription.form.yearly', value: 'year' }
 ]);
 
 // Validation
@@ -124,9 +124,9 @@ onMounted(() => {
         record.value.starts_at = new Date(record.value.starts_at);
     }
 
-    // Default billing_cycle & quantity
-    if (!record.value.billing_cycle) {
-        record.value.billing_cycle = 'monthly';
+    // Default billing_period & quantity
+    if (!record.value.billing_period) {
+        record.value.billing_period = 'month';
     }
     if (!record.value.quantity) {
         record.value.quantity = 1;
@@ -196,7 +196,7 @@ onMounted(() => {
                     <span class="font-bold text-base text-surface-800 dark:text-surface-100">{{ plan.name }}</span>
                     <span class="text-xs text-surface-400 dark:text-surface-500 leading-snug">{{ plan.description || '—' }}</span>
                     <span class="font-semibold text-sm text-primary mt-1">
-                        {{ record.billing_cycle === 'yearly' ? plan.yearly_price : plan.monthly_price }} DA / {{ record.billing_cycle === 'yearly' ? t('subscription.form.yr') : t('subscription.form.mo') }}
+                        {{ record.billing_period === 'year' ? plan.yearly_price : plan.monthly_price }} DA / {{ record.billing_period === 'year' ? t('subscription.form.yr') : t('subscription.form.mo') }}
                     </span>
                 </div>
             </div>
@@ -231,13 +231,13 @@ onMounted(() => {
 
                 <!-- Renewal Cycle -->
                 <div>
-                    <SelectButton v-model="record.billing_cycle" :options="billingCycleOptions" optionLabel="label" optionValue="value" :allowEmpty="false" class="w-full" :disabled="loading.isFormSending">
+                    <SelectButton v-model="record.billing_period" :options="billingPeriodOptions" optionLabel="label" optionValue="value" :allowEmpty="false" class="w-full" :disabled="loading.isFormSending">
                         <template #option="{ option }">
                             {{ t(option.label) }}
                         </template>
                     </SelectButton>
-                    <Message v-if="authStore.errors?.['billing_cycle']?.[0]" severity="error" size="small">
-                        {{ t(authStore.errors?.['billing_cycle']?.[0]) }}
+                    <Message v-if="authStore.errors?.['billing_period']?.[0]" severity="error" size="small">
+                        {{ t(authStore.errors?.['billing_period']?.[0]) }}
                     </Message>
                 </div>
 

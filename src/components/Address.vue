@@ -101,6 +101,13 @@ const suppressEmit = ref(false);
 watch(
     () => props.modelValue,
     async (newVal) => {
+        // Skip re-normalization if local data already matches (avoids key regeneration & focus loss)
+        const incomingNorm = normalizeOut(newVal);
+        const localNorm = normalizeOut(localAddresses.value);
+        if (localAddresses.value.length > 0 && isEqualAddresses(incomingNorm, localNorm)) {
+            return;
+        }
+
         suppressEmit.value = true;
         const incoming = Array.isArray(newVal) ? newVal : [];
 
@@ -209,32 +216,36 @@ const onRegionChange = async (index, regionId) => {
 
 <template>
     <div class="addresses-component">
-        <div v-if="isMultiple" class="flex justify-end mb-6">
-            <Button icon="pi pi-plus" :label="t('address.buttons.add_address')" @click="addAddress" outlined />
-        </div>
-
         <div class="space-y-6">
-            <div v-for="(address, index) in localAddresses" :key="address._key" :class="['address-card', { 'border border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900 shadow-sm': isMultiple }]">
-                <div v-if="isMultiple && localAddresses.length > 1" class="flex justify-end">
-                    <Button icon="pi pi-trash" @click="removeAddress(index)" severity="danger" size="small" outlined :title="t('address.buttons.remove')" />
+            <div v-for="(address, index) in localAddresses" :key="address._key" class="border border-surface-200 dark:border-surface-700 rounded-xl p-6 bg-surface-0 dark:bg-surface-900">
+                <!-- Address header -->
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-map-marker text-primary" />
+                        <span class="text-sm font-bold text-surface-900 dark:text-white uppercase tracking-wider">{{ t('address.labels.address') }} {{ index + 1 }}</span>
+                    </div>
+                    <Button v-if="isMultiple && localAddresses.length > 1" icon="pi pi-trash" @click="removeAddress(index)" severity="danger" text rounded size="small" :title="t('address.buttons.remove')" />
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="col-span-2">
-                        <FloatLabel variant="on">
+                <!-- Fields: Street / Region / City -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Street -->
+                    <div>
+                        <FloatLabel variant="on" class="w-full">
                             <IconField>
                                 <InputIcon class="pi pi-map-marker" />
                                 <InputText :id="`street_${address._key}`" v-model="address.street" class="w-full" maxlength="255" @blur="() => onFieldBlur(index, 'street')" />
-                                <label :for="`street_${address._key}`">{{ t('address.labels.street') }}</label>
                             </IconField>
+                            <label :for="`street_${address._key}`">{{ t('address.labels.street') }}</label>
                         </FloatLabel>
                         <Message v-if="authStore.errors?.[`addresses.${index}.street`]" severity="error" size="small">
                             {{ t(authStore.errors?.[`addresses.${index}.street`]?.[0]) }}
                         </Message>
                     </div>
 
+                    <!-- Region -->
                     <div>
-                        <FloatLabel variant="on">
+                        <FloatLabel variant="on" class="w-full">
                             <Select
                                 :id="`region_${address._key}`"
                                 v-model="address.region"
@@ -254,8 +265,9 @@ const onRegionChange = async (index, regionId) => {
                         </Message>
                     </div>
 
+                    <!-- City -->
                     <div>
-                        <FloatLabel variant="on">
+                        <FloatLabel variant="on" class="w-full">
                             <Select
                                 :id="`city_${address._key}`"
                                 v-model="address.city"
@@ -277,11 +289,22 @@ const onRegionChange = async (index, regionId) => {
                     </div>
                 </div>
 
-                <div v-if="isMultiple" class="flex items-center space-x-4 mt-4">
-                    <Checkbox :id="`main_${address._key}`" :modelValue="address.main" :binary="true" @update:modelValue="() => setMain(index)" />
-                    <label :for="`main_${address._key}`">{{ t('address.labels.main') }}</label>
+                <!-- Main Address toggle -->
+                <div v-if="isMultiple" class="flex items-center gap-3 mt-4">
+                    <ToggleSwitch :modelValue="address.main" @update:modelValue="() => setMain(index)" />
+                    <label class="text-sm font-medium text-surface-700 dark:text-surface-300">{{ t('address.labels.main') }}</label>
                 </div>
             </div>
+        </div>
+
+        <!-- Add another address -->
+        <div
+            v-if="isMultiple"
+            class="mt-6 flex items-center justify-center border-2 border-dashed border-surface-200 dark:border-surface-700 rounded-xl py-4 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-200"
+            @click="addAddress"
+        >
+            <i class="pi pi-plus-circle text-primary mr-2" />
+            <span class="text-sm font-semibold text-primary uppercase tracking-wider">{{ t('address.buttons.add_address') }}</span>
         </div>
     </div>
 </template>

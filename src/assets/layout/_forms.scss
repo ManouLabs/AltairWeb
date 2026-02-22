@@ -7,7 +7,8 @@
 .p-calendar,
 .p-inputnumber-input,
 .p-password-input,
-.p-treeselect {
+.p-treeselect,
+.p-datepicker-input {
     background-color: #f8fafc !important;
     border-color: #eef1f6 !important;
 
@@ -25,6 +26,32 @@
     }
 }
 
-/* Ensure Select placeholder/label alignment with padding if needed globally,
-   but be careful not to break other selects.
-   The user specifically asked for background and border. */
+/* Dark mode overrides */
+.app-dark {
+    .p-inputtext,
+    .p-select,
+    .p-dropdown,
+    .p-multiselect,
+    .p-textarea,
+    .p-calendar,
+    .p-inputnumber-input,
+    .p-password-input,
+    .p-treeselect,
+    .p-datepicker-input {
+        background-color: var(--p-surface-800, #27272a) !important;
+        border-color: var(--p-surface-600, #52525b) !important;
+
+        &:enabled:hover {
+            border-color: var(--p-primary-color) !important;
+        }
+
+        &:enabled:focus {
+            border-color: var(--p-primary-color) !important;
+            box-shadow: 0 0 0 1px var(--p-primary-color) !important;
+        }
+
+        &.p-invalid {
+            border-color: var(--p-red-400) !important;
+        }
+    }
+}

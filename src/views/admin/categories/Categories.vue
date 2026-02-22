@@ -216,7 +216,7 @@ function openForm(parentId: number | null = null): void {
 
     dialog.open(formComponent, {
         props: {
-            style: { width: '32rem' },
+            style: { width: '48rem' },
             breakpoints: { '960px': '90vw' },
             modal: true
         },

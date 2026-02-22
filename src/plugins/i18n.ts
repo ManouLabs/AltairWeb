@@ -7,7 +7,7 @@ const defaultLocale = (import.meta.env.VITE_DEFAULT_LOCALE as string) || 'fr';
 const i18n = createI18n({
     legacy: false,
     locale: defaultLocale,
-    fallbackLocale: (import.meta.env.VITE_FALLBACK_LOCALE as string) || 'fr',
+    fallbackLocale: (import.meta.env.VITE_FALLBACK_LOCALE as string) || 'en',
     globalInjection: true,
     messages,
     missingWarn: false,

@@ -13,10 +13,9 @@ import { findRecordIndex, formatDate } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
-import { useDialog } from 'primevue/usedialog';
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, markRaw } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import FormHeader from '@/components/FormHeader.vue';
+import { useRouter } from 'vue-router';
 import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
 
 onMounted(() => {
@@ -41,7 +40,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
         useAccountService.getAccounts(params).then((data: any) => {
             dataLoaded.value = true;
             return {
-                data: data.data,
+                data: data.accounts,
                 meta: data.meta
             };
         }),
@@ -50,8 +49,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 
 const authStore = useAuthStore();
 const confirm = useConfirm();
-const dialog = useDialog();
-const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
+const router = useRouter();
 const { showToast } = useShowToast();
 const { t } = useI18n();
 const loading = useLoading();
@@ -86,7 +84,6 @@ const getAvatarColor = (name: string | null) => {
 };
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
-const record = ref<any>(null);
 const defaultColumns = computed(() =>
     defaultFields.map((field: string) => ({
         field,
@@ -145,68 +142,12 @@ function handleStore(event: any) {
 }
 
 function addRecord() {
-    authStore.errors = {};
-    record.value = {
-        legal_name: null,
-        trade_name: null,
-        rc_number: null,
-        nif: null,
-        nis: null,
-        rib: null,
-        contacts: [{ civility: null, first_name: '', last_name: '', contactMethods: [{ contact_id: null, type: 'mobile', value: '' }] }],
-        addresses: [{ street: '', region: null, city: null, main: true }]
-    };
-    openDialog();
+    router.push({ name: 'account-create' });
 }
+
 function editRecord(row: any) {
-    authStore.errors = {};
-    record.value = row;
-    openDialog();
+    router.push({ name: 'account-edit', params: { id: row.id } });
 }
-const openDialog = () => {
-    const isEdit = !!record.value?.id;
-    dialog.open(formComponent, {
-        props: {
-            style: { width: '40vw' },
-            breakpoints: { '960px': '75vw', '640px': '90vw' },
-            modal: true,
-            maximizable: true
-        },
-        templates: {
-            header: markRaw(FormHeader)
-        },
-        data: {
-            record: record.value,
-            action: isEdit ? ACTIONS.EDIT : ACTIONS.CREATE,
-            headerProps: computed(() => ({
-                title: isEdit ? t('common.titles.edit', { entity: t('entity.account') }) : t('common.titles.add', { entity: t('entity.account') }),
-                description: t('account.form.subtitle'),
-                icon: isEdit ? 'pi pi-id-card' : 'pi pi-plus-circle',
-                iconColor: '#3B82F6'
-            }))
-        },
-        onClose: (result: any) => {
-            if (result && result.data?.record?.id) {
-                switch (result.data?.action) {
-                    case ACTIONS.CREATE:
-                        records.value.unshift(result.data.record);
-                        markHighlight(result.data.record.id, 'new');
-                        showToast('success', ACTIONS.CREATE, 'account', 'tc');
-                        break;
-                    case ACTIONS.EDIT: {
-                        const index = findRecordIndex(records, result.data.record.id);
-                        records.value[index] = result.data.record;
-                        markHighlight(result.data.record.id, 'updated');
-                        showToast('success', ACTIONS.EDIT, 'account', 'tc');
-                        break;
-                    }
-                    default:
-                        console.error(`Unhandled action: ${result.data?.action}`);
-                }
-            }
-        }
-    });
-};
 
 function confirmDeleteRecord(event: any, accountIds: any[]) {
     confirm.require({

@@ -25,6 +25,18 @@ const adminRoutes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresSuperAdmin: true }
     },
     {
+        path: 'accounts/create',
+        name: 'account-create',
+        component: () => import('@/views/admin/accounts/Form.vue'),
+        meta: { requiresAuth: true, requiresSuperAdmin: true, activeMenu: '/admin/accounts' }
+    },
+    {
+        path: 'accounts/:id/edit',
+        name: 'account-edit',
+        component: () => import('@/views/admin/accounts/Form.vue'),
+        meta: { requiresAuth: true, requiresSuperAdmin: true, activeMenu: '/admin/accounts' }
+    },
+    {
         path: 'shops',
         name: 'shops',
         component: () => import('@/views/admin/shops/Shops.vue'),

@@ -7,7 +7,7 @@ export interface Subscription {
     plan_id: number;
     plan_name?: string;
     active: boolean;
-    billing_cycle: 'monthly' | 'yearly';
+    billing_period: 'month' | 'year';
     starts_at: string;
     ends_at?: string | null;
     notes?: string | null;
@@ -19,7 +19,7 @@ export interface SubscriptionFormData {
     id?: number;
     account_id: number | null;
     plan_id: number | null;
-    billing_cycle: 'monthly' | 'yearly';
+    billing_period: 'month' | 'year';
     starts_at: string;
     notes?: string | null;
 }

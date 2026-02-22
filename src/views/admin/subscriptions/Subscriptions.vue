@@ -30,9 +30,15 @@ const loadingStore = useLoading();
 // ── Filters ───────────────────────────────────────────────
 const defaultFiltersConfig = {
     id: FilterMatchMode.CONTAINS,
-    account_name: FilterMatchMode.CONTAINS,
-    plan_name: FilterMatchMode.CONTAINS,
-    billing_cycle: FilterMatchMode.EQUALS,
+    account_name: {
+        matchMode: FilterMatchMode.CONTAINS,
+        relation: { name: 'account', column: 'legal_name' }
+    },
+    plan_name: {
+        matchMode: FilterMatchMode.IN,
+        relation: { name: 'plan', column: 'name' }
+    },
+    billing_period: FilterMatchMode.EQUALS,
     active: FilterMatchMode.EQUALS,
     starts_at: FilterMatchMode.CONTAINS,
     ends_at: FilterMatchMode.CONTAINS
@@ -41,6 +47,16 @@ const defaultFiltersConfig = {
 // Auxiliary data from the API
 const accounts = ref<any[]>([]);
 const plans = ref<any[]>([]);
+
+const billingPeriodOptions = [
+    { label: 'Month', value: 'month' },
+    { label: 'Year', value: 'year' }
+];
+
+const activeOptions = [
+    { label: 'Yes', value: 1 },
+    { label: 'No', value: 0 }
+];
 const loadingActiveId = ref<number | null>(null);
 
 // ── DataTable ─────────────────────────────────────────────
@@ -68,7 +84,7 @@ const { showToast } = useShowToast();
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
 // Row lock + column freezing
-const defaultFields = ['account_name', 'plan_name', 'billing_cycle', 'starts_at', 'ends_at', 'notes', 'quotas', 'active'];
+const defaultFields = ['account_name', 'plan_name', 'billing_period', 'starts_at', 'ends_at', 'notes', 'quotas', 'active'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref<Record<string, any> | null>(null);
@@ -137,7 +153,7 @@ function addRecord() {
     record.value = {
         account_id: null,
         plan_id: null,
-        billing_cycle: 'monthly',
+        billing_period: 'month',
         quantity: 1,
         starts_at: new Date().toISOString().split('T')[0],
         active: true,
@@ -444,7 +460,18 @@ onUnmounted(() => {
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
 
                 <!-- ═══ Account (Rich) ═══ -->
-                <Column columnKey="account_name" field="account_name" :frozen="frozenColumns.account_name" v-if="selectedColumns.some((column) => column.field === 'account_name')" sortable class="min-w-56">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="account_name"
+                    field="account_name"
+                    :frozen="frozenColumns.account_name"
+                    v-if="selectedColumns.some((column) => column.field === 'account_name')"
+                    sortable
+                    class="min-w-56"
+                >
                     <template #header>
                         <HeaderCell
                             :text="t('subscription.columns.account_name')"
@@ -472,10 +499,30 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
                 </Column>
 
                 <!-- ═══ Plan (Badge) ═══ -->
-                <Column columnKey="plan_name" field="plan_name" :frozen="frozenColumns.plan_name" v-if="selectedColumns.some((column) => column.field === 'plan_name')" sortable class="min-w-32">
+                <Column
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    columnKey="plan_name"
+                    field="plan_name"
+                    :frozen="frozenColumns.plan_name"
+                    v-if="selectedColumns.some((column) => column.field === 'plan_name')"
+                    sortable
+                    class="min-w-32"
+                >
                     <template #header>
                         <HeaderCell
                             :text="t('subscription.columns.plan_name')"
@@ -492,22 +539,57 @@ onUnmounted(() => {
                             {{ data.plan_name?.toUpperCase() }}
                         </span>
                     </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <MultiSelect size="small" v-model="filterModel.value" :options="plans" optionLabel="name" optionValue="name">
+                                <template #option="slotProps">
+                                    <div class="flex items-center gap-2">
+                                        <span>{{ slotProps.option.name }}</span>
+                                    </div>
+                                </template>
+                            </MultiSelect>
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
                 </Column>
 
-                <!-- ═══ Billing Cycle ═══ -->
-                <Column columnKey="billing_cycle" field="billing_cycle" :frozen="frozenColumns.billing_cycle" v-if="selectedColumns.some((column) => column.field === 'billing_cycle')" sortable class="min-w-32">
+                <!-- ═══ Billing Period ═══ -->
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="billing_period"
+                    field="billing_period"
+                    :frozen="frozenColumns.billing_period"
+                    v-if="selectedColumns.some((column) => column.field === 'billing_period')"
+                    sortable
+                    class="min-w-32"
+                >
                     <template #header>
                         <HeaderCell
-                            :text="t('subscription.columns.billing_cycle')"
-                            :frozen="frozenColumns.billing_cycle"
+                            :text="t('subscription.columns.billing_period')"
+                            :frozen="frozenColumns.billing_period"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('billing_cycle')"
+                            @toggle="toggleColumnFrozen('billing_period')"
                         />
                     </template>
                     <template #body="{ data }">
-                        <span class="text-sm text-surface-800 dark:text-surface-100 capitalize">{{ data.billing_cycle }}</span>
+                        <span class="text-sm text-surface-800 dark:text-surface-100 capitalize">{{ data.billing_period }}</span>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <Select v-model="filterModel.value" :options="billingPeriodOptions" optionLabel="label" optionValue="value" size="small" class="w-full" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
                     </template>
                 </Column>
 
@@ -604,7 +686,18 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- ═══ Active (Toggle) ═══ -->
-                <Column columnKey="active" field="active" :frozen="frozenColumns.active" v-if="selectedColumns.some((column) => column.field === 'active')" sortable class="min-w-32">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="active"
+                    field="active"
+                    :frozen="frozenColumns.active"
+                    v-if="selectedColumns.some((column) => column.field === 'active')"
+                    sortable
+                    class="min-w-32"
+                >
                     <template #header>
                         <HeaderCell
                             :text="t('subscription.columns.active')"
@@ -617,6 +710,15 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <ActiveToggleButton :active="data.active" entity="subscription" variant="button" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <Select v-model="filterModel.value" :options="activeOptions" optionLabel="label" optionValue="value" size="small" class="w-full" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="filterModel.value == null" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
                     </template>
                 </Column>
 

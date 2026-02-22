@@ -44,6 +44,8 @@
             "no_records": "No records found",
             "no_selected_records": "No records selected",
             "no_search_results": "No search results found",
+            "no_data_title": "No {entity} yet",
+            "no_data_description": "Get started by creating your first {entity}.",
             "no_permissions": "You do not have the necessary permisions. Please contact admins.",
             "error": "An error occurred while processing your request",
             "access_denied": "Access denied",
@@ -66,7 +68,10 @@
             "invalid_contact_method": "Invalid contact method",
             "invalid_url": "Enter a valid URL (e.g., https://www.example.com)",
             "invalid_mobile": "Enter a valid mobile number (e.g., 0553338529)",
-            "invalid_landline": "Enter a valid landline number (e.g., 0212345678)"
+            "invalid_landline": "Enter a valid landline number (e.g., 0212345678)",
+            "min_value": "The value must be at least 1",
+            "min_length": "Must be at least 8 characters",
+            "passwords_dont_match": "Passwords do not match"
         },
         "titles": {
             "manage": "Manage {entity}",
@@ -130,6 +135,8 @@
 
             "create_entity": "Create {entity}",
             "edit_entity": "Edit {entity}",
+            "next_step": "Next Step",
+            "previous_step": "Previous Step",
 
             "select": "Select..."
         },
@@ -222,6 +229,9 @@
             "login": {
                 "summary": "Login Successful",
                 "detail": "Welcome back!"
+            },
+            "validation": {
+                "summary": "Validation Error"
             }
         }
     },
@@ -328,6 +338,66 @@
             "active": "Active",
             "created_at": "Created At",
             "updated_at": "Updated At"
+        },
+        "form": {
+            "subtitle": "Manage account details, contacts, and addresses",
+            "step1_subtitle": "Step 1: Provide basic company information to get started.",
+            "step2_subtitle": "Step 2: Add the company addresses.",
+            "step3_subtitle": "Step 3: Add company contacts and their details.",
+            "step4_subtitle": "Step 4: Select subscription plan.",
+            "step5_subtitle": "Step 5: Add staff members who will use the platform."
+        },
+        "steps": {
+            "info": "Info",
+            "information": "Information",
+            "contacts": "Contacts",
+            "addresses": "Addresses",
+            "plans": "Plans",
+            "staff": "Staff"
+        },
+        "labels": {
+            "company_info": "Company Information",
+            "contacts": "Contacts",
+            "addresses": "Addresses",
+            "active_status": "Active Status",
+            "active_status_hint": "Enable account access immediately after creation",
+            "account_contacts": "Account Contacts"
+        },
+        "plan": {
+            "choose_plan": "Choose Plan",
+            "choose_plan_subtitle": "Select the plan",
+            "active_badge": "RECOMMENDED",
+            "subscription_start_date": "Subscription Start Date",
+            "plan_quantity": "Quantity",
+            "billing_period": "Billing Period",
+            "monthly": "Monthly",
+            "yearly": "Yearly",
+            "month": "Month",
+            "year": "Year",
+            "total_due_now": "Total Due Now",
+            "per_month": "/mo",
+            "per_year": "/yr"
+        },
+        "staff": {
+            "title": "Staff Users",
+            "subtitle": "Add the team members who will use the platform.",
+            "full_name": "Full Name",
+            "email_address": "Email Address",
+            "role": "Role",
+            "role_admin": "Admin",
+            "role_staff": "Staff",
+            "password": "Password",
+            "confirm_password": "Confirm Password",
+            "add_staff_member": "Add Another Staff Member",
+            "complete_onboarding": "Complete Onboarding"
+        },
+        "placeholders": {
+            "legal_name": "e.g. Nexus Logistics Ltd.",
+            "trade_name": "e.g. Nexus Express",
+            "rc_number": "97",
+            "nif": "Tax ID Number",
+            "nis": "Statistical ID",
+            "rib": "Bank Account Number"
         }
     },
     "shop": {
@@ -523,7 +593,7 @@
             "account_name": "Account",
             "plan_name": "Plan",
             "active": "Active",
-            "billing_cycle": "Billing Cycle",
+            "billing_period": "Billing Period",
             "quotas": "Quotas",
             "starts_at": "Starts At",
             "ends_at": "Ends At",
@@ -822,10 +892,11 @@
             "street": "Street",
             "region": "Region",
             "city": "City",
-            "main": "Main Address"
+            "main": "Main Address",
+            "address": "Address"
         },
         "buttons": {
-            "add_address": "Add Address",
+            "add_address": "Add Another Address",
             "remove": "Remove Address"
         }
     },
@@ -837,7 +908,8 @@
             "contact": "Contact",
             "contacts": "Contacts",
             "contact_methods": "Contact Methods",
-            "type": "Type"
+            "type": "Type",
+            "add_contact_hint": "Add additional contacts for this account"
         },
         "civility": {
             "mr": "Mr",
@@ -1048,6 +1120,21 @@
         "aria.rotateLeft": "Rotate Left"
     },
     "quota": {
-        "limit_reached": "You've reached the limit for {entity}. Upgrade your plan."
+        "labels": {
+            "limit_reached": "Plan Limit Reached",
+            "limit_warning": "Approaching Limit"
+        },
+        "messages": {
+            "reached_max": "You've reached the maximum of",
+            "approaching_limit": "You're using {used} of {limit} {entity} ({used}/{limit}).",
+            "upgrade_description": "Your current {plan} plan has reached its limit. Upgrade to the {nextPlan} plan to unlock the full potential of your team."
+        },
+        "features": {
+            "up_to": "Up to {count} {entity}",
+            "unlimited": "Unlimited {entity}"
+        },
+        "actions": {
+            "unlock": "Unlock More {entity}"
+        }
     }
 }

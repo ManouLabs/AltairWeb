@@ -56,7 +56,7 @@ export interface PlansFilterParams {
 }
 
 export interface PlansResponse {
-    data: Plan[];
+    plans: Plan[];
     meta: {
         total: number;
         per_page: number;

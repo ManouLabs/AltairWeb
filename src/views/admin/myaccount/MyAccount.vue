@@ -2,6 +2,7 @@
 import { useFileableService } from '@/services/useFileableService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { useQuotaStore } from '@/stores/useQuotaStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { UploadProfilePictureResponse } from '@/types/myaccount';
 
@@ -19,6 +20,7 @@ const { t } = useI18n();
 
 const formRef = ref<any>(null);
 const authStore = useAuthStore();
+const quotaStore = useQuotaStore();
 
 const loading = useLoading();
 const user = computed(() => authStore.user);
@@ -71,14 +73,17 @@ const onFormSubmit = ({ valid, values }: { valid: boolean; values: Record<string
     }
 };
 
-// Helper to calculate usage percentage
-function getUsagePercent(current: number | undefined, max: number | undefined): number {
-    if (!current || !max) return 0;
-    return Math.min(Math.round((current / max) * 100), 100);
-}
+// Plan usage resources to display
+const planResources = [
+    { key: 'orders', icon: 'pi pi-shopping-cart', color: 'from-cyan-400 to-blue-500' },
+    { key: 'users', icon: 'pi pi-users', color: 'from-violet-400 to-purple-500' },
+    { key: 'shops', icon: 'pi pi-shop', color: 'from-emerald-400 to-teal-500' },
+    { key: 'products', icon: 'pi pi-box', color: 'from-amber-400 to-orange-500' }
+];
 
 onMounted(async () => {
     await authStore.fetchUser();
+    if (!quotaStore.loaded) quotaStore.fetchQuotas();
     loading.stopPageLoading();
 });
 </script>
@@ -147,56 +152,27 @@ onMounted(async () => {
 
             <!-- Plan Usage Card -->
             <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
-                <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-4">{{ t('myaccount.labels.plan_usage') }}</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white">{{ t('myaccount.labels.plan_usage') }}</h3>
+                    <Tag v-if="user.account?.plan?.name" :value="user.account.plan.name" severity="info" size="small" />
+                </div>
                 <div class="space-y-4">
-                    <!-- Orders -->
-                    <div>
+                    <div v-for="res in planResources" :key="res.key">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.orders') }}</span>
-                            <span class="text-xs text-slate-500">{{ user.account?.usage?.orders || 0 }} / {{ user.account?.plan?.limits?.orders || '∞' }}</span>
+                            <span class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                <i :class="res.icon" class="text-xs text-slate-400"></i>
+                                {{ t(`entity.${res.key}`) }}
+                            </span>
+                            <span class="text-xs font-semibold" :class="quotaStore.getStatus(res.key) === 'danger' ? 'text-red-500' : quotaStore.getStatus(res.key) === 'warning' ? 'text-amber-500' : 'text-slate-500'">
+                                {{ quotaStore.getUsage(res.key) }} / {{ quotaStore.getLimit(res.key) !== null ? quotaStore.getLimit(res.key) : '∞' }}
+                            </span>
                         </div>
                         <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.orders, user.account?.plan?.limits?.orders) + '%' }"></div>
-                        </div>
-                    </div>
-                    <!-- Users -->
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.users') }}</span>
-                            <span class="text-xs text-slate-500">{{ user.account?.usage?.users || 0 }} / {{ user.account?.plan?.limits?.users || '∞' }}</span>
-                        </div>
-                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.users, user.account?.plan?.limits?.users) + '%' }"></div>
-                        </div>
-                    </div>
-                    <!-- Shops -->
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.shops') }}</span>
-                            <span class="text-xs text-slate-500">{{ user.account?.usage?.shops || 0 }} / {{ user.account?.plan?.limits?.shops || '∞' }}</span>
-                        </div>
-                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.shops, user.account?.plan?.limits?.shops) + '%' }"></div>
-                        </div>
-                    </div>
-                    <!-- Products -->
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.products') }}</span>
-                            <span class="text-xs text-slate-500">{{ user.account?.usage?.products || 0 }} / {{ user.account?.plan?.limits?.products || '∞' }}</span>
-                        </div>
-                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.products, user.account?.plan?.limits?.products) + '%' }"></div>
-                        </div>
-                    </div>
-                    <!-- Shippers -->
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ t('entity.shippers') }}</span>
-                            <span class="text-xs text-slate-500">{{ user.account?.usage?.shippers || 0 }} / {{ user.account?.plan?.limits?.shippers || '∞' }}</span>
-                        </div>
-                        <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full transition-all" :style="{ width: getUsagePercent(user.account?.usage?.shippers, user.account?.plan?.limits?.shippers) + '%' }"></div>
+                            <div
+                                class="h-full rounded-full transition-all duration-500 bg-gradient-to-r"
+                                :class="[quotaStore.getStatus(res.key) === 'danger' ? 'from-red-400 to-red-500' : quotaStore.getStatus(res.key) === 'warning' ? 'from-amber-400 to-orange-500' : res.color]"
+                                :style="{ width: (quotaStore.getLimit(res.key) !== null ? quotaStore.getPercentage(res.key) : 0) + '%' }"
+                            ></div>
                         </div>
                     </div>
                 </div>

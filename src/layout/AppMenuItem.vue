@@ -57,6 +57,11 @@ function itemClick(event, item) {
         return;
     }
 
+    // Prevent navigation for parent items (they only toggle submenu)
+    if (item.items || (!item.to && !item.url)) {
+        event.preventDefault();
+    }
+
     // Close mobile/overlay menu
     if ((item.to || item.url) && (layoutStore.staticMenuMobileActive || layoutStore.overlayMenuActive)) {
         layoutStore.onMenuToggle();
