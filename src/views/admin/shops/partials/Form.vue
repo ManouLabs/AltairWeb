@@ -139,7 +139,7 @@ const onFormSubmit = (): void => {
         })
         .catch((error: any) => {
             authStore.processError && authStore.processError(error, t('common.messages.error'));
-            showToast('error', action.value, 'shop', 'tr');
+            showToast('error', action.value, 'shop', 'tr', error);
         })
         .finally(() => {
             loading.stopFormSending();
@@ -209,6 +209,18 @@ onMounted(() => {
 <template>
     <form @submit.prevent="onFormSubmit" class="flex flex-col space-y-4">
         <div class="grid grid-cols-1 gap-4 pt-2">
+            <div class="col-span-1">
+                <FileUploadField
+                    v-model="record.files"
+                    variant="avatar"
+                    icon="pi pi-shop"
+                    accept="image/*"
+                    :maxFileSize="5000000"
+                    :label="t('entity.shop')"
+                    :error="authStore.errors?.['files']?.[0] ? t(authStore.errors?.['files']?.[0]) : null"
+                    @select="() => authStore.clearErrors(['files'])"
+                />
+            </div>
             <div class="col-span-1">
                 <FloatLabel variant="on" class="w-full">
                     <IconField>
@@ -344,19 +356,6 @@ onMounted(() => {
                         <Message v-if="authStore.errors?.[`contactMethods.${key}.value`]?.[0]" severity="error" size="small">{{ t(authStore.errors?.[`contactMethods.${key}.value`]?.[0] ?? '') }}</Message>
                     </div>
                 </div>
-            </div>
-            <div class="col-span-1">
-                <h3 class="text-lg font-semibold mb-2">{{ t('common.labels.logo') }}</h3>
-                <FileUploadField
-                    v-model="record.files"
-                    :label="t('shop.columns.file')"
-                    accept="image/*"
-                    :multiple="false"
-                    :maxFiles="1"
-                    :maxFileSize="5000000"
-                    :error="authStore.errors?.['files']?.[0] ? t(authStore.errors?.['files']?.[0]) : null"
-                    @select="() => authStore.clearErrors(['files'])"
-                />
             </div>
 
             <div class="col-span-1">

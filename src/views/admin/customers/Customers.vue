@@ -367,7 +367,7 @@ onUnmounted(() => {
                 <Button
                     v-if="authStore.hasPermission('create_customers')"
                     v-tooltip.top="t('common.tooltips.add', { entity: t('entity.customer') })"
-                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.customer')"
+                    :label="`+ ${t('common.labels.new')} ${t('entity.customer')}`"
                     severity="primary"
                     :disabled="!dataLoaded"
                     @click="addRecord"

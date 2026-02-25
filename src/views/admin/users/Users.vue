@@ -154,6 +154,7 @@ async function handleDelete(event: EchoEvent): Promise<void> {
             records.value.splice(index, 1);
         }
     }
+    quotaStore.refreshQuotas();
 }
 
 function handleUpdate(event: EchoEvent): void {
@@ -172,6 +173,7 @@ function handleStore(event: EchoEvent): void {
         records.value.unshift(data);
         markHighlight(data.id, 'new');
     }
+    quotaStore.refreshQuotas();
 }
 
 function addRecord(): void {
@@ -217,6 +219,7 @@ const openDialog = () => {
                         records.value.unshift(result.data.record);
                         markHighlight(result.data.record.id, 'new');
                         showToast('success', ACTIONS.CREATE, 'user', 'tc');
+                        quotaStore.refreshQuotas();
                         break;
                     case ACTIONS.EDIT: {
                         const index = findRecordIndex(records, result.data.record.id);
@@ -265,6 +268,7 @@ function confirmDeleteRecord(event: MouseEvent | null, usersIds: number[]): void
                         }
                     })();
                     showToast('success', ACTIONS.DELETE, 'user', 'tc');
+                    quotaStore.refreshQuotas();
                 })
                 .catch((error: any) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
@@ -299,7 +303,7 @@ onUnmounted(() => {
                 <Button
                     v-if="authStore.hasPermission('create_users')"
                     v-tooltip.top="!quotaStore.canCreate('users') ? t('quota.limit_reached', { entity: t('entity.user') }) : t('common.tooltips.add', { entity: t('entity.user') })"
-                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.user')"
+                    :label="`+ ${t('common.labels.new')} ${t('entity.user')}`"
                     severity="primary"
                     :disabled="!dataLoaded || !quotaStore.canCreate('users')"
                     @click="addRecord"

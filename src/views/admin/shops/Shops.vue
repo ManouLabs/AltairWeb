@@ -85,6 +85,7 @@ function handleEchoEvent(event: EchoEvent): void {
                 const index = findRecordIndex(records, id);
                 if (index !== -1) records.value.splice(index, 1);
             });
+            quotaStore.refreshQuotas();
             break;
         case ACTIONS.UPDATE: {
             const data = event.data as ShopData;
@@ -100,6 +101,7 @@ function handleEchoEvent(event: EchoEvent): void {
             if (!exists) {
                 records.value.unshift(data);
             }
+            quotaStore.refreshQuotas();
             break;
         }
         default:
@@ -155,6 +157,7 @@ const openDialog = (): void => {
                     case ACTIONS.CREATE:
                         records.value.unshift(result.data.record);
                         showToast('success', ACTIONS.CREATE, 'shop', 'tc');
+                        quotaStore.refreshQuotas();
                         break;
                     case ACTIONS.EDIT: {
                         const index = findRecordIndex(records, result.data.record.id);
@@ -187,6 +190,7 @@ function confirmDeleteRecord(event: MouseEvent, shopIds: number[]): void {
                         if (index !== -1) records.value.splice(index, 1);
                     });
                     showToast('success', ACTIONS.DELETE, 'shop', 'tc');
+                    quotaStore.refreshQuotas();
                 })
                 .catch((error: any) => {
                     console.error('Error deleting shops', error);

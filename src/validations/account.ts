@@ -18,9 +18,30 @@ const optionalStringMax = (max: number) =>
 export const accountSchema = z.object({
     legal_name: requiredStringMax(150),
     trade_name: optionalStringMax(150),
-    rc_number: optionalStringMax(30),
-    nif: optionalStringMax(30),
-    nis: optionalStringMax(30),
+    rc_number: z.preprocess(
+        (v) => (v === null || v === undefined || v === '' ? undefined : String(v)),
+        z
+            .string()
+            .regex(/^\d{2}-\d{2}-\d{7}[APap]\d{2}$/, { message: 'account.messages.invalid_rc_format' })
+            .optional()
+            .nullable()
+    ),
+    nif: z.preprocess(
+        (v) => (v === null || v === undefined || v === '' ? undefined : String(v)),
+        z
+            .string()
+            .regex(/^\d{15}$/, { message: 'account.messages.invalid_nif_format' })
+            .optional()
+            .nullable()
+    ),
+    nis: z.preprocess(
+        (v) => (v === null || v === undefined || v === '' ? undefined : String(v)),
+        z
+            .string()
+            .regex(/^\d{15}$/, { message: 'account.messages.invalid_nis_format' })
+            .optional()
+            .nullable()
+    ),
     rib: optionalStringMax(30),
     addresses: z
         .array(

@@ -50,7 +50,7 @@ const onFormSubmit = () => {
         })
         .catch((error) => {
             authStore.processError(error, t('common.messages.error_occurred'));
-            showToast('error', action.value, 'plan', 'tr');
+            showToast('error', action.value, 'plan', 'tr', error);
         })
         .finally(() => {
             loading.stopFormSending();

@@ -95,7 +95,7 @@ const onFormSubmit = () => {
         })
         .catch((error: any) => {
             authStore.processError(error, t('common.messages.error_occurred'));
-            showToast('error', action.value as any, 'category', 'tr');
+            showToast('error', action.value as any, 'category', 'tr', error);
         })
         .finally(() => {
             loading.stopFormSending();

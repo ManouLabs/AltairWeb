@@ -114,15 +114,15 @@ const onFormSubmit = ({ valid, values }: { valid: boolean; values: Record<string
                                 :disabled="isSubmitting"
                             >
                                 <template #header>
-                                    <div class="font-semibold text-xm mb-4">{{ $t('user.columns.new_password') }}</div>
+                                    <div class="font-semibold text-xm mb-4">{{ t('user.columns.new_password') }}</div>
                                 </template>
                                 <template #footer>
                                     <Divider />
                                     <ul class="pl-2 my-0 leading-normal">
-                                        <li>{{ $t('common.contents.password_requirements.lowercase') }}</li>
-                                        <li>{{ $t('common.contents.password_requirements.uppercase') }}</li>
-                                        <li>{{ $t('common.contents.password_requirements.numeric') }}</li>
-                                        <li>{{ $t('common.contents.password_requirements.minimum_length', { length: 8 }) }}</li>
+                                        <li>{{ t('common.contents.password_requirements.lowercase') }}</li>
+                                        <li>{{ t('common.contents.password_requirements.uppercase') }}</li>
+                                        <li>{{ t('common.contents.password_requirements.numeric') }}</li>
+                                        <li>{{ t('common.contents.password_requirements.minimum_length', { length: 8 }) }}</li>
                                     </ul>
                                 </template>
                             </Password>
@@ -158,7 +158,7 @@ const onFormSubmit = ({ valid, values }: { valid: boolean; values: Record<string
                 </FormField>
             </div>
             <div class="col-span-1 md:col-span-2 flex justify-start">
-                <Button :label="$t('myaccount.labels.change_password')" icon="pi pi-check" type="submit" :loading="isSubmitting" :disabled="isSubmitting" />
+                <Button :label="t('myaccount.labels.change_password')" icon="pi pi-check" type="submit" :loading="isSubmitting" :disabled="isSubmitting" />
             </div>
         </Form>
     </div>

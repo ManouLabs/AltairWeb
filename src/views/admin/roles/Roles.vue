@@ -256,7 +256,7 @@ onUnmounted(() => {
                 <Button
                     v-if="authStore.hasPermission('create_roles')"
                     v-tooltip.top="t('common.tooltips.add', { entity: t('entity.role') })"
-                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.role')"
+                    :label="`+ ${t('common.labels.new')} ${t('entity.role')}`"
                     severity="primary"
                     :disabled="!dataLoaded"
                     @click="addRecord"

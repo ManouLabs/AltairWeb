@@ -101,10 +101,10 @@ const closeDialog = (): void => {
                         <InputIcon class="pi pi-user" />
                         <InputText :disabled="loading.isFormSending" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
                     </IconField>
-                    <label for="name">{{ $t('user.columns.name') }}</label>
+                    <label for="name">{{ t('user.columns.name') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
-                    {{ $t(authStore.errors?.['name']?.[0]) }}
+                    {{ t(authStore.errors?.['name']?.[0]) }}
                 </Message>
             </div>
             <div>
@@ -123,10 +123,10 @@ const closeDialog = (): void => {
                             @blur="onBlurField('email')"
                         />
                     </IconField>
-                    <label for="email">{{ $t('user.columns.email') }}</label>
+                    <label for="email">{{ t('user.columns.email') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['email']?.[0]" severity="error" size="small">
-                    {{ $t(authStore.errors?.['email']?.[0]) }}
+                    {{ t(authStore.errors?.['email']?.[0]) }}
                 </Message>
             </div>
             <div>
@@ -145,23 +145,23 @@ const closeDialog = (): void => {
                             @blur="onBlurField('password')"
                         >
                             <template #header>
-                                <div class="font-semibold text-xm mb-4">{{ $t('user.columns.password') }}</div>
+                                <div class="font-semibold text-xm mb-4">{{ t('user.columns.password') }}</div>
                             </template>
                             <template #footer>
                                 <Divider />
                                 <ul class="pl-2 my-0 leading-normal">
-                                    <li>{{ $t('common.contents.password_requirements.lowercase') }}</li>
-                                    <li>{{ $t('common.contents.password_requirements.uppercase') }}</li>
-                                    <li>{{ $t('common.contents.password_requirements.numeric') }}</li>
-                                    <li>{{ $t('common.contents.password_requirements.minimum_length', { length: 8 }) }}</li>
+                                    <li>{{ t('common.contents.password_requirements.lowercase') }}</li>
+                                    <li>{{ t('common.contents.password_requirements.uppercase') }}</li>
+                                    <li>{{ t('common.contents.password_requirements.numeric') }}</li>
+                                    <li>{{ t('common.contents.password_requirements.minimum_length', { length: 8 }) }}</li>
                                 </ul>
                             </template>
                         </Password>
                     </IconField>
-                    <label for="password">{{ $t('user.columns.password') }}</label>
+                    <label for="password">{{ t('user.columns.password') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['password']?.[0]" severity="error" size="small">
-                    {{ $t(authStore.errors?.['password']?.[0]) }}
+                    {{ t(authStore.errors?.['password']?.[0]) }}
                 </Message>
             </div>
 
@@ -182,10 +182,10 @@ const closeDialog = (): void => {
                             @blur="onBlurField('password_confirmation')"
                         />
                     </IconField>
-                    <label for="password_confirmation">{{ $t('user.columns.password_confirmation') }}</label>
+                    <label for="password_confirmation">{{ t('user.columns.password_confirmation') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['password_confirmation']?.[0]" severity="error" size="small">
-                    {{ $t(authStore.errors?.['password_confirmation']?.[0]) }}
+                    {{ t(authStore.errors?.['password_confirmation']?.[0]) }}
                 </Message>
             </div>
 
@@ -209,23 +209,23 @@ const closeDialog = (): void => {
                     @change="onBlurField('roles')"
                 >
                     <template #sourceheader>
-                        {{ $t('user.placeholders.roles_available') }}
+                        {{ t('user.placeholders.roles_available') }}
                     </template>
                     <template #targetheader>
-                        {{ $t('user.placeholders.roles_selected') }}
+                        {{ t('user.placeholders.roles_selected') }}
                     </template>
                     <template #option="{ option }">
                         {{ option.name }}
                     </template>
                 </PickList>
                 <Message v-if="authStore.errors?.['roles']?.[0]" severity="error" size="small">
-                    {{ $t(authStore.errors?.['roles']?.[0]) }}
+                    {{ t(authStore.errors?.['roles']?.[0]) }}
                 </Message>
             </div>
         </div>
         <div class="flex justify-end gap-2 mt-4">
-            <Button :label="$t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
+            <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
+            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
     </form>
 </template>

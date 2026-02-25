@@ -29,7 +29,9 @@
         "attribute": "Attribute",
         "attributes": "Attributes",
         "subscription": "Subscription",
-        "subscriptions": "Subscriptions"
+        "subscriptions": "Subscriptions",
+        "supplier": "Supplier",
+        "suppliers": "Suppliers"
     },
     "common": {
         "contents": {
@@ -138,7 +140,11 @@
             "next_step": "Next Step",
             "previous_step": "Previous Step",
 
-            "select": "Select..."
+            "select": "Select...",
+            "discard_changes": "Discard Changes",
+            "street": "Street Address",
+            "region": "Region / State",
+            "city": "City"
         },
         "icon_picker": {
             "title": "Icon & Color",
@@ -268,6 +274,7 @@
             "categories": "Categories",
             "attributes": "Attributes",
             "products": "Products",
+            "suppliers": "Suppliers",
             "subscriptions": "Subscriptions"
         },
         "sections": {
@@ -334,6 +341,9 @@
             "nif": "NIF",
             "nis": "NIS",
             "rib": "RIB",
+            "tax_details": "Tax Details",
+            "primary_contact": "Primary Contact",
+            "main_address": "Main Address",
             "plan": "Plan",
             "active": "Active",
             "created_at": "Created At",
@@ -390,6 +400,11 @@
             "confirm_password": "Confirm Password",
             "add_staff_member": "Add Another Staff Member",
             "complete_onboarding": "Complete Onboarding"
+        },
+        "messages": {
+            "invalid_rc_format": "RC must follow format: XX-XX-XXXXXXXAXX (A = Company, P = Individual)",
+            "invalid_nif_format": "NIF must be exactly 15 digits",
+            "invalid_nis_format": "NIS must be exactly 15 digits"
         },
         "placeholders": {
             "legal_name": "e.g. Nexus Logistics Ltd.",
@@ -806,6 +821,7 @@
             "category": "Category",
             "category_placeholder": "Select a category...",
             "create_category": "Create Category",
+            "supplier": "Supplier",
             "sku_prefix": "SKU Prefix",
             "sku_prefix_placeholder": "e.g. CCT, PLW...",
             "low_stock_threshold": "Low Stock Alert",
@@ -885,6 +901,40 @@
             "variants": "Variants",
             "attributes": "Attributes",
             "quick_actions": "Quick Actions"
+        }
+    },
+    "supplier": {
+        "columns": {
+            "name": "Name",
+            "type": "Type",
+            "address": "Address",
+            "phone": "Phone",
+            "email": "Email",
+            "created_at": "Created At",
+            "updated_at": "Updated At"
+        },
+        "labels": {
+            "manage_subtitle": "Add, edit and manage your suppliers.",
+            "no_suppliers": "No suppliers available. Please add a new supplier...",
+            "basic_info": "General Information",
+            "business_address": "Business Address"
+        },
+        "types": {
+            "wholesaler": "Wholesaler",
+            "manufacturer": "Manufacturer",
+            "importer": "Importer",
+            "distributor": "Distributor",
+            "service_provider": "Service Provider",
+            "agent_broker": "Agent / Broker",
+            "other": "Other"
+        },
+        "placeholders": {
+            "enter_name": "e.g. Shenzhen Electronics Ltd.",
+            "street": "e.g. 123 Industrial Road, B-4"
+        },
+        "form": {
+            "title": "Create New Supplier",
+            "subtitle": "Complete the details below to register a new logistics partner"
         }
     },
     "address": {

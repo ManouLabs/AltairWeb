@@ -44,75 +44,55 @@ const hasFile = (shopData: Partial<ShopFormData>): boolean => {
 
 export const useShopService = {
     async getShops(): Promise<ShopsResponse> {
-        try {
-            const response = await apiClient.get<ShopsResponse>('/api/admin/shops');
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await apiClient.get<ShopsResponse>('/api/admin/shops');
+        return response.data;
     },
 
     async storeShop(shopData: ShopFormData): Promise<ShopApiResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
+        await apiClient.get('/sanctum/csrf-cookie');
 
-            if (hasFile(shopData)) {
-                const formData = buildShopFormData(shopData);
-                const response = await apiClient.post<ShopApiResponse>('/api/admin/shops', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-                return response.data;
-            }
-
-            const response = await apiClient.post<ShopApiResponse>('/api/admin/shops', shopData);
+        if (hasFile(shopData)) {
+            const formData = buildShopFormData(shopData);
+            const response = await apiClient.post<ShopApiResponse>('/api/admin/shops', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             return response.data;
-        } catch (error) {
-            throw error;
         }
+
+        const response = await apiClient.post<ShopApiResponse>('/api/admin/shops', shopData);
+        return response.data;
     },
 
     async updateShop(shopId: number, updatedData: Partial<ShopFormData>): Promise<ShopApiResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
+        await apiClient.get('/sanctum/csrf-cookie');
 
-            // Laravel/PHP only reliably parses multipart uploads on POST.
-            // For updates with a file, use method spoofing.
-            if (hasFile(updatedData)) {
-                const formData = buildShopFormData(updatedData, { methodOverride: 'PUT' });
-                const response = await apiClient.post<ShopApiResponse>(`/api/admin/shops/${shopId}`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-                return response.data;
-            }
-
-            const response = await apiClient.put<ShopApiResponse>(`/api/admin/shops/${shopId}`, updatedData);
+        // Laravel/PHP only reliably parses multipart uploads on POST.
+        // For updates with a file, use method spoofing.
+        if (hasFile(updatedData)) {
+            const formData = buildShopFormData(updatedData, { methodOverride: 'PUT' });
+            const response = await apiClient.post<ShopApiResponse>(`/api/admin/shops/${shopId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             return response.data;
-        } catch (error) {
-            throw error;
         }
+
+        const response = await apiClient.put<ShopApiResponse>(`/api/admin/shops/${shopId}`, updatedData);
+        return response.data;
     },
 
     async toggleActiveShop(shopId: number): Promise<ToggleActiveResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.patch<ToggleActiveResponse>(`/api/admin/shops/${shopId}/toggle`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.patch<ToggleActiveResponse>(`/api/admin/shops/${shopId}/toggle`);
+        return response.data;
     },
 
     async deleteShops(shopsIds: number[]): Promise<DeleteShopsResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.delete<DeleteShopsResponse>('/api/admin/shops', { data: { shops: shopsIds } });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.delete<DeleteShopsResponse>('/api/admin/shops', { data: { shops: shopsIds } });
+        return response.data;
     }
 };

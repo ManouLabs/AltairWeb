@@ -4,6 +4,7 @@ import { useShipperService } from '@/services/useShipperService';
 import { useShopService } from '@/services/useShopService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { useQuotaStore } from '@/stores/useQuotaStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { shipperSchema } from '@/validations/shipper';
 import type { ShipperData, RegionPricing as RegionPricingType } from '@/types/shipper';
@@ -162,7 +163,7 @@ async function loadShipper(): Promise<void> {
         formKey.value++;
     } catch (error) {
         console.error('Error loading shipper:', error);
-        showToast('error', ACTIONS.EDIT, 'shipper', 'tc');
+        showToast('error', ACTIONS.EDIT, 'shipper', 'tc', error);
     } finally {
         loading.stopDataLoading();
     }
@@ -277,6 +278,7 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
         } else {
             await useShipperService.storeShipper(payload);
             showToast('success', ACTIONS.CREATE, 'shipper', 'tc');
+            useQuotaStore().refreshQuotas();
         }
 
         router.push({ name: 'shippers' });
@@ -286,7 +288,7 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
             authStore.errors = error.response.data.errors;
         } else {
             // Other errors - show toast
-            showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'shipper', 'tc');
+            showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'shipper', 'tc', error);
         }
     } finally {
         loading.stopFormSending();

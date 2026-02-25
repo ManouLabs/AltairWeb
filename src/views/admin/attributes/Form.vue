@@ -165,7 +165,7 @@ async function loadAttribute(): Promise<void> {
         formKey.value++;
     } catch (error) {
         console.error('Error loading attribute:', error);
-        showToast('error', ACTIONS.EDIT, 'attribute', 'tc');
+        showToast('error', ACTIONS.EDIT, 'attribute', 'tc', error);
     } finally {
         loading.stopDataLoading();
     }
@@ -251,7 +251,7 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
         if (error?.response?.status === 422 && error?.response?.data?.errors) {
             authStore.errors = error.response.data.errors;
         } else {
-            showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'attribute', 'tc');
+            showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'attribute', 'tc', error);
         }
     } finally {
         loading.stopFormSending();

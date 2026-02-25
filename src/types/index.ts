@@ -30,3 +30,6 @@ export * from './user';
 
 // Product types
 export * from './product';
+
+// Supplier types
+export * from './supplier';

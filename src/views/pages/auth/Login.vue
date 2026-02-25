@@ -28,9 +28,9 @@ const loginUser = async () => {
     } catch (error) {
         // If it's a specific validation error pushed by backend check
         if (authStore.errors.email && authStore.errors.email[0].includes('subscription')) {
-            showToast('error', authStore.errors.email[0], 'login', 'tc');
+            showToast('error', authStore.errors.email[0], 'login', 'tc', error);
         } else {
-            showToast('error', 'error', 'login', 'tc');
+            showToast('error', 'error', 'login', 'tc', error);
         }
     } finally {
         loading.stopFormSending();

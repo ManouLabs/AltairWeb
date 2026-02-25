@@ -86,7 +86,7 @@ const logoutUser = async () => {
     try {
         await authStore.logout();
     } catch (error) {
-        showToast('error', 'error', 'user', 'tc');
+        showToast('error', 'error', 'user', 'tc', error);
     }
 };
 

@@ -26,31 +26,19 @@ interface DeleteNotificationsResponse {
 
 export const useNotificationService = {
     async getNotifications(): Promise<NotificationsResponse> {
-        try {
-            const response = await apiClient.get<NotificationsResponse>('/api/admin/notifications');
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await apiClient.get<NotificationsResponse>('/api/admin/notifications');
+        return response.data;
     },
 
     async markAsRead(notificationIds: string[]): Promise<MarkAsReadResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.put<MarkAsReadResponse>(`/api/admin/notifications/read`, { notifications: notificationIds });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.put<MarkAsReadResponse>(`/api/admin/notifications/read`, { notifications: notificationIds });
+        return response.data;
     },
 
     async deleteNotifications(notificationIds: string[]): Promise<DeleteNotificationsResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.delete<DeleteNotificationsResponse>('/api/admin/notifications', { data: { notifications: notificationIds } });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.delete<DeleteNotificationsResponse>('/api/admin/notifications', { data: { notifications: notificationIds } });
+        return response.data;
     }
 };

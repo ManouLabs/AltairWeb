@@ -251,7 +251,7 @@ onUnmounted(() => {
                 <Button
                     v-if="authStore.hasPermission('create_attributes')"
                     v-tooltip.top="t('common.tooltips.add', { entity: t('entity.attribute') })"
-                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.attribute')"
+                    :label="`+ ${t('common.labels.new')} ${t('entity.attribute')}`"
                     severity="primary"
                     :disabled="!dataLoaded"
                     @click="addRecord"

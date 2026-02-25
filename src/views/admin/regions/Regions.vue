@@ -43,7 +43,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
         useRegionService.getRegions(params).then((data) => {
             dataLoaded.value = true;
             return {
-                data: data.regions,
+                data: data.data,
                 meta: data.meta
             };
         }),
@@ -249,7 +249,7 @@ onUnmounted(() => {
         <PageHeader icon="pi pi-map" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.regions') })" :description="t('common.subtitles.manage', { entity: t('entity.regions').toLowerCase() })">
             <template #actions>
                 <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.regions') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
-                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.region') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.region')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
+                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.region') })" :label="`+ ${t('common.labels.new')} ${t('entity.region')}`" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
             </template>
         </PageHeader>
         <!-- Skeleton Loading State -->

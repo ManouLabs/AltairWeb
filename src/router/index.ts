@@ -1,6 +1,7 @@
 // src/router/index.ts
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { useQuotaStore } from '@/stores/useQuotaStore';
 import { createRouter, createWebHistory, type RouteRecordRaw, type NavigationGuardNext, type RouteLocationNormalized } from 'vue-router';
 
 interface RouteMeta {
@@ -8,6 +9,7 @@ interface RouteMeta {
     requiresGuest?: boolean;
     requiresSuperAdmin?: boolean;
     requiresPermission?: string;
+    requiresQuota?: string;
     activeMenu?: string;
 }
 
@@ -64,7 +66,7 @@ const adminRoutes: RouteRecordRaw[] = [
         path: 'shippers/create',
         name: 'shipper-create',
         component: () => import('@/views/admin/shippers/Form.vue'),
-        meta: { requiresAuth: true, requiresPermission: 'create_shippers', activeMenu: '/admin/shippers' }
+        meta: { requiresAuth: true, requiresPermission: 'create_shippers', requiresQuota: 'shippers', activeMenu: '/admin/shippers' }
     },
     {
         path: 'shippers/:id/edit',
@@ -148,7 +150,7 @@ const adminRoutes: RouteRecordRaw[] = [
         path: 'products/create',
         name: 'product-create',
         component: () => import('@/views/admin/products/Form.vue'),
-        meta: { requiresAuth: true, requiresPermission: 'create_products', activeMenu: '/admin/products' }
+        meta: { requiresAuth: true, requiresPermission: 'create_products', requiresQuota: 'products', activeMenu: '/admin/products' }
     },
     {
         path: 'products/:id/edit',
@@ -161,6 +163,12 @@ const adminRoutes: RouteRecordRaw[] = [
         name: 'product-show',
         component: () => import('@/views/admin/products/ProductShow.vue'),
         meta: { requiresAuth: true, requiresPermission: 'view_products', activeMenu: '/admin/products' }
+    },
+    {
+        path: 'suppliers',
+        name: 'suppliers',
+        component: () => import('@/views/admin/suppliers/Suppliers.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_suppliers' }
     }
 ];
 
@@ -233,6 +241,17 @@ const handleRouteGuard = async (to: RouteLocationNormalized, next: NavigationGua
 
     if (meta.requiresPermission && !authStore.hasPermission(meta.requiresPermission)) {
         return next({ name: 'accessDenied' });
+    }
+
+    // Quota checks — user is authenticated and authorized but may have reached their plan limit
+    if (meta.requiresQuota) {
+        const quotaStore = useQuotaStore();
+        if (!quotaStore.loaded) {
+            await quotaStore.fetchQuotas();
+        }
+        if (!quotaStore.canCreate(meta.requiresQuota)) {
+            return next({ name: 'accessDenied' });
+        }
     }
 
     authStore.resetSessionTimerFromAction();

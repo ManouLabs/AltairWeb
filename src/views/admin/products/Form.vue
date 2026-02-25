@@ -2,13 +2,16 @@
 import { useProductService } from '@/services/useProductService';
 import { useCategoryService } from '@/services/useCategoryService';
 import { useAttributeService } from '@/services/useAttributeService';
+import { useSupplierService } from '@/services/useSupplierService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { useQuotaStore } from '@/stores/useQuotaStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { productSchema } from '@/validations/product';
 import type { ProductData, ProductVariantData } from '@/types/product';
 import type { CategoryData } from '@/types/category';
 import type { AttributeData, AttributeValueData } from '@/types/attribute';
+import type { SupplierData } from '@/types/supplier';
 import { zodResolver } from '@primevue/forms/resolvers/zod';
 import { computed, defineAsyncComponent, markRaw, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -36,6 +39,7 @@ const formKey = ref<number>(0);
 // All available data
 const allCategories = ref<CategoryData[]>([]);
 const allAttributes = ref<AttributeData[]>([]);
+const allSuppliers = ref<SupplierData[]>([]);
 
 // Form initial values (used by PrimeVue Form resolver)
 const initialValues = reactive({
@@ -47,6 +51,7 @@ const initialValues = reactive({
 
 // Fields managed outside the PrimeVue Form (separately tracked)
 const selectedCategoryId = ref<number | null>(null);
+const selectedSupplierId = ref<number | null>(null);
 const stockType = ref<'single' | 'variant'>('single');
 const purchasePrice = ref<number | null>(null);
 const salePrice = ref<number | null>(null);
@@ -283,6 +288,21 @@ async function loadAttributes(): Promise<void> {
     }
 }
 
+// Load suppliers
+async function loadSuppliers(): Promise<void> {
+    try {
+        const data = await useSupplierService.getSuppliers({
+            rows: 100,
+            page: 1,
+            sortField: 'name',
+            sortOrder: '1'
+        });
+        allSuppliers.value = data.data || [];
+    } catch (e) {
+        console.error('Failed to load suppliers');
+    }
+}
+
 // Load product for edit mode
 async function loadProduct(): Promise<void> {
     if (!isEdit.value) return;
@@ -297,6 +317,7 @@ async function loadProduct(): Promise<void> {
         initialValues.active = product.active;
 
         selectedCategoryId.value = product.category?.id ? ({ [product.category.id]: true } as any) : null;
+        selectedSupplierId.value = product.supplier?.id ?? null;
         stockType.value = product.stock_type;
         purchasePrice.value = product.purchase_price !== null ? Number(product.purchase_price) : null;
         salePrice.value = product.sale_price !== null ? Number(product.sale_price) : null;
@@ -363,7 +384,7 @@ async function loadProduct(): Promise<void> {
         }
     } catch (error) {
         console.error('Error loading product:', error);
-        showToast('error', ACTIONS.EDIT, 'product', 'tc');
+        showToast('error', ACTIONS.EDIT, 'product', 'tc', error);
     } finally {
         loading.stopDataLoading();
     }
@@ -631,6 +652,9 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
         formData.append('stock_type', stockType.value);
         formData.append('active', values.active ? '1' : '0');
 
+        if (selectedSupplierId.value) {
+            formData.append('supplier_id', String(selectedSupplierId.value));
+        }
         if (resolvedCategoryId.value) {
             formData.append('category_id', String(resolvedCategoryId.value));
         }
@@ -691,6 +715,7 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
         } else {
             await useProductService.storeProduct(formData);
             showToast('success', ACTIONS.CREATE, 'product', 'tc');
+            useQuotaStore().refreshQuotas();
         }
 
         router.push({ name: 'products' });
@@ -698,7 +723,7 @@ const onFormSubmit = async ({ valid, values }: any): Promise<void> => {
         if (error?.response?.status === 422 && error?.response?.data?.errors) {
             authStore.errors = error.response.data.errors;
         } else {
-            showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'product', 'tc');
+            showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'product', 'tc', error);
         }
     } finally {
         loading.stopFormSending();
@@ -710,7 +735,7 @@ function goBack(): void {
 }
 
 onMounted(async () => {
-    await Promise.all([loadCategories(), loadAttributes()]);
+    await Promise.all([loadCategories(), loadAttributes(), loadSuppliers()]);
     await loadProduct();
     isLoading.value = false;
     loading.stopPageLoading();
@@ -753,6 +778,8 @@ onMounted(async () => {
                         <!-- Name field (FloatLabel) -->
                         <Skeleton height="48px" class="w-full" />
                         <!-- Category field (FloatLabel) -->
+                        <Skeleton height="48px" class="w-full" />
+                        <!-- Supplier field (FloatLabel) -->
                         <Skeleton height="48px" class="w-full" />
                         <!-- 2-col: SKU + Low stock (FloatLabel) -->
                         <div class="grid grid-cols-2 gap-4">
@@ -874,6 +901,14 @@ onMounted(async () => {
                                     <label for="product_category">{{ t('product.form.category') }}</label>
                                 </FloatLabel>
                                 <Message v-if="authStore.errors.category_id" severity="error" size="small">{{ authStore.errors?.category_id?.[0] }}</Message>
+                            </div>
+
+                            <div class="flex flex-col gap-1.5">
+                                <FloatLabel variant="on">
+                                    <Select id="product_supplier" v-model="selectedSupplierId" :options="allSuppliers" optionLabel="name" optionValue="id" :disabled="loading.isFormSending" class="w-full" showClear filter />
+                                    <label for="product_supplier">{{ t('product.form.supplier') }}</label>
+                                </FloatLabel>
+                                <Message v-if="authStore.errors.supplier_id" severity="error" size="small">{{ authStore.errors?.supplier_id?.[0] }}</Message>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">

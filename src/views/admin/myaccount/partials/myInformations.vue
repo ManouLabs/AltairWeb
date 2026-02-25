@@ -89,7 +89,7 @@ const onFormSubmit = ({ valid, values }: FormSubmitEvent): void => {
 
             <!-- Submit button (left aligned) -->
             <div class="col-span-1 md:col-span-2 flex justify-start pt-2">
-                <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="isSubmitting" :disabled="isSubmitting" />
+                <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="isSubmitting" :disabled="isSubmitting" />
             </div>
         </Form>
     </div>

@@ -95,16 +95,16 @@ const closeDialog = (): void => {
                         <InputIcon class="pi pi-shield" />
                         <InputText :disabled="loading.isFormSending" id="name" v-model.trim="record.name" autofocus fluid :invalid="authStore.errors?.name ? true : false" @input="() => authStore.clearErrors([`name`])" @blur="onBlurField('name')" />
                     </IconField>
-                    <label for="name">{{ $t('role.columns.name') }}</label>
+                    <label for="name">{{ t('role.columns.name') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['name']?.[0]" severity="error" size="small">
-                    {{ $t(authStore.errors?.['name']?.[0]) }}
+                    {{ t(authStore.errors?.['name']?.[0]) }}
                 </Message>
             </div>
             <!-- guard_name removed (server will enforce hard-coded guard) -->
             <div>
                 <Message v-if="authStore.errors?.['permissions']?.[0]" severity="error" size="small">
-                    {{ $t(authStore.errors?.['permissions']?.[0]) }}
+                    {{ t(authStore.errors?.['permissions']?.[0]) }}
                 </Message>
                 <PickList
                     required
@@ -125,10 +125,10 @@ const closeDialog = (): void => {
                     @change="onBlurField('permissions')"
                 >
                     <template #sourceheader>
-                        {{ $t('role.placeholders.permissions_available') }}
+                        {{ t('role.placeholders.permissions_available') }}
                     </template>
                     <template #targetheader>
-                        {{ $t('role.placeholders.permissions_selected') }}
+                        {{ t('role.placeholders.permissions_selected') }}
                     </template>
                     <template #option="{ option }">
                         {{ option.name }}
@@ -137,8 +137,8 @@ const closeDialog = (): void => {
             </div>
         </div>
         <div class="flex justify-end gap-2 mt-4">
-            <Button :label="$t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="$t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
+            <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
+            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
     </form>
 </template>

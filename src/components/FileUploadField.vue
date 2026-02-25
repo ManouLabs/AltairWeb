@@ -12,7 +12,7 @@ const props = defineProps({
     },
     label: {
         type: String,
-        required: true
+        default: ''
     },
     accept: {
         type: String,
@@ -66,6 +66,15 @@ const props = defineProps({
     emitUpdate: {
         type: Boolean,
         default: true
+    },
+    variant: {
+        type: String,
+        default: 'advanced',
+        validator: (value) => ['advanced', 'avatar'].includes(value)
+    },
+    icon: {
+        type: String,
+        default: 'pi pi-building'
     }
 });
 
@@ -300,145 +309,224 @@ const onClearExisting = () => {
     if (props.emitUpdate) emit('update:modelValue', null);
     emit('remove', { file: existingMedia.value || null, reason: 'existing' });
 };
+
+// ---------- Avatar mode ----------
+const avatarPreview = ref(null);
+const avatarInputRef = ref(null);
+
+const avatarImageUrl = computed(() => {
+    if (avatarPreview.value) return avatarPreview.value;
+    const media = existingMedia.value;
+    if (media) return getMediaUrl(media);
+    return null;
+});
+
+const onAvatarSelect = (event) => {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+
+    if (props.maxFileSize && file.size > props.maxFileSize) {
+        emit('error', { files: [file] });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        avatarPreview.value = e.target?.result;
+    };
+    reader.readAsDataURL(file);
+
+    hideExisting.value = true;
+    if (props.emitUpdate) emit('update:modelValue', file);
+    emit('select', { files: [file] });
+
+    // Reset input so re-selecting the same file triggers change
+    if (avatarInputRef.value) avatarInputRef.value.value = '';
+};
+
+const removeAvatar = () => {
+    avatarPreview.value = null;
+    hideExisting.value = true;
+    if (props.emitUpdate) emit('update:modelValue', null);
+    emit('remove', { file: null, reason: 'avatar' });
+};
 </script>
 
 <template>
     <div class="file-upload-field">
-        <FileUpload
-            ref="fileUploadRef"
-            :mode="uploadMode"
-            :multiple="multiple"
-            :accept="accept"
-            :maxFileSize="maxFileSize"
-            :fileLimit="maxFiles"
-            :disabled="disabled"
-            :class="{ 'p-invalid': isInvalid }"
-            :chooseLabel="computedPlaceholder"
-            :showUploadButton="showUploadButton"
-            :showCancelButton="showCancelButton"
-            :pt="{
-                root: { class: 'w-full' },
-                content: { class: 'border-2 border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900 rounded-lg p-6 text-center' },
-                chooseButton: {
-                    class: props.disabled ? 'opacity-50 cursor-not-allowed' : 'bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md transition-colors'
-                }
-            }"
-            @select="onSelect"
-            @upload="onUpload"
-            @remove="onRemove"
-            @error="onError"
-        >
-            <template #header="{ chooseCallback, clearCallback, files }">
-                <div class="flex justify-between items-center">
-                    <div class="flex gap-2">
-                        <Button @click="handleChoose(chooseCallback, files)" :label="t('common.file_upload.choose')" icon="pi pi-plus" severity="primary" size="small" :disabled="isChooseDisabled(files)" />
-                        <Button v-if="files && files.length > 0" @click="handleHeaderClear(clearCallback)" :label="t('common.file_upload.clear')" icon="pi pi-times" severity="secondary" outlined size="small" :disabled="disabled" />
+        <!-- Avatar variant: circular picture with camera overlay -->
+        <template v-if="variant === 'avatar'">
+            <div class="flex flex-col items-center gap-3">
+                <div class="relative">
+                    <!-- Has image (preview or existing) -->
+                    <div v-if="avatarImageUrl" class="relative">
+                        <img :src="avatarImageUrl" alt="" class="w-20 h-20 rounded-full object-cover border-2 border-surface-200 dark:border-surface-700 shadow-sm" />
+                        <button
+                            v-if="!disabled"
+                            type="button"
+                            class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors shadow-sm"
+                            @click="removeAvatar"
+                        >
+                            <i class="pi pi-times text-xs" />
+                        </button>
+                    </div>
+                    <!-- Empty placeholder -->
+                    <div v-else class="relative">
+                        <div class="w-20 h-20 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center border-2 border-dashed border-surface-300 dark:border-surface-600">
+                            <i :class="icon" class="text-2xl text-surface-400" />
+                        </div>
+                        <label
+                            v-if="!disabled"
+                            :for="`avatar-upload-${$.uid}`"
+                            class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center cursor-pointer hover:bg-primary-600 transition-colors shadow-sm"
+                        >
+                            <i class="pi pi-camera text-xs" />
+                        </label>
+                        <input :id="`avatar-upload-${$.uid}`" ref="avatarInputRef" type="file" :accept="accept" class="hidden" @change="onAvatarSelect" />
                     </div>
                 </div>
-            </template>
+                <span v-if="label" class="text-xs text-surface-400 uppercase tracking-wider font-semibold">{{ label }}</span>
+            </div>
+        </template>
 
-            <template #content="{ files, removeFileCallback }">
-                <div v-if="(files && files.length > 0) || (uploadedFiles && uploadedFiles.length > 0)" class="space-y-3">
-                    <div v-for="(file, index) in files && files.length ? files : uploadedFiles" :key="index" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <template v-if="file">
-                            <div class="flex items-center space-x-3">
-                                <!-- File preview for images -->
-                                <div v-if="file.type?.startsWith('image/')" class="flex-shrink-0">
-                                    <img :src="getObjectURL(file)" :alt="file.name" :width="previewWidth" class="rounded-md object-cover" :style="{ height: previewWidth + 'px' }" />
-                                </div>
+        <!-- Advanced variant: PrimeVue FileUpload (default) -->
+        <template v-else>
+            <FileUpload
+                ref="fileUploadRef"
+                :mode="uploadMode"
+                :multiple="multiple"
+                :accept="accept"
+                :maxFileSize="maxFileSize"
+                :fileLimit="maxFiles"
+                :disabled="disabled"
+                :class="{ 'p-invalid': isInvalid }"
+                :chooseLabel="computedPlaceholder"
+                :showUploadButton="showUploadButton"
+                :showCancelButton="showCancelButton"
+                :pt="{
+                    root: { class: 'w-full' },
+                    content: { class: 'border-2 border-surface-200 dark:border-surface-700 rounded-lg p-6 bg-surface-0 dark:bg-surface-900 rounded-lg p-6 text-center' },
+                    chooseButton: {
+                        class: props.disabled ? 'opacity-50 cursor-not-allowed' : 'bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md transition-colors'
+                    }
+                }"
+                @select="onSelect"
+                @upload="onUpload"
+                @remove="onRemove"
+                @error="onError"
+            >
+                <template #header="{ chooseCallback, clearCallback, files }">
+                    <div class="flex justify-between items-center">
+                        <div class="flex gap-2">
+                            <Button @click="handleChoose(chooseCallback, files)" :label="t('common.file_upload.choose')" icon="pi pi-plus" severity="primary" size="small" :disabled="isChooseDisabled(files)" />
+                            <Button v-if="files && files.length > 0" @click="handleHeaderClear(clearCallback)" :label="t('common.file_upload.clear')" icon="pi pi-times" severity="secondary" outlined size="small" :disabled="disabled" />
+                        </div>
+                    </div>
+                </template>
 
-                                <!-- Video preview -->
-                                <div v-else-if="file.type?.startsWith('video/')" class="flex-shrink-0 relative">
-                                    <video :width="previewWidth" :style="{ height: previewWidth + 'px' }" class="rounded-md object-cover" preload="metadata">
-                                        <source :src="getObjectURL(file)" :type="file.type" />
-                                    </video>
-                                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-md">
-                                        <i class="pi pi-play text-white text-2xl"></i>
+                <template #content="{ files, removeFileCallback }">
+                    <div v-if="(files && files.length > 0) || (uploadedFiles && uploadedFiles.length > 0)" class="space-y-3">
+                        <div v-for="(file, index) in files && files.length ? files : uploadedFiles" :key="index" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <template v-if="file">
+                                <div class="flex items-center space-x-3">
+                                    <!-- File preview for images -->
+                                    <div v-if="file.type?.startsWith('image/')" class="flex-shrink-0">
+                                        <img :src="getObjectURL(file)" :alt="file.name" :width="previewWidth" class="rounded-md object-cover" :style="{ height: previewWidth + 'px' }" />
+                                    </div>
+
+                                    <!-- Video preview -->
+                                    <div v-else-if="file.type?.startsWith('video/')" class="flex-shrink-0 relative">
+                                        <video :width="previewWidth" :style="{ height: previewWidth + 'px' }" class="rounded-md object-cover" preload="metadata">
+                                            <source :src="getObjectURL(file)" :type="file.type" />
+                                        </video>
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-md">
+                                            <i class="pi pi-play text-white text-2xl"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- File icon for other media types -->
+                                    <div v-else class="flex-shrink-0 w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center">
+                                        <i :class="getFileIcon(file)" class="text-xl text-gray-500 dark:text-gray-400"></i>
+                                    </div>
+
+                                    <!-- File details -->
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                            {{ file.name }}
+                                        </p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatFileSize(file.size) }} • {{ getFileType(file) }}</p>
                                     </div>
                                 </div>
 
-                                <!-- File icon for other media types -->
-                                <div v-else class="flex-shrink-0 w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center">
-                                    <i :class="getFileIcon(file)" class="text-xl text-gray-500 dark:text-gray-400"></i>
-                                </div>
-
-                                <!-- File details -->
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                                        {{ file.name }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatFileSize(file.size) }} • {{ getFileType(file) }}</p>
-                                </div>
-                            </div>
-
-                            <!-- Remove button -->
-                            <Button v-if="files && files.length" @click="removeFileCallback(index)" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
-                            <Button v-else @click="removeUploaded(index)" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Empty state or existing media preview (read-only) -->
-                <div v-else>
-                    <div v-if="existingMedia" class="space-y-3">
-                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <div class="flex items-center space-x-3">
-                                <!-- Image preview -->
-                                <div v-if="isImageMedia(existingMedia)" class="flex-shrink-0">
-                                    <img :src="getMediaUrl(existingMedia)" :alt="getMediaName(existingMedia)" :width="previewWidth" class="rounded-md object-cover" :style="{ height: previewWidth + 'px' }" />
-                                </div>
-                                <!-- Video preview -->
-                                <div v-else-if="isVideoMedia(existingMedia)" class="flex-shrink-0 relative">
-                                    <video :width="previewWidth" :style="{ height: previewWidth + 'px' }" class="rounded-md object-cover" preload="metadata">
-                                        <source :src="getMediaUrl(existingMedia)" :type="existingMedia.mime_type || undefined" />
-                                    </video>
-                                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-md">
-                                        <i class="pi pi-play text-white text-2xl"></i>
-                                    </div>
-                                </div>
-                                <!-- Other file icon -->
-                                <div v-else class="flex-shrink-0 w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center">
-                                    <i class="pi pi-file text-xl text-gray-500 dark:text-gray-400"></i>
-                                </div>
-
-                                <!-- File details -->
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                                        {{ getMediaName(existingMedia) }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                        <span v-if="existingMedia.size">{{ formatFileSize(existingMedia.size) }}</span>
-                                        <span v-if="existingMedia.size && existingMedia.mime_type"> • </span>
-                                        <span>{{ getMimeTypeName(existingMedia.mime_type) }}</span>
-                                    </p>
-                                </div>
-                            </div>
-                            <!-- Remove existing media button -->
-                            <Button @click="onClearExisting" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
+                                <!-- Remove button -->
+                                <Button v-if="files && files.length" @click="removeFileCallback(index)" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
+                                <Button v-else @click="removeUploaded(index)" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
+                            </template>
                         </div>
                     </div>
 
-                    <div v-else class="text-center py-8">
-                        <i class="pi pi-cloud-upload text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
-                        <p class="text-gray-600 dark:text-gray-400 mb-2">{{ computedPlaceholder }}</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-500">
-                            {{ t('common.file_upload.drag_drop_hint') }}
-                        </p>
-                        <p v-if="maxFileSize" class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t('common.file_upload.max_size') }}: {{ formatFileSize(maxFileSize) }}</p>
+                    <!-- Empty state or existing media preview (read-only) -->
+                    <div v-else>
+                        <div v-if="existingMedia" class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <!-- Image preview -->
+                                    <div v-if="isImageMedia(existingMedia)" class="flex-shrink-0">
+                                        <img :src="getMediaUrl(existingMedia)" :alt="getMediaName(existingMedia)" :width="previewWidth" class="rounded-md object-cover" :style="{ height: previewWidth + 'px' }" />
+                                    </div>
+                                    <!-- Video preview -->
+                                    <div v-else-if="isVideoMedia(existingMedia)" class="flex-shrink-0 relative">
+                                        <video :width="previewWidth" :style="{ height: previewWidth + 'px' }" class="rounded-md object-cover" preload="metadata">
+                                            <source :src="getMediaUrl(existingMedia)" :type="existingMedia.mime_type || undefined" />
+                                        </video>
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-md">
+                                            <i class="pi pi-play text-white text-2xl"></i>
+                                        </div>
+                                    </div>
+                                    <!-- Other file icon -->
+                                    <div v-else class="flex-shrink-0 w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center">
+                                        <i class="pi pi-file text-xl text-gray-500 dark:text-gray-400"></i>
+                                    </div>
+
+                                    <!-- File details -->
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                            {{ getMediaName(existingMedia) }}
+                                        </p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                            <span v-if="existingMedia.size">{{ formatFileSize(existingMedia.size) }}</span>
+                                            <span v-if="existingMedia.size && existingMedia.mime_type"> • </span>
+                                            <span>{{ getMimeTypeName(existingMedia.mime_type) }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- Remove existing media button -->
+                                <Button @click="onClearExisting" icon="pi pi-trash" severity="danger" text size="small" :disabled="disabled" class="ml-2" />
+                            </div>
+                        </div>
+
+                        <div v-else class="text-center py-8">
+                            <i class="pi pi-cloud-upload text-4xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                            <p class="text-gray-600 dark:text-gray-400 mb-2">{{ computedPlaceholder }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500">
+                                {{ t('common.file_upload.drag_drop_hint') }}
+                            </p>
+                            <p v-if="maxFileSize" class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ t('common.file_upload.max_size') }}: {{ formatFileSize(maxFileSize) }}</p>
+                        </div>
                     </div>
-                </div>
-            </template>
-        </FileUpload>
+                </template>
+            </FileUpload>
 
-        <!-- Error message -->
+            <!-- Help text -->
+            <small v-if="!error && (accept || maxFileSize)" class="text-gray-500 dark:text-gray-400 block mt-2">
+                <span v-if="accept">{{ t('common.file_upload.accepted_formats') }}: {{ accept }}</span>
+                <span v-if="accept && maxFileSize"> • </span>
+                <span v-if="maxFileSize">{{ t('common.file_upload.max_size') }}: {{ formatFileSize(maxFileSize) }}</span>
+            </small>
+        </template>
+
+        <!-- Error message (shared by both variants) -->
         <Message v-if="error" severity="error" size="small" class="mt-2">{{ error }}</Message>
-
-        <!-- Help text -->
-        <small v-if="!error && (accept || maxFileSize)" class="text-gray-500 dark:text-gray-400 block mt-2">
-            <span v-if="accept">{{ t('common.file_upload.accepted_formats') }}: {{ accept }}</span>
-            <span v-if="accept && maxFileSize"> • </span>
-            <span v-if="maxFileSize">{{ t('common.file_upload.max_size') }}: {{ formatFileSize(maxFileSize) }}</span>
-        </small>
     </div>
 </template>
 

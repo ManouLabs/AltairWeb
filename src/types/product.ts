@@ -43,6 +43,7 @@ export interface ProductData {
     total_stock: number;
     active: boolean;
     category: { id: number; name: string; icon?: string; icon_color?: string } | null;
+    supplier: { id: number; name: string } | null;
     image: ProductImageData | null;
     attributes: ProductAttributeData[];
     variants: ProductVariantData[];
@@ -54,6 +55,7 @@ export interface ProductData {
 export interface ProductFormData {
     name: string;
     category_id: number | null;
+    supplier_id: number | null;
     sku_prefix: string | null;
     low_stock_threshold: number;
     stock_type: 'single' | 'variant';
@@ -73,6 +75,7 @@ export interface ProductsFilterParams {
 export interface ProductsResponse {
     products: ProductData[];
     categories: { id: number; name: string }[];
+    suppliers: { id: number; name: string }[];
     meta: {
         current_page: number;
         per_page: number;

@@ -90,7 +90,7 @@ const onFormSubmit = (): void => {
         })
         .catch((error: any) => {
             authStore.processError && authStore.processError(error, t('common.messages.error'));
-            showToast('error', action.value, 'attribute', 'tr');
+            showToast('error', action.value, 'attribute', 'tr', error);
         })
         .finally(() => {
             loading.stopFormSending();

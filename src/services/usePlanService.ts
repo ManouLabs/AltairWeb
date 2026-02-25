@@ -4,61 +4,37 @@ import type { PlansFilterParams, PlansResponse, PlanFormData, PlanApiResponse, T
 
 export const usePlanService = {
     async getPlans(params: PlansFilterParams = {}): Promise<PlansResponse> {
-        try {
-            const response = await apiClient.post<PlansResponse>('/api/admin/plans/filter', { params });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await apiClient.post<PlansResponse>('/api/admin/plans/filter', { params });
+        return response.data;
     },
 
     async storePlan(planData: PlanFormData): Promise<PlanApiResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.post<PlanApiResponse>('/api/admin/plans', planData);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.post<PlanApiResponse>('/api/admin/plans', planData);
+        return response.data;
     },
 
     async updatePlan(planId: number, updatedData: Partial<PlanFormData>): Promise<PlanApiResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.put<PlanApiResponse>(`/api/admin/plans/${planId}`, updatedData);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.put<PlanApiResponse>(`/api/admin/plans/${planId}`, updatedData);
+        return response.data;
     },
 
     async toggleActivePlan(planId: number): Promise<ToggleActivePlanResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.patch<ToggleActivePlanResponse>(`/api/admin/plans/${planId}/toggle`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.patch<ToggleActivePlanResponse>(`/api/admin/plans/${planId}/toggle`);
+        return response.data;
     },
 
     async toggleRecommendedPlan(planId: number): Promise<ToggleRecommendedPlanResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.patch<ToggleRecommendedPlanResponse>(`/api/admin/plans/${planId}/toggle-recommended`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.patch<ToggleRecommendedPlanResponse>(`/api/admin/plans/${planId}/toggle-recommended`);
+        return response.data;
     },
 
     async deletePlans(planIds: number[]): Promise<DeletePlansResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.delete<DeletePlansResponse>('/api/admin/plans', { data: { plans: planIds } });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.delete<DeletePlansResponse>('/api/admin/plans', { data: { plans: planIds } });
+        return response.data;
     }
 };

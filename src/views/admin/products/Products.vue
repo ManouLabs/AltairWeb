@@ -120,6 +120,7 @@ async function handleDeleteEvent(event: EchoEvent): Promise<void> {
             records.value.splice(index, 1);
         }
     }
+    quotaStore.refreshQuotas();
 }
 
 function handleUpdate(event: EchoEvent): void {
@@ -138,6 +139,7 @@ function handleStore(event: EchoEvent): void {
         records.value.unshift(data);
         markHighlight(data.id, 'new');
     }
+    quotaStore.refreshQuotas();
 }
 
 function addRecord(): void {
@@ -183,6 +185,7 @@ function confirmDeleteRecord(event: MouseEvent | null, productIds: number[]): vo
                     }
                     selectedRecords.value = [];
                     showToast('success', ACTIONS.DELETE, 'product', 'tc');
+                    quotaStore.refreshQuotas();
                 })
                 .catch((error: any) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
@@ -272,7 +275,7 @@ onUnmounted(() => {
                 <Button
                     v-if="authStore.hasPermission('create_products')"
                     v-tooltip.top="!quotaStore.canCreate('products') ? t('quota.limit_reached', { entity: t('entity.product') }) : t('common.tooltips.add', { entity: t('entity.product') })"
-                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.product')"
+                    :label="`+ ${t('common.labels.new')} ${t('entity.product')}`"
                     severity="primary"
                     :disabled="!dataLoaded || !quotaStore.canCreate('products')"
                     @click="addRecord"

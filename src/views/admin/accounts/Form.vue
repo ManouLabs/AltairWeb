@@ -121,25 +121,33 @@ const validateCurrentStep = (): boolean => {
 const goToStep = (targetStep: string) => {
     if (targetStep === activeStep.value) return;
 
-    if (validateCurrentStep()) {
-        activeStep.value = targetStep;
+    const isGoingForward = Number(targetStep) > Number(activeStep.value);
+
+    // Only validate when moving forward, allow going backward freely
+    if (isGoingForward) {
+        if (!validateCurrentStep()) return;
     }
+
+    activeStep.value = targetStep;
 };
 
 const onStepChange = (newStep: string | number) => {
     const targetStep = String(newStep);
     if (targetStep === activeStep.value) return;
 
-    if (validateCurrentStep()) {
-        activeStep.value = targetStep;
-    } else {
+    const isGoingForward = Number(targetStep) > Number(activeStep.value);
+
+    if (isGoingForward && !validateCurrentStep()) {
         // PrimeVue internally sets d_value before emitting, reset it
         nextTick(() => {
             if (stepperRef.value) {
                 stepperRef.value.d_value = activeStep.value;
             }
         });
+        return;
     }
+
+    activeStep.value = targetStep;
 };
 
 const onFormSubmit = ({ valid }: any) => {
@@ -169,7 +177,7 @@ const onFormSubmit = ({ valid }: any) => {
                     }
                 }
             } else {
-                showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'account', 'tc');
+                showToast('error', isEdit.value ? ACTIONS.EDIT : ACTIONS.CREATE, 'account', 'tc', error);
             }
         })
         .finally(() => {
@@ -206,7 +214,7 @@ async function loadAccount() {
         formKey.value++;
     } catch (error) {
         console.error('Error loading account:', error);
-        showToast('error', ACTIONS.EDIT, 'account', 'tc');
+        showToast('error', ACTIONS.EDIT, 'account', 'tc', error);
     } finally {
         loading.stopDataLoading();
     }

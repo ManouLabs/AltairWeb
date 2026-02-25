@@ -244,7 +244,7 @@ onUnmounted(() => {
                 <Button
                     v-if="authStore.hasPermission('createcity')"
                     v-tooltip.top="t('common.tooltips.add', { entity: t('entity.city') })"
-                    :label="'+ ' + t('common.labels.new') + ' ' + t('entity.city')"
+                    :label="`+ ${t('common.labels.new')} ${t('entity.city')}`"
                     severity="primary"
                     :disabled="!dataLoaded"
                     @click="addRecord"

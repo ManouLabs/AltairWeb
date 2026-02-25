@@ -75,6 +75,12 @@ const productsMenu = computed(() => [
         icon: 'pi pi-fw pi-sliders-h',
         to: '/admin/attributes',
         visible: can('view_attributes')
+    },
+    {
+        label: t('navigation.side_bar.suppliers'),
+        icon: 'pi pi-fw pi-building',
+        to: '/admin/suppliers',
+        visible: can('view_suppliers')
     }
 ]);
 

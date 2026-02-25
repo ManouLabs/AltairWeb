@@ -1,49 +1,42 @@
 <script setup lang="ts">
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
+import FormHeader from '@/components/FormHeader.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
 import { useLock } from '@/composables/useLock';
 import { useRowEffects } from '@/composables/useRowEffects';
-import { useShipperService } from '@/services/useShipperService';
-import { useShopService } from '@/services/useShopService';
+import { useSupplierService } from '@/services/useSupplierService';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
-import type { ShipperData } from '@/types/shipper';
-import type { ShopData } from '@/types/shop';
+import type { SupplierData } from '@/types/supplier';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useDialog } from 'primevue/usedialog';
+import { computed, defineAsyncComponent, markRaw, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
 
-const router = useRouter();
 const { t } = useI18n();
 const authStore = useAuthStore();
 const confirm = useConfirm();
+const dialog = useDialog();
 const { showToast } = useShowToast();
-const loading = useLoading();
-const loadingActiveId = ref<number | null>(null);
+const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 
 // Filters configuration
 const defaultFiltersConfig = {
     name: FilterMatchMode.CONTAINS,
-    type: FilterMatchMode.CONTAINS,
-    active: FilterMatchMode.EQUALS,
-    shops: { matchMode: FilterMatchMode.IN, relation: { name: 'shops', column: 'shops.id' } }
+    type: FilterMatchMode.CONTAINS
 };
 
-// Shops options for filter
-const shopsOptions = ref<ShopData[]>([]);
 const dataLoaded = ref(false);
 
 // Initialize DataTable
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
     (params: any) =>
-        useShipperService.getShippers(params).then((data) => {
+        useSupplierService.getSuppliers(params).then((data) => {
             dataLoaded.value = true;
             return {
                 data: data.data,
@@ -57,7 +50,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
 // Column locking
-const defaultFields = ['name', 'type', 'shops', 'api', 'active'];
+const defaultFields = ['name', 'type', 'address', 'phone', 'email'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 interface Column {
@@ -68,22 +61,22 @@ interface Column {
 const defaultColumns = computed<Column[]>(() =>
     defaultFields.map((field) => ({
         field,
-        header: t(`shipper.columns.${field}`)
+        header: t(`supplier.columns.${field}`)
     }))
 );
 
-const { selectedColumns, columnChanged } = useDynamicColumns('shippersColumns', defaultFields, 'shipper.columns');
+const { selectedColumns, columnChanged } = useDynamicColumns('suppliersColumns', defaultFields, 'supplier.columns');
 const subscription = ref<any>(null);
 
 interface EchoEvent {
     action: string;
-    data: ShipperData | number[];
+    data: SupplierData | number[];
 }
 
 // Echo subscription
 function subscribeToEcho(): void {
     if (!authStore.user) return;
-    subscription.value = Echo.private(`data-stream.shippers${authStore.user.account_id}`).listen('DataStream', (event: EchoEvent) => {
+    subscription.value = Echo.private(`data-stream.suppliers${authStore.user.account_id}`).listen('DataStream', (event: EchoEvent) => {
         handleEchoEvent(event);
     });
 }
@@ -97,7 +90,7 @@ function handleEchoEvent(event: EchoEvent): void {
             });
             break;
         case ACTIONS.UPDATE: {
-            const data = event.data as ShipperData;
+            const data = event.data as SupplierData;
             const index = findRecordIndex(records, data.id);
             if (index !== -1) {
                 records.value[index] = data;
@@ -106,8 +99,8 @@ function handleEchoEvent(event: EchoEvent): void {
             break;
         }
         case ACTIONS.STORE: {
-            const data = event.data as ShipperData;
-            const exists = records.value.some((r: ShipperData) => r.id === data.id);
+            const data = event.data as SupplierData;
+            const exists = records.value.some((r: SupplierData) => r.id === data.id);
             if (!exists) {
                 records.value.unshift(data);
                 markHighlight(data.id, 'new');
@@ -118,41 +111,65 @@ function handleEchoEvent(event: EchoEvent): void {
 }
 
 function addRecord(): void {
-    router.push({ name: 'shipper-create' });
+    authStore.errors = {};
+    openDialog(null, ACTIONS.CREATE);
 }
 
-function editRecord(row: ShipperData): void {
-    router.push({ name: 'shipper-edit', params: { id: row.id } });
+function editRecord(row: SupplierData): void {
+    authStore.errors = {};
+    openDialog(row, ACTIONS.EDIT);
 }
 
-function toggleActive(shipperId: number): void {
-    loadingActiveId.value = shipperId;
-    loading.startPageLoading();
-    useShipperService
-        .toggleActiveShipper(shipperId)
-        .then((result: any) => {
-            const index = findRecordIndex(records, shipperId);
-            records.value[index].active = !records.value[index].active;
-            markHighlight(shipperId, 'updated');
-            showToast('success', ACTIONS.EDIT, 'shipper', 'tc');
-        })
-        .catch((error: any) => {
-            if (error?.response?.status === 419 || error?.response?.status === 401) {
-                console.error('Session expired, redirecting to login');
+function openDialog(record: SupplierData | null, actionType: string): void {
+    const isEdit = actionType === ACTIONS.EDIT;
+    dialog.open(formComponent, {
+        props: {
+            style: { width: '42vw' },
+            breakpoints: { '1200px': '55vw', '960px': '75vw', '640px': '90vw' },
+            modal: true,
+            maximizable: true
+        },
+        templates: {
+            header: markRaw(FormHeader)
+        },
+        data: {
+            record: record,
+            action: actionType,
+            headerProps: computed(() => ({
+                title: isEdit ? t('common.titles.edit', { entity: t('entity.supplier') }) : t('supplier.form.title'),
+                description: t('supplier.form.subtitle'),
+                icon: isEdit ? 'pi pi-building' : 'pi pi-plus-circle',
+                iconColor: '#8B5CF6'
+            }))
+        },
+        onClose: (result) => {
+            if (result && result.data?.record?.id) {
+                switch (result.data?.action) {
+                    case ACTIONS.CREATE:
+                        records.value.unshift(result.data.record);
+                        markHighlight(result.data.record.id, 'new');
+                        showToast('success', ACTIONS.CREATE, 'supplier', 'tc');
+                        break;
+                    case ACTIONS.EDIT: {
+                        const index = findRecordIndex(records, result.data.record.id);
+                        records.value[index] = result.data.record;
+                        markHighlight(result.data.record.id, 'updated');
+                        showToast('success', ACTIONS.EDIT, 'supplier', 'tc');
+                        break;
+                    }
+                    default:
+                        console.error(`Unhandled action: ${result.data?.action}`);
+                }
             }
-            console.error('Error updating shipper status');
-        })
-        .finally(() => {
-            loadingActiveId.value = null;
-            loading.stopPageLoading();
-        });
+        }
+    });
 }
 
-function confirmDeleteRecord(event: MouseEvent | null, shipperIds: number[]): void {
+function confirmDeleteRecord(event: MouseEvent | null, supplierIds: number[]): void {
     confirm.require({
         modal: true,
         target: event?.currentTarget as HTMLElement | undefined,
-        message: shipperIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.shippers') }) : t('common.confirmations.delete.message', { entity: t('entity.shipper') }),
+        message: supplierIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.suppliers') }) : t('common.confirmations.delete.message', { entity: t('entity.supplier') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
             label: t('common.labels.cancel'),
@@ -167,32 +184,46 @@ function confirmDeleteRecord(event: MouseEvent | null, shipperIds: number[]): vo
             severity: 'danger'
         },
         accept: () => {
-            useShipperService
-                .deleteShippers(shipperIds)
+            useSupplierService
+                .deleteSuppliers(supplierIds)
                 .then(() => {
-                    shipperIds.forEach((id: number) => {
+                    supplierIds.forEach((id: number) => {
                         const index = findRecordIndex(records, id);
                         if (index !== -1) records.value.splice(index, 1);
                     });
-                    showToast('success', ACTIONS.DELETE, 'shipper', 'tc');
+                    showToast('success', ACTIONS.DELETE, 'supplier', 'tc');
                 })
                 .catch((error: any) => {
                     if (error?.response?.status === 419 || error?.response?.status === 401) {
                         console.error('Session expired, redirecting to login');
                     }
-                    console.error('Error deleting shippers');
+                    console.error('Error deleting suppliers');
                 });
         }
     });
 }
 
+// Helper to get first contact method value by type
+function getContactValue(supplier: SupplierData, type: string): string | null {
+    if (!supplier.contactMethods) return null;
+    const method = supplier.contactMethods.find((m: any) => m.type === type);
+    return method?.value || null;
+}
+
+// Helper to get primary address display
+function getAddressDisplay(supplier: SupplierData): string {
+    if (!supplier.addresses || supplier.addresses.length === 0) return '—';
+    const addr = supplier.addresses[0];
+    const parts: string[] = [];
+    if (addr.street) parts.push(addr.street as string);
+    if (typeof addr.city === 'object' && addr.city?.name) parts.push(addr.city.name);
+    if (typeof addr.region === 'object' && addr.region?.name) parts.push(addr.region.name);
+    return parts.join(', ') || '—';
+}
+
 onMounted(() => {
     initialize();
     subscribeToEcho();
-    // Fetch shops for filter
-    useShopService.getShops().then((response: any) => {
-        shopsOptions.value = response.data;
-    });
 });
 
 onUnmounted(() => {
@@ -203,10 +234,10 @@ onUnmounted(() => {
 <template>
     <div>
         <!-- Page Header (always visible) -->
-        <PageHeader icon="pi pi-truck" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.shippers') })" :description="t('common.subtitles.manage', { entity: t('entity.shippers').toLowerCase() })">
+        <PageHeader icon="pi pi-building" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.suppliers') })" :description="t('common.subtitles.manage', { entity: t('entity.suppliers').toLowerCase() })">
             <template #actions>
-                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.shippers') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
-                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.shipper') })" :label="`+ ${t('common.labels.new')} ${t('entity.shipper')}`" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
+                <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.suppliers') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
+                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.supplier') })" :label="`+ ${t('common.labels.new')} ${t('entity.supplier')}`" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
             </template>
         </PageHeader>
 
@@ -230,7 +261,7 @@ onUnmounted(() => {
                 :totalRecords="total"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.shipper') })"
+                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.supplier') })"
                 resizableColumns
                 columnResizeMode="expand"
                 reorderableColumns
@@ -254,14 +285,14 @@ onUnmounted(() => {
                         <template #start>
                             <div class="flex space-x-2">
                                 <Button
-                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.shipper') })"
+                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.supplier') })"
                                     :label="t('common.labels.delete_selected')"
                                     icon="pi pi-trash"
                                     severity="danger"
                                     @click="
                                         confirmDeleteRecord(
                                             $event,
-                                            selectedRecords.map((record: ShipperData) => record.id)
+                                            selectedRecords.map((record: SupplierData) => record.id)
                                         )
                                     "
                                     outlined
@@ -306,7 +337,7 @@ onUnmounted(() => {
                 >
                     <template #header>
                         <HeaderCell
-                            :text="t('shipper.columns.name')"
+                            :text="t('supplier.columns.name')"
                             :frozen="frozenColumns.name"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
@@ -317,6 +348,12 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
+                                <div class="relative">
+                                    <img v-if="data.logo?.url" :src="data.logo.url" :alt="data.name" class="w-8 h-8 rounded-full object-cover border border-surface-200 dark:border-surface-700" />
+                                    <div v-else class="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center">
+                                        <i class="pi pi-building text-violet-600 dark:text-violet-400 text-xs"></i>
+                                    </div>
+                                </div>
                                 <span>{{ data.name }}</span>
                                 <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
@@ -348,7 +385,7 @@ onUnmounted(() => {
                 >
                     <template #header>
                         <HeaderCell
-                            :text="t('shipper.columns.type')"
+                            :text="t('supplier.columns.type')"
                             :frozen="frozenColumns.type"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
@@ -359,7 +396,7 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.type }">
-                                <i :class="data.type === 'company' ? 'pi pi-building' : 'pi pi-user'" class="text-color-secondary"></i>
+                                <i class="pi pi-tag text-color-secondary"></i>
                                 <span>{{ data.type_label }}</span>
                             </div>
                         </DataCell>
@@ -369,8 +406,13 @@ onUnmounted(() => {
                             <Select
                                 v-model="filterModel.value"
                                 :options="[
-                                    { label: t('shipper.types.company'), value: 'company' },
-                                    { label: t('shipper.types.individual'), value: 'individual' }
+                                    { label: t('supplier.types.wholesaler'), value: 'wholesaler' },
+                                    { label: t('supplier.types.manufacturer'), value: 'manufacturer' },
+                                    { label: t('supplier.types.importer'), value: 'importer' },
+                                    { label: t('supplier.types.distributor'), value: 'distributor' },
+                                    { label: t('supplier.types.service_provider'), value: 'service_provider' },
+                                    { label: t('supplier.types.agent_broker'), value: 'agent_broker' },
+                                    { label: t('supplier.types.other'), value: 'other' }
                                 ]"
                                 optionLabel="label"
                                 optionValue="value"
@@ -386,132 +428,62 @@ onUnmounted(() => {
                     </template>
                 </Column>
 
-                <!-- Shops Column -->
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="shops"
-                    field="shops"
-                    :frozen="frozenColumns.shops"
-                    v-if="selectedColumns.some((column: Column) => column.field === 'shops')"
-                    class="min-w-40"
-                >
+                <!-- Address Column -->
+                <Column columnKey="address" field="address" :frozen="frozenColumns.address" v-if="selectedColumns.some((column: Column) => column.field === 'address')" class="min-w-40">
                     <template #header>
                         <HeaderCell
-                            :text="t('shipper.columns.shops')"
-                            :frozen="frozenColumns.shops"
+                            :text="t('supplier.columns.address')"
+                            :frozen="frozenColumns.address"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('shops')"
+                            @toggle="toggleColumnFrozen('address')"
                         />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div v-if="data.shops && data.shops.length" class="flex flex-wrap gap-1">
-                                <Tag v-for="shop in data.shops" :key="shop.id" :value="shop.name" severity="contrast" size="small" icon="pi pi-shop" />
-                            </div>
-                            <span v-else class="text-muted-color">—</span>
+                            <span class="text-surface-600 dark:text-surface-400">{{ getAddressDisplay(data) }}</span>
                         </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <MultiSelect v-model="filterModel.value" :options="shopsOptions" optionLabel="name" optionValue="id" :placeholder="t('common.labels.select_shops')" class="w-full" size="small" display="chip" :maxSelectedLabels="2" />
-                            <InputGroupAddon>
-                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button
-                                    :disabled="!filterModel.value || filterModel.value.length === 0"
-                                    size="small"
-                                    v-tooltip.top="t('common.labels.clear')"
-                                    outlined
-                                    icon="pi pi-times"
-                                    severity="danger"
-                                    @click="((filterModel.value = null), applyFilter())"
-                                />
-                            </InputGroupAddon>
-                        </InputGroup>
                     </template>
                 </Column>
 
-                <!-- API Column -->
-                <Column columnKey="api" field="api" :frozen="frozenColumns.api" v-if="selectedColumns.some((column: Column) => column.field === 'api')" class="min-w-32">
+                <!-- Phone Column -->
+                <Column columnKey="phone" field="phone" :frozen="frozenColumns.phone" v-if="selectedColumns.some((column: Column) => column.field === 'phone')" class="min-w-32">
                     <template #header>
                         <HeaderCell
-                            :text="t('shipper.columns.api')"
-                            :frozen="frozenColumns.api"
+                            :text="t('supplier.columns.phone')"
+                            :frozen="frozenColumns.phone"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('api')"
+                            @toggle="toggleColumnFrozen('phone')"
                         />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <Tag
-                                v-if="data.type === 'company'"
-                                :value="data.api_configured ? t('shipper.labels.connected') : t('shipper.labels.not_configured')"
-                                :severity="data.api_configured ? 'success' : 'warn'"
-                                icon="pi pi-sync"
-                                rounded
-                                size="small"
-                                :class="{ 'font-bold': frozenColumns.api }"
-                            />
+                            <span v-if="getContactValue(data, 'phone')">{{ getContactValue(data, 'phone') }}</span>
                             <span v-else class="text-muted-color">—</span>
                         </DataCell>
                     </template>
                 </Column>
 
-                <!-- Active Column -->
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="active"
-                    field="active"
-                    :frozen="frozenColumns.active"
-                    v-if="selectedColumns.some((column: Column) => column.field === 'active')"
-                    sortable
-                    class="min-w-32"
-                >
+                <!-- Email Column -->
+                <Column columnKey="email" field="email" :frozen="frozenColumns.email" v-if="selectedColumns.some((column: Column) => column.field === 'email')" class="min-w-40">
                     <template #header>
                         <HeaderCell
-                            :text="t('shipper.columns.active')"
-                            :frozen="frozenColumns.active"
+                            :text="t('supplier.columns.email')"
+                            :frozen="frozenColumns.email"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('active')"
+                            @toggle="toggleColumnFrozen('email')"
                         />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.active }">
-                                <ActiveToggleButton :active="data.active" entity="shipper" variant="button" :loading="loadingActiveId === data.id" @toggle="toggleActive(data.id)" />
-                            </div>
+                            <span v-if="getContactValue(data, 'email')">{{ getContactValue(data, 'email') }}</span>
+                            <span v-else class="text-muted-color">—</span>
                         </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <Select
-                                v-model="filterModel.value"
-                                :options="[
-                                    { label: t('common.labels.active'), value: true },
-                                    { label: t('common.labels.inactive'), value: false }
-                                ]"
-                                optionLabel="label"
-                                optionValue="value"
-                                :placeholder="t('common.labels.select_status')"
-                                class="w-full"
-                                size="small"
-                            />
-                            <InputGroupAddon>
-                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
                     </template>
                 </Column>
 
@@ -540,10 +512,10 @@ onUnmounted(() => {
 
                 <template #empty>
                     <div class="flex flex-col items-center justify-center py-12">
-                        <i class="pi pi-truck text-5xl text-surface-300 dark:text-surface-600 mb-4"></i>
-                        <h3 class="text-lg font-semibold text-surface-700 dark:text-surface-200 mb-2">{{ t('common.messages.no_data_title', { entity: t('entity.shippers').toLowerCase() }) }}</h3>
-                        <p class="text-surface-500 dark:text-surface-400 text-sm mb-6">{{ t('common.messages.no_data_description', { entity: t('entity.shipper').toLowerCase() }) }}</p>
-                        <Button :label="t('common.labels.new') + ' ' + t('entity.shipper')" icon="pi pi-plus" severity="primary" @click="addRecord" />
+                        <i class="pi pi-building text-5xl text-surface-300 dark:text-surface-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-surface-700 dark:text-surface-200 mb-2">{{ t('common.messages.no_data_title', { entity: t('entity.suppliers').toLowerCase() }) }}</h3>
+                        <p class="text-surface-500 dark:text-surface-400 text-sm mb-6">{{ t('common.messages.no_data_description', { entity: t('entity.supplier').toLowerCase() }) }}</p>
+                        <Button :label="t('common.labels.new') + ' ' + t('entity.supplier')" icon="pi pi-plus" severity="primary" @click="addRecord" />
                     </div>
                 </template>
             </DataTable>

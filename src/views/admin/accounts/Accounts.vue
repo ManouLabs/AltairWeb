@@ -27,10 +27,9 @@ const defaultFiltersConfig = {
     id: FilterMatchMode.CONTAINS,
     legal_name: FilterMatchMode.CONTAINS,
     trade_name: FilterMatchMode.CONTAINS,
-    rc_number: FilterMatchMode.CONTAINS,
-    nif: FilterMatchMode.CONTAINS,
-    nis: FilterMatchMode.CONTAINS,
-    rib: FilterMatchMode.CONTAINS,
+    primary_contact: FilterMatchMode.CONTAINS,
+    main_address: FilterMatchMode.CONTAINS,
+    tax_details: FilterMatchMode.CONTAINS,
     created_at: FilterMatchMode.DATE_IS,
     updated_at: FilterMatchMode.DATE_IS
 };
@@ -56,7 +55,21 @@ const loading = useLoading();
 
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 
-const defaultFields = ['legal_name', 'trade_name', 'rc_number', 'nif', 'nis', 'rib'];
+const defaultFields = ['legal_name', 'trade_name', 'primary_contact', 'main_address', 'tax_details'];
+
+const getPrimaryContact = (data: any) => {
+    return data.contacts?.[0] || null;
+};
+
+const getContactMethod = (contact: any) => {
+    if (!contact?.contactMethods?.length) return null;
+    return contact.contactMethods[0];
+};
+
+const getMainAddress = (data: any) => {
+    if (!data.addresses?.length) return null;
+    return data.addresses.find((addr: any) => addr.main) || data.addresses[0];
+};
 
 const avatarColors = ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#9333EA'];
 
@@ -202,7 +215,7 @@ onUnmounted(() => {
         <PageHeader icon="pi pi-users" icon-color="#8B5CF6" :title="t('common.titles.manage', { entity: t('entity.accounts') })" :description="t('common.subtitles.manage', { entity: t('entity.accounts').toLowerCase() })">
             <template #actions>
                 <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.accounts') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
-                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.account') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.account')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
+                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.account') })" :label="`+ ${t('common.labels.new')} ${t('entity.account')}`" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
             </template>
         </PageHeader>
         <!-- Skeleton Loading State -->
@@ -363,152 +376,98 @@ onUnmounted(() => {
                         </InputGroup>
                     </template>
                 </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="rc_number"
-                    field="rc_number"
-                    :frozen="frozenColumns.rc_number"
-                    v-if="selectedColumns.some((column: any) => column.field === 'rc_number')"
-                    sortable
-                    class="min-w-32"
-                >
+
+                <!-- Primary Contact Column -->
+                <Column columnKey="primary_contact" field="primary_contact" :frozen="frozenColumns.primary_contact" v-if="selectedColumns.some((column: any) => column.field === 'primary_contact')" class="min-w-48">
                     <template #header>
                         <HeaderCell
-                            :text="t('account.columns.rc_number')"
-                            :frozen="frozenColumns.rc_number"
+                            :text="t('account.columns.primary_contact')"
+                            :frozen="frozenColumns.primary_contact"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('rc_number')"
+                            @toggle="toggleColumnFrozen('primary_contact')"
                         />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.rc_number }">{{ data.rc_number }}</div>
+                            <div v-if="getPrimaryContact(data)" class="flex items-center gap-2.5">
+                                <Avatar
+                                    :label="getInitials(getPrimaryContact(data).first_name + ' ' + getPrimaryContact(data).last_name)"
+                                    shape="circle"
+                                    :style="{ backgroundColor: getAvatarColor(getPrimaryContact(data).first_name + ' ' + getPrimaryContact(data).last_name), color: '#fff' }"
+                                    class="shrink-0"
+                                />
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-surface-700 dark:text-surface-200 text-sm"> {{ getPrimaryContact(data).civility }}. {{ getPrimaryContact(data).first_name }} {{ getPrimaryContact(data).last_name }} </span>
+                                    <span v-if="getContactMethod(getPrimaryContact(data))" class="text-xs text-surface-400">
+                                        {{ getContactMethod(getPrimaryContact(data)).value }}
+                                    </span>
+                                </div>
+                            </div>
+                            <span v-else class="text-surface-400">—</span>
                         </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <InputText v-model="filterModel.value" size="small" />
-                            <InputGroupAddon>
-                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
                     </template>
                 </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="nif"
-                    field="nif"
-                    :frozen="frozenColumns.nif"
-                    v-if="selectedColumns.some((column: any) => column.field === 'nif')"
-                    sortable
-                    class="min-w-32"
-                >
+
+                <!-- Main Address Column -->
+                <Column columnKey="main_address" field="main_address" :frozen="frozenColumns.main_address" v-if="selectedColumns.some((column: any) => column.field === 'main_address')" class="min-w-44">
                     <template #header>
                         <HeaderCell
-                            :text="t('account.columns.nif')"
-                            :frozen="frozenColumns.nif"
+                            :text="t('account.columns.main_address')"
+                            :frozen="frozenColumns.main_address"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('nif')"
+                            @toggle="toggleColumnFrozen('main_address')"
                         />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.nif }">{{ data.nif }}</div>
+                            <div v-if="getMainAddress(data)" class="flex flex-col gap-0.5 text-sm">
+                                <span v-if="getMainAddress(data).street" class="text-surface-700 dark:text-surface-200">
+                                    {{ getMainAddress(data).street }}
+                                </span>
+                                <span class="text-xs text-surface-400">
+                                    <template v-if="getMainAddress(data).city">{{ getMainAddress(data).city.name }}</template>
+                                    <template v-if="getMainAddress(data).city && getMainAddress(data).region">, </template>
+                                    <template v-if="getMainAddress(data).region">{{ getMainAddress(data).region.name }}</template>
+                                </span>
+                            </div>
+                            <span v-else class="text-surface-400">—</span>
                         </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <InputText v-model="filterModel.value" size="small" />
-                            <InputGroupAddon>
-                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
                     </template>
                 </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="nis"
-                    field="nis"
-                    :frozen="frozenColumns.nis"
-                    v-if="selectedColumns.some((column: any) => column.field === 'nis')"
-                    sortable
-                    class="min-w-32"
-                >
+
+                <Column columnKey="tax_details" field="tax_details" :frozen="frozenColumns.tax_details" v-if="selectedColumns.some((column: any) => column.field === 'tax_details')" class="min-w-44">
                     <template #header>
                         <HeaderCell
-                            :text="t('account.columns.nis')"
-                            :frozen="frozenColumns.nis"
+                            :text="t('account.columns.tax_details')"
+                            :frozen="frozenColumns.tax_details"
                             :reorderTooltip="t('common.tooltips.reorder_columns')"
                             :lockTooltip="t('common.tooltips.lock_column')"
                             :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('nis')"
+                            @toggle="toggleColumnFrozen('tax_details')"
                         />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.nis }">{{ data.nis }}</div>
+                            <div class="flex flex-col gap-0.5 text-sm" :class="{ 'font-bold': frozenColumns.tax_details }">
+                                <div v-if="data.nif">
+                                    <span class="text-surface-400 font-semibold">NIF:</span> <span class="text-surface-700 dark:text-surface-200">{{ data.nif }}</span>
+                                </div>
+                                <div v-if="data.rc_number">
+                                    <span class="text-surface-400 font-semibold">RC:</span> <span class="text-surface-500 dark:text-surface-400">{{ data.rc_number }}</span>
+                                </div>
+                                <div v-if="data.nis">
+                                    <span class="text-surface-400 font-semibold">NIS:</span> <span class="text-surface-500 dark:text-surface-400">{{ data.nis }}</span>
+                                </div>
+                                <div v-if="data.rib">
+                                    <span class="text-surface-400 font-semibold">RIB:</span> <span class="text-surface-500 dark:text-surface-400">{{ data.rib }}</span>
+                                </div>
+                                <span v-if="!data.nif && !data.rc_number && !data.nis && !data.rib" class="text-surface-400">—</span>
+                            </div>
                         </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <InputText v-model="filterModel.value" size="small" />
-                            <InputGroupAddon>
-                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
-                    </template>
-                </Column>
-                <Column
-                    :showClearButton="false"
-                    :showApplyButton="false"
-                    :showFilterMatchModes="false"
-                    :showFilterOperator="false"
-                    columnKey="rib"
-                    field="rib"
-                    :frozen="frozenColumns.rib"
-                    v-if="selectedColumns.some((column: any) => column.field === 'rib')"
-                    sortable
-                    class="min-w-32"
-                >
-                    <template #header>
-                        <HeaderCell
-                            :text="t('account.columns.rib')"
-                            :frozen="frozenColumns.rib"
-                            :reorderTooltip="t('common.tooltips.reorder_columns')"
-                            :lockTooltip="t('common.tooltips.lock_column')"
-                            :unlockTooltip="t('common.tooltips.unlock_column')"
-                            @toggle="toggleColumnFrozen('rib')"
-                        />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <div :class="{ 'font-bold': frozenColumns.rib }">{{ data.rib }}</div>
-                        </DataCell>
-                    </template>
-                    <template #filter="{ filterModel, applyFilter }">
-                        <InputGroup>
-                            <InputText v-model="filterModel.value" size="small" />
-                            <InputGroupAddon>
-                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
-                            </InputGroupAddon>
-                        </InputGroup>
                     </template>
                 </Column>
 

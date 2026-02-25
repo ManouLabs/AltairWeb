@@ -4,50 +4,30 @@ import type { AccountsFilterParams, AccountsResponse, AccountFormData, AccountAp
 
 export const useAccountService = {
     async getAccounts(params: AccountsFilterParams = {}): Promise<AccountsResponse> {
-        try {
-            const response = await apiClient.post<AccountsResponse>('/api/admin/accounts/filter', { params });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await apiClient.post<AccountsResponse>('/api/admin/accounts/filter', { params });
+        return response.data;
     },
 
     async getAccount(accountId: number): Promise<AccountApiResponse> {
-        try {
-            const response = await apiClient.get<AccountApiResponse>(`/api/admin/accounts/${accountId}`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await apiClient.get<AccountApiResponse>(`/api/admin/accounts/${accountId}`);
+        return response.data;
     },
 
     async storeAccount(accountData: AccountFormData): Promise<AccountApiResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.post<AccountApiResponse>('/api/admin/accounts', accountData);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.post<AccountApiResponse>('/api/admin/accounts', accountData);
+        return response.data;
     },
 
     async updateAccount(accountId: number, updatedData: Partial<AccountFormData>): Promise<AccountApiResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.put<AccountApiResponse>(`/api/admin/accounts/${accountId}`, updatedData);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.put<AccountApiResponse>(`/api/admin/accounts/${accountId}`, updatedData);
+        return response.data;
     },
 
     async deleteAccounts(accountsIds: number[]): Promise<DeleteAccountsResponse> {
-        try {
-            await apiClient.get('/sanctum/csrf-cookie');
-            const response = await apiClient.delete<DeleteAccountsResponse>('/api/admin/accounts', { data: { accounts: accountsIds } });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.delete<DeleteAccountsResponse>('/api/admin/accounts', { data: { accounts: accountsIds } });
+        return response.data;
     }
 };

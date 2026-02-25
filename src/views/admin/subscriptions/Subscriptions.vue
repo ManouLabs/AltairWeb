@@ -373,7 +373,7 @@ onUnmounted(() => {
             </div>
             <div class="flex gap-2 items-center">
                 <Button v-tooltip.top="t('common.tooltips.export_selection', { entity: t('entity.subscriptions') })" :label="t('common.labels.export')" icon="pi pi-upload" outlined severity="info" @click="exportCSV()" />
-                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.subscription') })" :label="'+ ' + t('common.labels.new') + ' ' + t('entity.subscription')" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
+                <Button v-tooltip.top="t('common.tooltips.add', { entity: t('entity.subscription') })" :label="`+ ${t('common.labels.new')} ${t('entity.subscription')}`" severity="primary" :disabled="!dataLoaded" @click="addRecord" />
             </div>
         </div>
 

@@ -72,22 +72,20 @@ const onBlurField = (path: string) => {
                 </Message>
             </div>
 
-            <!-- RC Number -->
+            <!-- RC Number (format: XX-XX-XXXXXXXAXX) -->
             <div class="col-span-1">
-                <FloatLabel variant="on" class="w-full">
-                    <IconField>
-                        <InputIcon class="pi pi-id-card" />
-                        <InputText
-                            id="rc_number"
-                            v-model="record.rc_number"
-                            :disabled="loading.isFormSending"
-                            class="w-full"
-                            maxlength="30"
-                            :invalid="authStore.errors?.['rc_number']?.[0] ? true : false"
-                            @input="() => authStore.clearErrors(['rc_number'])"
-                            @blur="() => onBlurField('rc_number')"
-                        />
-                    </IconField>
+                <FloatLabel variant="on">
+                    <InputMask
+                        id="rc_number"
+                        v-model="record.rc_number"
+                        mask="99-99-9999999a99"
+                        placeholder="00-00-0000000A00"
+                        :disabled="loading.isFormSending"
+                        class="w-full"
+                        :invalid="authStore.errors?.['rc_number']?.[0] ? true : false"
+                        @update:modelValue="() => authStore.clearErrors(['rc_number'])"
+                        @blur="() => onBlurField('rc_number')"
+                    />
                     <label for="rc_number">{{ t('account.columns.rc_number') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['rc_number']?.[0]" severity="error" size="small">
@@ -95,22 +93,20 @@ const onBlurField = (path: string) => {
                 </Message>
             </div>
 
-            <!-- NIF -->
+            <!-- NIF (exactly 15 digits) -->
             <div class="col-span-1">
-                <FloatLabel variant="on" class="w-full">
-                    <IconField>
-                        <InputIcon class="pi pi-file" />
-                        <InputText
-                            id="nif"
-                            v-model="record.nif"
-                            :disabled="loading.isFormSending"
-                            class="w-full"
-                            maxlength="30"
-                            :invalid="authStore.errors?.['nif']?.[0] ? true : false"
-                            @input="() => authStore.clearErrors(['nif'])"
-                            @blur="() => onBlurField('nif')"
-                        />
-                    </IconField>
+                <FloatLabel variant="on">
+                    <InputMask
+                        id="nif"
+                        v-model="record.nif"
+                        mask="999999999999999"
+                        placeholder="Example: 123456789101112"
+                        :disabled="loading.isFormSending"
+                        class="w-full"
+                        :invalid="authStore.errors?.['nif']?.[0] ? true : false"
+                        @update:modelValue="() => authStore.clearErrors(['nif'])"
+                        @blur="() => onBlurField('nif')"
+                    />
                     <label for="nif">{{ t('account.columns.nif') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['nif']?.[0]" severity="error" size="small">
@@ -118,22 +114,20 @@ const onBlurField = (path: string) => {
                 </Message>
             </div>
 
-            <!-- NIS -->
+            <!-- NIS (exactly 15 digits) -->
             <div class="col-span-1">
-                <FloatLabel variant="on" class="w-full">
-                    <IconField>
-                        <InputIcon class="pi pi-shield" />
-                        <InputText
-                            id="nis"
-                            v-model="record.nis"
-                            :disabled="loading.isFormSending"
-                            class="w-full"
-                            maxlength="30"
-                            :invalid="authStore.errors?.['nis']?.[0] ? true : false"
-                            @input="() => authStore.clearErrors(['nis'])"
-                            @blur="() => onBlurField('nis')"
-                        />
-                    </IconField>
+                <FloatLabel variant="on">
+                    <InputMask
+                        id="nis"
+                        v-model="record.nis"
+                        mask="999999999999999"
+                        placeholder="Example: 123456789101112"
+                        :disabled="loading.isFormSending"
+                        class="w-full"
+                        :invalid="authStore.errors?.['nis']?.[0] ? true : false"
+                        @update:modelValue="() => authStore.clearErrors(['nis'])"
+                        @blur="() => onBlurField('nis')"
+                    />
                     <label for="nis">{{ t('account.columns.nis') }}</label>
                 </FloatLabel>
                 <Message v-if="authStore.errors?.['nis']?.[0]" severity="error" size="small">
@@ -143,7 +137,7 @@ const onBlurField = (path: string) => {
 
             <!-- RIB -->
             <div class="col-span-1">
-                <FloatLabel variant="on" class="w-full">
+                <FloatLabel variant="on">
                     <IconField>
                         <InputIcon class="pi pi-credit-card" />
                         <InputText

@@ -232,8 +232,8 @@ function confirmDeleteRecord(event: MouseEvent, planId: number) {
                     }
                     showToast('success', ACTIONS.DELETE, 'plan', 'tc');
                 })
-                .catch(() => {
-                    showToast('error', ACTIONS.DELETE, 'plan', 'tc');
+                .catch((error) => {
+                    showToast('error', ACTIONS.DELETE, 'plan', 'tc', error);
                 });
         }
     });

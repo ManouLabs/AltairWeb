@@ -4,18 +4,14 @@ import type { UploadProfilePictureResponse } from '@/types/myaccount';
 
 export const useFileableService = {
     async uploadProfilePicture(file: File): Promise<UploadProfilePictureResponse> {
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
+        const formData = new FormData();
+        formData.append('file', file);
 
-            const response = await apiClient.post<UploadProfilePictureResponse>('/api/admin/myaccount/profilepicture/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await apiClient.post<UploadProfilePictureResponse>('/api/admin/myaccount/profilepicture/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
     }
 };
