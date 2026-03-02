@@ -275,7 +275,8 @@
             "attributes": "Attributes",
             "products": "Products",
             "suppliers": "Suppliers",
-            "subscriptions": "Subscriptions"
+            "subscriptions": "Subscriptions",
+            "orders": "Orders"
         },
         "sections": {
             "main_menu": "Main Menu",
@@ -1185,6 +1186,84 @@
         },
         "actions": {
             "unlock": "Unlock More {entity}"
+        }
+    },
+    "order": {
+        "columns": {
+            "reference": "Reference",
+            "customer": "Customer",
+            "shop": "Shop",
+            "shipper": "Shipper",
+            "status": "Status",
+            "source": "Source",
+            "total": "Total",
+            "payment_status": "Payment",
+            "created_at": "Date",
+            "shipping_type": "Shipping Type",
+            "product": "Product",
+            "sku": "SKU",
+            "qty": "Qty",
+            "price": "Price",
+            "item_total": "Total",
+            "note": "Note"
+        },
+        "statuses": {
+            "pending": "Pending",
+            "confirmed": "Confirmed",
+            "shipping": "Shipping",
+            "delivered": "Delivered",
+            "cancelled": "Cancelled",
+            "returned": "Returned"
+        },
+        "payment_statuses": {
+            "paid": "Paid",
+            "not_paid": "COD (Unpaid)"
+        },
+        "shipping_types": {
+            "home_delivery": "Home Delivery",
+            "stop_desk": "Stop Desk"
+        },
+        "sources": {
+            "tiktok": "TikTok",
+            "whatsapp": "WhatsApp",
+            "facebook": "Facebook",
+            "youcan": "YouCan",
+            "shopify": "Shopify",
+            "woocommerce": "WooCommerce",
+            "direct_website": "Direct Website",
+            "other": "Other"
+        },
+        "sections": {
+            "customer_info": "Customer & Shipping",
+            "order_products": "Products",
+            "order_details": "Order Details",
+            "pricing_summary": "Pricing Summary"
+        },
+        "labels": {
+            "add_product": "Add Product",
+            "add_custom_item": "Add Custom Item",
+            "subtotal": "Subtotal",
+            "discount": "Discount",
+            "shipping_fee": "Shipping Fee",
+            "grand_total": "Grand Total",
+            "create_order": "Create Order",
+            "search_customer": "Search customer...",
+            "or_create_new": "or create new customer",
+            "quick_customer_name": "Customer name",
+            "quick_customer_phone": "Phone number",
+            "view_history": "View History",
+            "last_order": "Last order: {date}"
+        },
+        "messages": {
+            "no_products": "No products added. Click '+ Add Product' to start.",
+            "min_one_item": "At least one item is required."
+        },
+        "placeholders": {
+            "select_product": "Select a product...",
+            "scan_or_search": "Scan barcode or type SKU / Product Name...",
+            "scan_to_add": "Scan item to add...",
+            "percentage": "Discount %",
+            "amount": "Amount"
         }
     }
 }

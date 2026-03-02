@@ -59,10 +59,10 @@ export const useAuthStore = defineStore('auth', {
         isLoggedIn: (state): boolean => !!state.user
     },
     actions: {
-        async login(email: string, password: string): Promise<void> {
+        async login(email: string, password: string, remember: boolean = false): Promise<void> {
             try {
                 await apiClient.get('/sanctum/csrf-cookie');
-                await apiClient.post('/login', { email, password });
+                await apiClient.post('/login', { email, password, remember });
 
                 await this.fetchUser();
                 await useSettingStore().fetchSettings();

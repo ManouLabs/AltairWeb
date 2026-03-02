@@ -22,21 +22,95 @@ const currentPage = ref<number>(1);
 const hasMorePages = ref<boolean>(true);
 const scrollContainer = ref<HTMLElement | null>(null);
 
+const modelIconMap: Record<string, { icon: string; color: string }> = {
+    order_log: { icon: 'pi pi-receipt', color: 'bg-indigo-500' },
+    customer_log: { icon: 'pi pi-users', color: 'bg-purple-500' },
+    product_log: { icon: 'pi pi-box', color: 'bg-amber-500' },
+    shop_log: { icon: 'pi pi-shop', color: 'bg-green-500' },
+    shipper_log: { icon: 'pi pi-truck', color: 'bg-orange-500' },
+    user_log: { icon: 'pi pi-user', color: 'bg-blue-500' },
+    role_log: { icon: 'pi pi-shield', color: 'bg-sky-600' },
+    supplier_log: { icon: 'pi pi-warehouse', color: 'bg-teal-500' },
+    category_log: { icon: 'pi pi-tags', color: 'bg-pink-500' },
+    attribute_log: { icon: 'pi pi-sliders-h', color: 'bg-cyan-500' },
+    plan_log: { icon: 'pi pi-credit-card', color: 'bg-violet-500' },
+    subscription_log: { icon: 'pi pi-calendar', color: 'bg-rose-500' },
+    account_log: { icon: 'pi pi-building', color: 'bg-emerald-500' }
+};
+
+// Fields to hide (internal / not useful to display)
+const hiddenFields = new Set(['account_id', 'created_at', 'updated_at', 'deleted_at', 'id', 'remember_token', 'email_verified_at', 'password']);
+
+// Human-readable labels for common field names
+const fieldLabels: Record<string, string> = {
+    customer_id: 'Customer',
+    shop_id: 'Shop',
+    shipper_id: 'Shipper',
+    supplier_id: 'Supplier',
+    category_id: 'Category',
+    product_id: 'Product',
+    reference: 'Reference',
+    subtotal: 'Subtotal',
+    shipping_fee: 'Shipping Fee',
+    discount_amount: 'Discount',
+    discount_percentage: 'Discount %',
+    total: 'Total',
+    tracking: 'Tracking',
+    shipping_type: 'Shipping Type',
+    source: 'Source',
+    status: 'Status',
+    payment_status: 'Payment Status',
+    note: 'Note',
+    name: 'Name',
+    email: 'Email',
+    phone: 'Phone',
+    type: 'Type',
+    active: 'Active',
+    blocked: 'Blocked',
+    blocking_reason: 'Blocking Reason',
+    sku_prefix: 'SKU',
+    sale_price: 'Sale Price',
+    purchase_price: 'Purchase Price',
+    stock: 'Stock',
+    description: 'Description',
+    street: 'Street',
+    region: 'Region',
+    city: 'City',
+    is_default: 'Default',
+    quantity: 'Quantity',
+    unit_price: 'Unit Price'
+};
+
+const formatFieldName = (key: string): string => {
+    if (fieldLabels[key]) return fieldLabels[key];
+    return key
+        .replace(/_/g, ' ')
+        .replace(/\bid\b/gi, 'ID')
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+const formatValue = (value: any): string => {
+    if (value === null || value === undefined || value === '') return '—';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (value === 'true') return 'Yes';
+    if (value === 'false') return 'No';
+    return String(value);
+};
+
 const getActivityIconAndColor = (activity: Activity): { icon: string; color: string } => {
-    switch (activity.log_name) {
-        case 'user_log':
-            return { icon: 'pi pi-user', color: 'bg-blue-500' };
-        case 'role_log':
-            return { icon: 'pi pi-shield', color: 'bg-sky-600' };
-        case 'shop_log':
-            return { icon: 'pi pi-shop', color: 'bg-green-500' };
-        case 'shipper_log':
-            return { icon: 'pi pi-truck', color: 'bg-orange-500' };
-        case 'customer_log':
-            return { icon: 'pi pi-users', color: 'bg-purple-500' };
-        default:
-            return { icon: 'pi pi-info-circle', color: 'bg-gray-600' };
+    return modelIconMap[activity.log_name] || { icon: 'pi pi-info-circle', color: 'bg-gray-600' };
+};
+
+const getFilteredChanges = (properties: any): { key: string; label: string; oldVal: string; newVal: string }[] => {
+    if (!properties?.attributes) return [];
+    const changes: { key: string; label: string; oldVal: string; newVal: string }[] = [];
+    for (const key of Object.keys(properties.attributes)) {
+        if (hiddenFields.has(key)) continue;
+        const newVal = formatValue(properties.attributes[key]);
+        const oldVal = properties.old ? formatValue(properties.old[key]) : '';
+        changes.push({ key, label: formatFieldName(key), oldVal, newVal });
     }
+    return changes;
 };
 
 const transformActivities = (rawActivities: Activity[]): ActivityWithUI[] => {
@@ -157,13 +231,18 @@ onMounted(async () => {
                         <div class="text-sm text-gray-500 mb-2 font-bold -mt-2">
                             {{ slotProps.item.created_at }}
                         </div>
-                        <!-- Show attribute changes if present -->
-                        <div v-if="slotProps.item.properties && slotProps.item.properties.attributes && slotProps.item.properties.old" class="bg-gray-50 dark:bg-surface-800 rounded p-3 text-sm">
-                            <div v-for="(newValue, key) in slotProps.item.properties.attributes" :key="key" class="mb-1">
-                                <span class="font-medium">{{ key }}:</span>
-                                <span class="text-amber-600 ml-1">{{ slotProps.item.properties.old[key] }}</span>
-                                <span v-if="slotProps.item.properties.old[key]" class="text-gray-400 mx-1">→</span>
-                                <span v-if="slotProps.item.properties.old[key]" class="text-primary">{{ newValue }}</span>
+                        <!-- Show attribute changes with human-readable labels -->
+                        <div v-if="getFilteredChanges(slotProps.item.properties).length > 0" class="bg-gray-50 dark:bg-surface-800 rounded-lg p-3 text-sm">
+                            <div v-for="change in getFilteredChanges(slotProps.item.properties)" :key="change.key" class="mb-1 last:mb-0">
+                                <span class="font-medium text-surface-700 dark:text-surface-200">{{ change.label }}:</span>
+                                <template v-if="change.oldVal && change.oldVal !== '—'">
+                                    <span class="text-amber-600 ml-1">{{ change.oldVal }}</span>
+                                    <span class="text-gray-400 mx-1">→</span>
+                                    <span class="text-primary">{{ change.newVal }}</span>
+                                </template>
+                                <template v-else>
+                                    <span class="text-primary ml-1">{{ change.newVal }}</span>
+                                </template>
                             </div>
                         </div>
                     </div>

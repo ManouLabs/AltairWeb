@@ -17,6 +17,12 @@ const mainMenu = computed(() => [
         visible: can('view_dashboard')
     },
     {
+        label: t('navigation.side_bar.orders'),
+        icon: 'pi pi-fw pi-shopping-bag',
+        to: '/admin/orders',
+        visible: can('view_orders')
+    },
+    {
         label: t('navigation.side_bar.customers'),
         icon: 'pi pi-fw pi-id-card',
         to: '/admin/customers',

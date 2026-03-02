@@ -10,6 +10,7 @@ const loading = useLoading();
 const router = useRouter();
 const email = ref('');
 const password = ref('');
+const rememberMe = ref(false);
 const authStore = useAuthStore();
 
 // Redirect to admin if already logged in
@@ -23,7 +24,7 @@ onMounted(() => {
 const loginUser = async () => {
     try {
         loading.startFormSending();
-        await authStore.login(email.value, password.value);
+        await authStore.login(email.value, password.value, rememberMe.value);
         authStore.redirectUser();
     } catch (error) {
         // If it's a specific validation error pushed by backend check
@@ -148,7 +149,7 @@ const loginUser = async () => {
 
                     <!-- Remember Me -->
                     <div class="flex items-center">
-                        <Checkbox inputId="remember" :binary="true" class="!mr-2" />
+                        <Checkbox inputId="remember" v-model="rememberMe" :binary="true" class="!mr-2" />
                         <label for="remember" class="text-sm text-surface-600 dark:text-surface-400 cursor-pointer">
                             {{ $t('login.remember_me') || 'Remember this device' }}
                         </label>

@@ -33,3 +33,6 @@ export * from './product';
 
 // Supplier types
 export * from './supplier';
+
+// Order types
+export * from './order';

@@ -288,6 +288,7 @@ onMounted(async () => {
                                     class="border-0 bg-transparent shadow-none text-sm w-44 dark:!bg-transparent"
                                     :invalid="authStore.errors?.[`contactMethods.${methodIndex}.value`]?.[0] ? true : false"
                                     @input="() => authStore.clearErrors([`contactMethods.${methodIndex}.value`])"
+                                    @blur="() => onBlurField(`contactMethods.${methodIndex}.value`)"
                                 />
                             </IconField>
                             <label :for="`method_${methodIndex}`">{{ contactMethodOptions.find((o) => o.value === contactMethod.type)?.label || contactMethod.type }}</label>

@@ -219,7 +219,12 @@ onMounted(() => {
                                 class="w-full"
                                 dateFormat="mm/dd/yy"
                                 :invalid="authStore.errors?.['starts_at']?.[0] ? true : false"
-                                @date-select="() => authStore.clearErrors(['starts_at'])"
+                                @date-select="
+                                    () => {
+                                        authStore.clearErrors(['starts_at']);
+                                        onBlurField('starts_at');
+                                    }
+                                "
                             />
                         </IconField>
                         <label for="starts_at">{{ t('subscription.columns.starts_at') }} *</label>
@@ -231,7 +236,16 @@ onMounted(() => {
 
                 <!-- Renewal Cycle -->
                 <div>
-                    <SelectButton v-model="record.billing_period" :options="billingPeriodOptions" optionLabel="label" optionValue="value" :allowEmpty="false" class="w-full" :disabled="loading.isFormSending">
+                    <SelectButton
+                        v-model="record.billing_period"
+                        :options="billingPeriodOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        :allowEmpty="false"
+                        class="w-full"
+                        :disabled="loading.isFormSending"
+                        @change="() => onBlurField('billing_period')"
+                    >
                         <template #option="{ option }">
                             {{ t(option.label) }}
                         </template>

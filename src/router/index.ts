@@ -169,6 +169,30 @@ const adminRoutes: RouteRecordRaw[] = [
         name: 'suppliers',
         component: () => import('@/views/admin/suppliers/Suppliers.vue'),
         meta: { requiresAuth: true, requiresPermission: 'view_suppliers' }
+    },
+    {
+        path: 'orders',
+        name: 'orders',
+        component: () => import('@/views/admin/orders/Orders.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_orders' }
+    },
+    {
+        path: 'orders/create',
+        name: 'order-create',
+        component: () => import('@/views/admin/orders/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'create_orders', requiresQuota: 'orders', activeMenu: '/admin/orders' }
+    },
+    {
+        path: 'orders/:id/edit',
+        name: 'order-edit',
+        component: () => import('@/views/admin/orders/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'update_orders', activeMenu: '/admin/orders' }
+    },
+    {
+        path: 'orders/:id',
+        name: 'order-show',
+        component: () => import('@/views/admin/orders/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_orders', activeMenu: '/admin/orders' }
     }
 ];
 
