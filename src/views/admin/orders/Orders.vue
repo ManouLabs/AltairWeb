@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
+import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
+import ReputationBadge from '@/components/common/ReputationBadge.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
 import { useLock } from '@/composables/useLock';
@@ -44,7 +46,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 );
 
 const { highlights, markHighlight, getRowClass } = useRowEffects();
-const defaultFields = ['reference', 'customer', 'status', 'source', 'total', 'payment_status', 'created_at'];
+const defaultFields = ['reference', 'customer', 'products', 'status', 'source', 'shipping_type', 'shop', 'shipper', 'subtotal', 'shipping_fee', 'total', 'payment_status'];
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 interface Column {
@@ -157,6 +159,8 @@ function confirmDeleteRecord(event: MouseEvent | null, orderIds: number[]): void
     });
 }
 
+// --- Status helpers ---
+
 const statusSeverity = (status: string) => {
     const map: Record<string, string> = {
         pending: 'warn',
@@ -169,8 +173,46 @@ const statusSeverity = (status: string) => {
     return map[status] || 'secondary';
 };
 
+const statusIcon = (status: string) => {
+    const map: Record<string, string> = {
+        pending: 'pi pi-clock',
+        confirmed: 'pi pi-check',
+        shipping: 'pi pi-truck',
+        delivered: 'pi pi-check-circle',
+        cancelled: 'pi pi-times-circle',
+        returned: 'pi pi-replay'
+    };
+    return map[status] || 'pi pi-question-circle';
+};
+
 const paymentSeverity = (status: string) => {
     return status === 'paid' ? 'success' : 'warn';
+};
+
+const paymentIcon = (status: string) => {
+    return status === 'paid' ? 'pi pi-check-circle' : 'pi pi-clock';
+};
+
+// --- Source icon helper ---
+
+const sourceIcon = (source: string) => {
+    const map: Record<string, string> = {
+        tiktok: 'pi pi-tiktok',
+        whatsapp: 'pi pi-whatsapp',
+        facebook: 'pi pi-facebook',
+        youcan: 'pi pi-shopping-cart',
+        shopify: 'pi pi-shopping-cart',
+        woocommerce: 'pi pi-shopping-cart',
+        direct_website: 'pi pi-globe',
+        other: 'pi pi-ellipsis-h'
+    };
+    return map[source] || 'pi pi-question-circle';
+};
+
+// --- Shipping type icon helper ---
+
+const shippingTypeIcon = (type: string) => {
+    return type === 'home_delivery' ? 'pi pi-home' : 'pi pi-building';
 };
 
 onMounted(() => {
@@ -192,7 +234,7 @@ onUnmounted(() => {
             </template>
         </PageHeader>
 
-        <DataTableSkeleton v-if="!dataLoaded" :columns="7" has-tag-column />
+        <DataTableSkeleton v-if="!dataLoaded" :columns="12" has-tag-column />
         <template v-else>
             <DataTable
                 ref="recordDataTable"
@@ -224,7 +266,7 @@ onUnmounted(() => {
                 rowHover
                 size="small"
                 :pt="{
-                    table: { style: 'min-width: 60rem' },
+                    table: { style: 'min-width: 90rem' },
                     bodyrow: ({ props }: { props: { frozenRow: boolean } }) => ({
                         class: [{ 'font-bold': props.frozenRow }]
                     })
@@ -285,7 +327,10 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.reference || highlights[data.id] }">
-                                <span class="font-mono text-primary font-semibold cursor-pointer hover:underline" @click="viewRecord(data)">{{ data.reference }}</span>
+                                <div>
+                                    <span class="font-mono text-primary font-semibold cursor-pointer hover:underline" @click="viewRecord(data)">{{ data.reference }}</span>
+                                    <div class="text-xs text-surface-400 mt-0.5">{{ data.created_at ? new Date(data.created_at).toLocaleDateString() : '—' }}</div>
+                                </div>
                                 <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
                             </div>
                         </DataCell>
@@ -293,38 +338,157 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- Customer Column -->
-                <Column columnKey="customer" field="customer" v-if="selectedColumns.some((c: Column) => c.field === 'customer')" class="min-w-40">
+                <Column columnKey="customer" field="customer" v-if="selectedColumns.some((c: Column) => c.field === 'customer')" class="min-w-52">
                     <template #header>
                         <HeaderCell :text="t('order.columns.customer')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <span v-if="data.customer">{{ data.customer.name }}</span>
+                            <div v-if="data.customer" class="flex items-start gap-2.5">
+                                <InitialsAvatar :name="data.customer.name" size="sm" class="mt-0.5" />
+                                <div class="flex-1 min-w-0">
+                                    <span class="font-semibold text-sm text-surface-800 dark:text-surface-100 truncate block">{{ data.customer.name }}</span>
+                                    <div class="flex items-center gap-2 text-[10px] text-surface-400 mt-0.5">
+                                        <span v-if="data.customer.phone || data.customer.contactMethods?.find((c: any) => c.type === 'phone')" class="flex items-center gap-0.5">
+                                            <i class="pi pi-phone text-[9px]"></i> {{ data.customer.phone || data.customer.contactMethods?.find((c: any) => c.type === 'phone')?.value }}
+                                        </span>
+                                        <span v-if="data.customer.email || data.customer.contactMethods?.find((c: any) => c.type === 'email')" class="flex items-center gap-0.5 truncate">
+                                            <i class="pi pi-envelope text-[9px]"></i> {{ data.customer.email || data.customer.contactMethods?.find((c: any) => c.type === 'email')?.value }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <span v-else class="text-muted-color">—</span>
+                            <!-- Reputation bar -->
+                            <div v-if="data.customer" class="mt-1">
+                                <ReputationBadge :reputation="data.customer.reputation" size="sm" />
+                            </div>
+                        </DataCell>
+                    </template>
+                </Column>
+
+                <!-- 5. Products Column -->
+                <Column columnKey="products" field="products" v-if="selectedColumns.some((c: Column) => c.field === 'products')" class="min-w-44">
+                    <template #header>
+                        <HeaderCell :text="t('order.columns.products')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div v-if="data.items?.length" class="flex flex-col gap-1">
+                                <div v-for="(item, idx) in data.items.slice(0, 2)" :key="idx" class="flex items-center gap-2">
+                                    <i class="pi pi-box text-surface-400 text-xs flex-shrink-0"></i>
+                                    <div class="flex-1 min-w-0">
+                                        <span class="text-xs font-medium text-surface-700 dark:text-surface-200 truncate block">{{ item.product_name }}</span>
+                                        <span v-if="item.variant_label" class="text-[10px] text-surface-400">{{ item.variant_label }}</span>
+                                    </div>
+                                    <span class="text-[10px] text-surface-400 flex-shrink-0">×{{ item.quantity }}</span>
+                                </div>
+                                <span v-if="data.items.length > 2" class="text-[10px] text-primary font-medium">+{{ data.items.length - 2 }} more</span>
+                            </div>
                             <span v-else class="text-muted-color">—</span>
                         </DataCell>
                     </template>
                 </Column>
 
-                <!-- Status Column -->
+                <!-- 6. Status Column (with icon) -->
                 <Column columnKey="status" field="status" v-if="selectedColumns.some((c: Column) => c.field === 'status')" sortable class="min-w-28">
                     <template #header>
                         <HeaderCell :text="t('order.columns.status')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <Tag :value="t(`order.statuses.${data.status}`)" :severity="statusSeverity(data.status)" />
+                            <Tag :value="t(`order.statuses.${data.status}`)" :severity="statusSeverity(data.status)" :icon="statusIcon(data.status)" />
                         </DataCell>
                     </template>
                 </Column>
 
-                <!-- Source Column -->
+                <!-- 3. Source Column (with icon) -->
                 <Column columnKey="source" field="source" v-if="selectedColumns.some((c: Column) => c.field === 'source')" sortable class="min-w-28">
                     <template #header>
                         <HeaderCell :text="t('order.columns.source')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <span class="capitalize">{{ t(`order.sources.${data.source}`) }}</span>
+                            <div v-if="data.source" class="flex items-center gap-2">
+                                <i :class="sourceIcon(data.source)" class="text-surface-500"></i>
+                                <span class="capitalize text-sm">{{ t(`order.sources.${data.source}`) }}</span>
+                            </div>
+                            <span v-else class="text-muted-color">—</span>
+                        </DataCell>
+                    </template>
+                </Column>
+
+                <!-- 4. Shipping Type Column (with icon) -->
+                <Column columnKey="shipping_type" field="shipping_type" v-if="selectedColumns.some((c: Column) => c.field === 'shipping_type')" class="min-w-32">
+                    <template #header>
+                        <HeaderCell :text="t('order.columns.shipping_type')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div v-if="data.shipping_type" class="flex items-center gap-2">
+                                <i :class="shippingTypeIcon(data.shipping_type)" class="text-surface-500"></i>
+                                <span class="text-sm">{{ t(`order.shipping_types.${data.shipping_type}`) }}</span>
+                            </div>
+                            <span v-else class="text-muted-color">—</span>
+                        </DataCell>
+                    </template>
+                </Column>
+
+                <!-- 1. Shop Column (with icon, no image field exists) -->
+                <Column columnKey="shop" field="shop" v-if="selectedColumns.some((c: Column) => c.field === 'shop')" class="min-w-28">
+                    <template #header>
+                        <HeaderCell :text="t('order.columns.shop')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div v-if="data.shop" class="flex items-center gap-2">
+                                <i class="pi pi-shop text-surface-500"></i>
+                                <span class="text-sm">{{ data.shop.name }}</span>
+                            </div>
+                            <span v-else class="text-muted-color">—</span>
+                        </DataCell>
+                    </template>
+                </Column>
+
+                <!-- 2. Shipper Column (with icon) -->
+                <Column columnKey="shipper" field="shipper" v-if="selectedColumns.some((c: Column) => c.field === 'shipper')" class="min-w-28">
+                    <template #header>
+                        <HeaderCell :text="t('order.columns.shipper')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <div v-if="data.shipper" class="flex items-center gap-2">
+                                <i class="pi pi-truck text-surface-500"></i>
+                                <div>
+                                    <span class="text-sm block">{{ data.shipper.name }}</span>
+                                    <span v-if="data.shipper.type" class="text-[10px] text-surface-400 capitalize">{{ data.shipper.type }}</span>
+                                </div>
+                            </div>
+                            <span v-else class="text-muted-color">—</span>
+                        </DataCell>
+                    </template>
+                </Column>
+
+                <!-- 9. Subtotal Column -->
+                <Column columnKey="subtotal" field="subtotal" v-if="selectedColumns.some((c: Column) => c.field === 'subtotal')" sortable class="min-w-28">
+                    <template #header>
+                        <HeaderCell :text="t('order.columns.subtotal')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <span class="text-sm">{{ Number(data.subtotal).toLocaleString('fr-DZ') }} DA</span>
+                        </DataCell>
+                    </template>
+                </Column>
+
+                <!-- 8. Shipping Fee Column -->
+                <Column columnKey="shipping_fee" field="shipping_fee" v-if="selectedColumns.some((c: Column) => c.field === 'shipping_fee')" sortable class="min-w-28">
+                    <template #header>
+                        <HeaderCell :text="t('order.columns.shipping_fee')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell>
+                            <span class="text-sm">{{ Number(data.shipping_fee).toLocaleString('fr-DZ') }} DA</span>
                         </DataCell>
                     </template>
                 </Column>
@@ -341,26 +505,14 @@ onUnmounted(() => {
                     </template>
                 </Column>
 
-                <!-- Payment Status Column -->
+                <!-- 7. Payment Status Column (with icon) -->
                 <Column columnKey="payment_status" field="payment_status" v-if="selectedColumns.some((c: Column) => c.field === 'payment_status')" class="min-w-28">
                     <template #header>
                         <HeaderCell :text="t('order.columns.payment_status')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <Tag :value="t(`order.payment_statuses.${data.payment_status}`)" :severity="paymentSeverity(data.payment_status)" />
-                        </DataCell>
-                    </template>
-                </Column>
-
-                <!-- Created At Column -->
-                <Column columnKey="created_at" field="created_at" v-if="selectedColumns.some((c: Column) => c.field === 'created_at')" sortable class="min-w-36">
-                    <template #header>
-                        <HeaderCell :text="t('order.columns.created_at')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
-                    </template>
-                    <template #body="{ data }">
-                        <DataCell>
-                            <span>{{ data.created_at ? new Date(data.created_at).toLocaleDateString() : '—' }}</span>
+                            <Tag :value="t(`order.payment_statuses.${data.payment_status}`)" :severity="paymentSeverity(data.payment_status)" :icon="paymentIcon(data.payment_status)" />
                         </DataCell>
                     </template>
                 </Column>

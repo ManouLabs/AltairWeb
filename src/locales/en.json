@@ -144,7 +144,9 @@
             "discard_changes": "Discard Changes",
             "street": "Street Address",
             "region": "Region / State",
-            "city": "City"
+            "city": "City",
+            "in_stock": "in stock",
+            "out_of_stock": "Out of stock"
         },
         "icon_picker": {
             "title": "Icon & Color",
@@ -1205,7 +1207,10 @@
             "qty": "Qty",
             "price": "Price",
             "item_total": "Total",
-            "note": "Note"
+            "note": "Note",
+            "subtotal": "Subtotal",
+            "shipping_fee": "Shipping Fee",
+            "products": "Products"
         },
         "statuses": {
             "pending": "Pending",

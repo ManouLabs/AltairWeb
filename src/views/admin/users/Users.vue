@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
+import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -73,31 +74,6 @@ if (authStore.user?.roles?.includes('Super Admin')) {
 const { lockedRow, toggleLock, frozenColumns, toggleColumnFrozen } = useLock(defaultFields, records);
 
 const record = ref<User | null>(null);
-
-const avatarColors: string[] = ['#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#9333EA'];
-
-const hashString = (s: string | null | undefined): number => {
-    if (!s) return 0;
-    let h = 0;
-    for (let i = 0; i < s.length; i++) {
-        h = (h << 5) - h + s.charCodeAt(i);
-        h |= 0;
-    }
-    return Math.abs(h);
-};
-
-const getInitials = (name: string | null | undefined): string => {
-    if (!name) return '';
-    const parts = String(name).trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return '';
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-};
-
-const getAvatarColor = (name: string | null | undefined): string => {
-    const idx = hashString(name || '') % avatarColors.length;
-    return avatarColors[idx];
-};
 
 interface Column {
     field: string;
@@ -428,7 +404,7 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }">
                                 <div class="flex items-center gap-2">
-                                    <Avatar :label="getInitials(data.name)" shape="circle" :style="{ backgroundColor: getAvatarColor(data.name), color: '#fff' }" />
+                                    <InitialsAvatar :name="data.name" />
                                     {{ data.name }}
                                 </div>
                                 <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />

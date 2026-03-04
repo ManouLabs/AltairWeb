@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
+import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
 import ActiveToggleButton from '@/components/ActiveToggleButton.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -484,12 +485,7 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <div class="flex items-center gap-3">
-                            <div
-                                class="w-9 h-9 rounded-lg flex items-center justify-center text-[0.7rem] font-bold tracking-tight shrink-0"
-                                :style="{ backgroundColor: `hsl(${(data.account_id * 47) % 360}, 65%, 88%)`, color: `hsl(${(data.account_id * 47) % 360}, 70%, 35%)` }"
-                            >
-                                {{ data.account_initials || '??' }}
-                            </div>
+                            <InitialsAvatar :name="data.account_name" shape="rounded" />
                             <div class="flex flex-col min-w-0">
                                 <span class="text-sm font-semibold text-surface-800 dark:text-surface-100 whitespace-nowrap overflow-hidden text-ellipsis" :class="{ 'font-bold': frozenColumns.account_name || highlights[data.id] }">
                                     {{ data.account_name }}

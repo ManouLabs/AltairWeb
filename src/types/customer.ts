@@ -38,6 +38,12 @@ export interface CustomerData {
     blocking_reason: string | null;
     addresses: Address[];
     contactMethods: ContactMethod[];
+    reputation?: {
+        level: string;
+        percentage: number | null;
+        delivered: number;
+        returned: number;
+    } | null;
     created_at?: string;
     updated_at?: string;
 }

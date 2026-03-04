@@ -44,12 +44,12 @@ function formatCurrency(value: number | null): string {
 
 const totalVariantStock = computed(() => {
     if (!product.value?.variants) return 0;
-    return product.value.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+    return product.value.variants.reduce((sum, v) => sum + (v.available_stock ?? v.stock ?? 0), 0);
 });
 
 const displayStock = computed(() => {
     if (!product.value) return 0;
-    return product.value.stock_type === 'variant' ? totalVariantStock.value : product.value.total_stock;
+    return product.value.stock_type === 'variant' ? totalVariantStock.value : (product.value.available_stock ?? product.value.total_stock);
 });
 
 const stockSeverity = computed(() => {
@@ -288,7 +288,11 @@ onMounted(loadProduct);
                         </Column>
                         <Column :header="t('product.form.stock_col')">
                             <template #body="{ data }">
-                                <Tag :value="data.stock + ' ' + t('product.labels.units')" :severity="data.stock === 0 ? 'danger' : data.stock <= (product?.low_stock_threshold || 10) ? 'warn' : 'success'" class="!text-xs" />
+                                <Tag
+                                    :value="(data.available_stock ?? data.stock) + ' ' + t('product.labels.units')"
+                                    :severity="(data.available_stock ?? data.stock) === 0 ? 'danger' : (data.available_stock ?? data.stock) <= (product?.low_stock_threshold || 10) ? 'warn' : 'success'"
+                                    class="!text-xs"
+                                />
                             </template>
                         </Column>
                     </DataTable>

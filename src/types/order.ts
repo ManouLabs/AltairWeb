@@ -23,7 +23,7 @@ export interface OrderData {
     total: number;
     tracking: string | null;
     shipping_type: string;
-    source: string;
+    source: string | null;
     status: string;
     payment_status: string;
     note: string | null;
@@ -52,7 +52,7 @@ export interface OrderFormData {
     discount_amount: number;
     discount_percentage: number;
     shipping_type: string;
-    source: string;
+    source: string | null;
     status: string;
     payment_status: string;
     note: string;
@@ -68,6 +68,7 @@ export interface OrderItemFormData {
     sku: string | null;
     quantity: number;
     unit_price: number;
+    stock?: number | null;
 }
 
 export interface OrdersResponse {

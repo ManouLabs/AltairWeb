@@ -231,9 +231,9 @@ function formatCurrency(value: number | null): string {
 
 function getStockDisplay(data: ProductData): number {
     if (data.stock_type === 'variant' && data.variants) {
-        return data.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+        return data.variants.reduce((sum, v) => sum + (v.available_stock ?? v.stock ?? 0), 0);
     }
-    return data.total_stock || 0;
+    return data.available_stock ?? data.total_stock ?? 0;
 }
 
 function getStockSeverity(data: ProductData): string {

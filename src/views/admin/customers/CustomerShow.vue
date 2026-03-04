@@ -7,6 +7,8 @@ import type { CustomerData, Address, City, Region, ContactMethod } from '@/types
 import { onMounted, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
+import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
+import { useReputation } from '@/composables/useReputation';
 
 const route = useRoute();
 const router = useRouter();
@@ -54,30 +56,12 @@ function getEmail(contactMethods: ContactMethod[]): string | null {
     return email?.value || null;
 }
 
-// --- Reputation (fake data — orders module not yet built) ---
+// --- Reputation (from API) ---
 
-interface ReputationData {
-    level: 'excellent' | 'good' | 'medium' | 'poor' | 'new';
-    label: string;
-    percentage: number | null;
-    delivered: number;
-    returned: number;
-    color: string;
-    bgColor: string;
-}
+const { mapReputation } = useReputation();
 
-const reputation = computed<ReputationData>(() => {
-    if (!customer.value) {
-        return { level: 'new', label: t('customer.reputation.levels.new'), percentage: null, delivered: 0, returned: 0, color: '#64748b', bgColor: '#f1f5f9' };
-    }
-    const fakeReputations: ReputationData[] = [
-        { level: 'excellent', label: t('customer.reputation.levels.excellent'), percentage: 92, delivered: 47, returned: 4, color: '#10b981', bgColor: '#d1fae5' },
-        { level: 'good', label: t('customer.reputation.levels.good'), percentage: 78, delivered: 35, returned: 10, color: '#3b82f6', bgColor: '#dbeafe' },
-        { level: 'medium', label: t('customer.reputation.levels.medium'), percentage: 56, delivered: 22, returned: 17, color: '#f59e0b', bgColor: '#fef3c7' },
-        { level: 'poor', label: t('customer.reputation.levels.low'), percentage: 32, delivered: 8, returned: 17, color: '#ef4444', bgColor: '#fee2e2' },
-        { level: 'new', label: t('customer.reputation.levels.new'), percentage: null, delivered: 0, returned: 0, color: '#64748b', bgColor: '#f1f5f9' }
-    ];
-    return fakeReputations[customer.value.id % fakeReputations.length];
+const reputation = computed(() => {
+    return mapReputation(customer.value?.reputation);
 });
 
 // --- Fake order stats (orders module not yet built) ---
@@ -200,13 +184,9 @@ function editCustomer(): void {
                             <div class="flex flex-col items-center">
                                 <!-- Avatar -->
                                 <div class="relative">
-                                    <Avatar
-                                        icon="pi pi-user"
-                                        size="xlarge"
-                                        shape="circle"
-                                        :style="{ backgroundColor: '#d1fae5', color: '#059669', width: '6rem', height: '6rem', fontSize: '2rem' }"
-                                        class="!shadow-lg !border-4 !border-white dark:!border-surface-800"
-                                    />
+                                    <div class="flex items-center justify-center rounded-full !shadow-lg !border-4 !border-white dark:!border-surface-800" style="width: 6rem; height: 6rem">
+                                        <InitialsAvatar :name="customer.name" size="lg" class="!w-full !h-full !text-2xl" />
+                                    </div>
                                     <!-- Online status indicator -->
                                     <span class="absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white dark:border-surface-800" :class="customer.status === 'active' ? 'bg-green-500' : 'bg-red-500'"></span>
                                 </div>

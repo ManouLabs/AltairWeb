@@ -16,6 +16,8 @@ export interface ProductVariantData {
     purchase_price: number;
     sale_price: number;
     stock: number;
+    reserved_stock: number;
+    available_stock: number;
 }
 
 export interface ProductImageData {
@@ -41,6 +43,8 @@ export interface ProductData {
     purchase_price: number | null;
     sale_price: number | null;
     total_stock: number;
+    reserved_stock: number;
+    available_stock: number;
     active: boolean;
     category: { id: number; name: string; icon?: string; icon_color?: string } | null;
     supplier: { id: number; name: string } | null;

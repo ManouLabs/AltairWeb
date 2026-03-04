@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
+import ReputationBadge from '@/components/common/ReputationBadge.vue';
+import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
@@ -276,73 +278,6 @@ function getEmail(contactMethods: ContactMethod[]): string | null {
     return email?.value || null;
 }
 
-// Reputation system types and helper
-interface ReputationData {
-    level: 'excellent' | 'good' | 'medium' | 'poor' | 'new';
-    label: string;
-    percentage: number | null;
-    delivered: number;
-    returned: number;
-    color: string;
-    bgColor: string;
-}
-
-// Get reputation data for a customer (FAKE DATA for UI testing)
-function getReputation(customerId: number): ReputationData {
-    // TODO: Replace with real order stats once orders module is built
-    // Fake data: cycles through different reputation levels for UI testing
-    const fakeReputations: ReputationData[] = [
-        {
-            level: 'excellent',
-            label: t('customer.reputation.levels.excellent'),
-            percentage: 95,
-            delivered: 47,
-            returned: 3,
-            color: '#10b981', // green
-            bgColor: '#d1fae5'
-        },
-        {
-            level: 'good',
-            label: t('customer.reputation.levels.good'),
-            percentage: 78,
-            delivered: 35,
-            returned: 10,
-            color: '#3b82f6', // blue
-            bgColor: '#dbeafe'
-        },
-        {
-            level: 'medium',
-            label: t('customer.reputation.levels.medium'),
-            percentage: 56,
-            delivered: 22,
-            returned: 17,
-            color: '#f59e0b', // amber
-            bgColor: '#fef3c7'
-        },
-        {
-            level: 'poor',
-            label: t('customer.reputation.levels.low'),
-            percentage: 32,
-            delivered: 8,
-            returned: 17,
-            color: '#ef4444', // red
-            bgColor: '#fee2e2'
-        },
-        {
-            level: 'new',
-            label: t('customer.reputation.levels.new'),
-            percentage: null,
-            delivered: 0,
-            returned: 0,
-            color: '#64748b', // gray
-            bgColor: '#f1f5f9'
-        }
-    ];
-
-    // Return reputation based on customer ID (for variety in testing)
-    return fakeReputations[customerId % fakeReputations.length];
-}
-
 onUnmounted(() => {
     if (subscription.value) {
         subscription.value.stopListening('DataStream');
@@ -483,7 +418,7 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2 cursor-pointer" :class="{ 'font-bold': frozenColumns.name || highlights[data.id] }" @click="viewRecord(data)">
-                                <i class="pi pi-user"></i>
+                                <InitialsAvatar :name="data.name" size="sm" />
                                 <div>
                                     <div class="font-semibold text-surface-800 dark:text-surface-100">{{ data.name }}</div>
                                     <div class="text-xs text-surface-400 mt-0.5">
@@ -574,34 +509,7 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div class="reputation-cell" :class="{ 'font-bold': frozenColumns.reputation }">
-                                <!-- Reputation label and percentage -->
-                                <div class="reputation-header">
-                                    <span class="reputation-label" :style="{ color: getReputation(data.id).color }">
-                                        {{ getReputation(data.id).label }}
-                                        <template v-if="getReputation(data.id).percentage !== null">({{ getReputation(data.id).percentage }}%)</template>
-                                    </span>
-                                </div>
-                                <!-- Progress bar -->
-                                <div class="reputation-bar" :style="{ backgroundColor: getReputation(data.id).bgColor }">
-                                    <div
-                                        class="reputation-bar-fill"
-                                        :style="{
-                                            width: getReputation(data.id).percentage !== null ? getReputation(data.id).percentage + '%' : '0%',
-                                            backgroundColor: getReputation(data.id).color
-                                        }"
-                                    ></div>
-                                </div>
-                                <!-- Stats: delivered / returned -->
-                                <div v-if="getReputation(data.id).level !== 'new'" class="reputation-stats">
-                                    <span class="stat-delivered"> <i class="pi pi-check-circle"></i>{{ getReputation(data.id).delivered }} </span>
-                                    <span class="stat-returned"> <i class="pi pi-times-circle"></i>{{ getReputation(data.id).returned }} </span>
-                                </div>
-                                <!-- No history message for new customers -->
-                                <div v-else class="reputation-no-history">
-                                    {{ t('customer.reputation.labels.no_history') }}
-                                </div>
-                            </div>
+                            <ReputationBadge :reputation="data.reputation" size="lg" />
                         </DataCell>
                     </template>
                 </Column>
