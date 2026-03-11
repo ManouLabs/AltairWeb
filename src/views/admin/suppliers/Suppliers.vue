@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BulkActionBar from '@/components/BulkActionBar.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import FormHeader from '@/components/FormHeader.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
@@ -10,7 +11,7 @@ import { useSupplierService } from '@/services/useSupplierService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
-import type { SupplierData } from '@/types/supplier';
+import { SUPPLIER_TYPES, type SupplierData, type SupplierType } from '@/types/supplier';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { useDialog } from 'primevue/usedialog';
@@ -191,6 +192,7 @@ function confirmDeleteRecord(event: MouseEvent | null, supplierIds: number[]): v
                         const index = findRecordIndex(records, id);
                         if (index !== -1) records.value.splice(index, 1);
                     });
+                    selectedRecords.value = [];
                     showToast('success', ACTIONS.DELETE, 'supplier', 'tc');
                 })
                 .catch((error: any) => {
@@ -201,6 +203,11 @@ function confirmDeleteRecord(event: MouseEvent | null, supplierIds: number[]): v
                 });
         }
     });
+}
+
+// Helper to get icon and color for supplier type
+function getTypeIcon(type: string): { icon: string; color: string } {
+    return SUPPLIER_TYPES[type as SupplierType] || { icon: 'pi pi-tag', color: 'text-gray-400' };
 }
 
 // Helper to get first contact method value by type
@@ -284,20 +291,6 @@ onUnmounted(() => {
                     <Toolbar class="w-full">
                         <template #start>
                             <div class="flex space-x-2">
-                                <Button
-                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.supplier') })"
-                                    :label="t('common.labels.delete_selected')"
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    @click="
-                                        confirmDeleteRecord(
-                                            $event,
-                                            selectedRecords.map((record: SupplierData) => record.id)
-                                        )
-                                    "
-                                    outlined
-                                    :disabled="!selectedRecords || !selectedRecords.length"
-                                />
                                 <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                             </div>
                         </template>
@@ -396,7 +389,7 @@ onUnmounted(() => {
                     <template #body="{ data }">
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.type }">
-                                <i class="pi pi-tag text-color-secondary"></i>
+                                <i :class="[getTypeIcon(data.type).icon, getTypeIcon(data.type).color]"></i>
                                 <span>{{ data.type_label }}</span>
                             </div>
                         </DataCell>
@@ -405,15 +398,7 @@ onUnmounted(() => {
                         <InputGroup>
                             <Select
                                 v-model="filterModel.value"
-                                :options="[
-                                    { label: t('supplier.types.wholesaler'), value: 'wholesaler' },
-                                    { label: t('supplier.types.manufacturer'), value: 'manufacturer' },
-                                    { label: t('supplier.types.importer'), value: 'importer' },
-                                    { label: t('supplier.types.distributor'), value: 'distributor' },
-                                    { label: t('supplier.types.service_provider'), value: 'service_provider' },
-                                    { label: t('supplier.types.agent_broker'), value: 'agent_broker' },
-                                    { label: t('supplier.types.other'), value: 'other' }
-                                ]"
+                                :options="Object.keys(SUPPLIER_TYPES).map((key) => ({ label: t(`supplier.types.${key}`), value: key }))"
                                 optionLabel="label"
                                 optionValue="value"
                                 :placeholder="t('common.labels.select_type')"
@@ -519,6 +504,18 @@ onUnmounted(() => {
                     </div>
                 </template>
             </DataTable>
+
+            <BulkActionBar
+                :selectedCount="selectedRecords.length"
+                :entityLabel="t('entity.suppliers').toLowerCase()"
+                :actions="[]"
+                @delete="
+                    confirmDeleteRecord(
+                        null,
+                        selectedRecords.map((r: SupplierData) => r.id)
+                    )
+                "
+            />
         </template>
     </div>
 </template>

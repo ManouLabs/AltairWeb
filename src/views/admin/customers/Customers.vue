@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BulkActionBar from '@/components/BulkActionBar.vue';
+import type { BulkAction } from '@/components/BulkActionBar.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import ReputationBadge from '@/components/common/ReputationBadge.vue';
 import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
@@ -10,6 +12,7 @@ import { useRowEffects } from '@/composables/useRowEffects';
 import dayjs from '@/plugins/dayjs';
 import { useCustomerService } from '@/services/useCustomerService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { CustomerData, CustomerFormData, Region, Address, City, ContactMethod } from '@/types/customer';
@@ -48,6 +51,7 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
 );
 
 const authStore = useAuthStore();
+const loading = useLoading();
 const confirm = useConfirm();
 const dialog = useDialog();
 const router = useRouter();
@@ -206,8 +210,6 @@ const openDialog = () => {
 
 function confirmDeleteRecord(event: MouseEvent | null, customerIds: number[]): void {
     confirm.require({
-        modal: true,
-        target: event?.currentTarget as HTMLElement,
         message: customerIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.customers') }) : t('common.confirmations.delete.message', { entity: t('entity.customer') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -222,6 +224,7 @@ function confirmDeleteRecord(event: MouseEvent | null, customerIds: number[]): v
             severity: 'danger'
         },
         accept: () => {
+            loading.startPageLoading();
             useCustomerService
                 .deleteCustomers(customerIds)
                 .then(() => {
@@ -233,6 +236,7 @@ function confirmDeleteRecord(event: MouseEvent | null, customerIds: number[]): v
                             }
                         }
                     })();
+                    selectedRecords.value = [];
                     showToast('success', ACTIONS.DELETE, 'customer', 'tc');
                 })
                 .catch((error: any) => {
@@ -240,6 +244,9 @@ function confirmDeleteRecord(event: MouseEvent | null, customerIds: number[]): v
                         console.error('Session expired, redirecting to login');
                     }
                     console.error('Error deleting customers');
+                })
+                .finally(() => {
+                    loading.stopPageLoading();
                 });
         }
     });
@@ -283,6 +290,44 @@ onUnmounted(() => {
         subscription.value.stopListening('DataStream');
     }
 });
+
+// ── Bulk Actions ────────────────────────────────────────────
+const bulkActions = computed<BulkAction[]>(() => [
+    {
+        key: 'mark_as',
+        label: t('common.labels.bulk_mark_as'),
+        type: 'select',
+        options: [
+            { label: t('customer.labels.blocked'), value: 'block' },
+            { label: t('customer.show.unblock'), value: 'unblock' }
+        ]
+    }
+]);
+
+async function handleBulkAction(payload: { key: string; value?: string }): Promise<void> {
+    const ids = selectedRecords.value.map((r: CustomerData) => r.id);
+    if (!ids.length || !payload.value) return;
+
+    loading.startPageLoading();
+    try {
+        const blocked = payload.value === 'block';
+        await useCustomerService.bulkBlock(ids, blocked, blocked ? 'Bulk blocked' : undefined);
+        ids.forEach((id) => {
+            const index = findRecordIndex(records, id);
+            if (index !== -1) {
+                records.value[index].status = blocked ? 'blocked' : 'active';
+                records.value[index].blocking_reason = blocked ? 'Bulk blocked' : null;
+                markHighlight(id, 'updated');
+            }
+        });
+        showToast('success', ACTIONS.UPDATE, 'customer', 'tc');
+        selectedRecords.value = [];
+    } catch (error) {
+        showToast('error', ACTIONS.UPDATE, 'customer', 'tc', error);
+    } finally {
+        loading.stopPageLoading();
+    }
+}
 </script>
 
 <template>
@@ -353,21 +398,6 @@ onUnmounted(() => {
                     <Toolbar class="w-full">
                         <template #start>
                             <div class="flex space-x-2">
-                                <Button
-                                    v-if="authStore.hasPermission('delete_customers')"
-                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.customers') })"
-                                    :label="t('common.labels.delete_selected')"
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    @click="
-                                        confirmDeleteRecord(
-                                            $event,
-                                            selectedRecords.map((record: CustomerData) => record.id)
-                                        )
-                                    "
-                                    outlined
-                                    :disabled="!selectedRecords || !selectedRecords.length"
-                                />
                                 <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                             </div>
                         </template>
@@ -672,6 +702,19 @@ onUnmounted(() => {
                     </div>
                 </template>
             </DataTable>
+
+            <BulkActionBar
+                :selectedCount="selectedRecords.length"
+                :entityLabel="t('entity.customers').toLowerCase()"
+                :actions="bulkActions"
+                @action="handleBulkAction"
+                @delete="
+                    confirmDeleteRecord(
+                        null,
+                        selectedRecords.map((r: CustomerData) => r.id)
+                    )
+                "
+            />
 
             <!-- Reputation System Explanation -->
             <Card class="mt-6">

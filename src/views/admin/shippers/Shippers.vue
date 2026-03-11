@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BulkActionBar from '@/components/BulkActionBar.vue';
+import type { BulkAction } from '@/components/BulkActionBar.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
@@ -167,6 +169,7 @@ function confirmDeleteRecord(event: MouseEvent | null, shipperIds: number[]): vo
             severity: 'danger'
         },
         accept: () => {
+            loading.startPageLoading();
             useShipperService
                 .deleteShippers(shipperIds)
                 .then(() => {
@@ -174,6 +177,7 @@ function confirmDeleteRecord(event: MouseEvent | null, shipperIds: number[]): vo
                         const index = findRecordIndex(records, id);
                         if (index !== -1) records.value.splice(index, 1);
                     });
+                    selectedRecords.value = [];
                     showToast('success', ACTIONS.DELETE, 'shipper', 'tc');
                 })
                 .catch((error: any) => {
@@ -181,6 +185,9 @@ function confirmDeleteRecord(event: MouseEvent | null, shipperIds: number[]): vo
                         console.error('Session expired, redirecting to login');
                     }
                     console.error('Error deleting shippers');
+                })
+                .finally(() => {
+                    loading.stopPageLoading();
                 });
         }
     });
@@ -198,6 +205,43 @@ onMounted(() => {
 onUnmounted(() => {
     if (subscription.value) subscription.value.stopListening('DataStream');
 });
+
+// ── Bulk Actions ────────────────────────────────────────────
+const bulkActions = computed<BulkAction[]>(() => [
+    {
+        key: 'mark_as',
+        label: t('common.labels.bulk_mark_as'),
+        type: 'select',
+        options: [
+            { label: t('common.labels.active'), value: 'active' },
+            { label: t('common.labels.inactive'), value: 'inactive' }
+        ]
+    }
+]);
+
+async function handleBulkAction(payload: { key: string; value?: string }): Promise<void> {
+    const ids = selectedRecords.value.map((r: ShipperData) => r.id);
+    if (!ids.length || !payload.value) return;
+
+    loading.startPageLoading();
+    try {
+        await useShipperService.bulkUpdate(ids, 'active', payload.value === 'active');
+        const newValue = payload.value === 'active';
+        ids.forEach((id) => {
+            const index = findRecordIndex(records, id);
+            if (index !== -1) {
+                records.value[index].active = newValue;
+                markHighlight(id, 'updated');
+            }
+        });
+        showToast('success', ACTIONS.UPDATE, 'shipper', 'tc');
+        selectedRecords.value = [];
+    } catch (error) {
+        showToast('error', ACTIONS.UPDATE, 'shipper', 'tc', error);
+    } finally {
+        loading.stopPageLoading();
+    }
+}
 </script>
 
 <template>
@@ -253,20 +297,6 @@ onUnmounted(() => {
                     <Toolbar class="w-full">
                         <template #start>
                             <div class="flex space-x-2">
-                                <Button
-                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.shipper') })"
-                                    :label="t('common.labels.delete_selected')"
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    @click="
-                                        confirmDeleteRecord(
-                                            $event,
-                                            selectedRecords.map((record: ShipperData) => record.id)
-                                        )
-                                    "
-                                    outlined
-                                    :disabled="!selectedRecords || !selectedRecords.length"
-                                />
                                 <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                             </div>
                         </template>
@@ -547,6 +577,19 @@ onUnmounted(() => {
                     </div>
                 </template>
             </DataTable>
+
+            <BulkActionBar
+                :selectedCount="selectedRecords.length"
+                :entityLabel="t('entity.shippers').toLowerCase()"
+                :actions="bulkActions"
+                @action="handleBulkAction"
+                @delete="
+                    confirmDeleteRecord(
+                        null,
+                        selectedRecords.map((r: ShipperData) => r.id)
+                    )
+                "
+            />
         </template>
     </div>
 </template>

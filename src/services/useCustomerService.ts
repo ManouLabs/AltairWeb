@@ -38,5 +38,15 @@ export const useCustomerService = {
         await apiClient.get('/sanctum/csrf-cookie');
         const response = await apiClient.delete<DeleteCustomersResponse>('/api/admin/customers', { data: { customers: customerIds } });
         return response.data;
+    },
+
+    async bulkBlock(ids: number[], blocked: boolean, blockingReason?: string): Promise<{ message: string }> {
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.patch<{ message: string }>('/api/admin/customers/bulk-block', {
+            ids,
+            blocked,
+            blocking_reason: blockingReason || null
+        });
+        return response.data;
     }
 };

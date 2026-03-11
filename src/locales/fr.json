@@ -330,7 +330,9 @@
             "image_hint": "PNG, JPG jusqu'à 2Mo",
             "remove_image": "Supprimer l'Image",
             "product_info_tip": "Info Produit",
-            "product_info_tip_desc": "Activez le bouton Actif pour rendre ce produit visible aux clients. Les produits inactifs ne sont visibles que par les gestionnaires."
+            "product_info_tip_desc": "Activez le bouton Actif pour rendre ce produit visible aux clients. Les produits inactifs ne sont visibles que par les gestionnaires.",
+            "select_at_least_one_value": "Sélectionnez au moins une valeur",
+            "generate_needs_values": "Sélectionnez au moins deux valeurs pour un attribut afin de générer les variantes"
         },
         "show": {
             "subtitle": "Voir les détails du produit et l'inventaire.",

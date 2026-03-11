@@ -12,6 +12,7 @@ declare module 'vue' {
     AutoComplete: typeof import('primevue/autocomplete')['default']
     Avatar: typeof import('primevue/avatar')['default']
     Badge: typeof import('primevue/badge')['default']
+    BulkActionBar: typeof import('./src/components/BulkActionBar.vue')['default']
     Button: typeof import('primevue/button')['default']
     Card: typeof import('primevue/card')['default']
     CardSection: typeof import('./src/components/CardSection.vue')['default']

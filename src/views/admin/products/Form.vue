@@ -112,9 +112,14 @@ const resolvedCategoryId = computed<number | null>(() => {
     return Number(val) || null;
 });
 
-// Whether the attribute type has predefined selectable values
+// Whether the attribute type has predefined selectable values (renders chip UI)
 function hasValues(type: string): boolean {
     return ['dropdown', 'multiselect', 'color', 'radio'].includes(type);
+}
+
+// Whether the attribute type supports multiple selected values (participates in variant generation)
+function isMultiChoice(type: string): boolean {
+    return ['multiselect', 'color'].includes(type);
 }
 
 // Available attributes filtered by selected category
@@ -128,12 +133,14 @@ const selectedAttributes = computed(() => {
     return allAttributes.value.filter((attr) => selectedAttributeIds.value.includes(attr.id));
 });
 
-// Groupable attributes for the "Group By" dropdown
+// Groupable attributes for the "Group By" dropdown (only multi-choice types that generate variant axes)
 const groupByOptions = computed(() => {
-    return selectedAttributes.value.map((attr, index) => ({
-        label: attr.name,
-        value: index
-    }));
+    return selectedAttributes.value.map((attr, index) => ({ label: attr.name, value: index, type: attr.type })).filter((opt) => isMultiChoice(opt.type));
+});
+
+// Whether enough values are selected to generate variants (at least one multi-choice attr must have ≥2 values)
+const canGenerateVariants = computed(() => {
+    return selectedAttributes.value.some((attr) => isMultiChoice(attr.type) && (selectedValueIds[attr.id]?.length ?? 0) >= 2);
 });
 
 // Margin calculated from prices
@@ -426,6 +433,9 @@ function addAttribute(attrId: number): void {
     if (!selectedAttributeIds.value.includes(attrId)) {
         selectedAttributeIds.value.push(attrId);
         selectedValueIds[attrId] = [];
+        if (variants.value.length > 0) {
+            variantsOutOfSync.value = true;
+        }
     }
 }
 
@@ -433,19 +443,28 @@ function addAttribute(attrId: number): void {
 function removeAttribute(attrId: number): void {
     selectedAttributeIds.value = selectedAttributeIds.value.filter((id) => id !== attrId);
     delete selectedValueIds[attrId];
-    variants.value = [];
+    if (variants.value.length > 0) {
+        variantsOutOfSync.value = true;
+    }
 }
 
-// Toggle a single value checkbox
-function toggleValue(attrId: number, valueId: number): void {
+// Toggle a single value – radio/dropdown allow only one selection, multiselect/color allow many
+function toggleValue(attrId: number, valueId: number, attrType: string): void {
     if (!selectedValueIds[attrId]) {
         selectedValueIds[attrId] = [];
     }
-    const idx = selectedValueIds[attrId].indexOf(valueId);
-    if (idx > -1) {
-        selectedValueIds[attrId].splice(idx, 1);
+    const isSingleChoice = attrType === 'radio' || attrType === 'dropdown';
+    if (isSingleChoice) {
+        // Single-choice: toggle off if already selected, otherwise replace
+        selectedValueIds[attrId] = selectedValueIds[attrId][0] === valueId ? [] : [valueId];
     } else {
-        selectedValueIds[attrId].push(valueId);
+        // Multi-choice: toggle individual values
+        const idx = selectedValueIds[attrId].indexOf(valueId);
+        if (idx > -1) {
+            selectedValueIds[attrId].splice(idx, 1);
+        } else {
+            selectedValueIds[attrId].push(valueId);
+        }
     }
     // Flag that the matrix is out of sync if variants already exist
     if (variants.value.length > 0) {
@@ -508,80 +527,77 @@ function openCreateAttribute(): void {
 async function generateVariantMatrix(): Promise<void> {
     if (selectedAttributeIds.value.length === 0) return;
 
-    if (isEdit.value) {
-        try {
-            // Collect all selected value IDs across all attributes
-            const allSelectedValueIds = selectedAttributeIds.value.flatMap((attrId: number) => selectedValueIds[attrId] || []);
-            const response = await useProductService.generateVariants(Number(route.params.id), selectedAttributeIds.value, allSelectedValueIds);
-            variants.value = response.variants;
-        } catch (e) {
-            console.error('Error generating variants');
-        }
-    } else {
-        const attrs = selectedAttributes.value;
-        const valueSets = attrs
-            .map((attr) => {
-                const checkedIds = selectedValueIds[attr.id] || [];
-                return (attr.values || [])
-                    .filter((v: AttributeValueData) => checkedIds.includes(v.id))
-                    .map((v: AttributeValueData) => ({
-                        attribute_id: attr.id,
-                        attribute_name: attr.name,
-                        value_id: v.id,
-                        value: v.value
-                    }));
-            })
-            .filter((set) => set.length > 0);
+    const attrs = selectedAttributes.value;
+    const valueSets = attrs
+        .map((attr) => {
+            // Only multi-choice types (multiselect, color) participate in variant generation
+            if (!isMultiChoice(attr.type)) return [];
+            const checkedIds = selectedValueIds[attr.id] || [];
+            return (attr.values || [])
+                .filter((v: AttributeValueData) => checkedIds.includes(v.id))
+                .map((v: AttributeValueData) => ({
+                    attribute_id: attr.id,
+                    attribute_name: attr.name,
+                    value_id: v.id,
+                    value: v.value
+                }));
+        })
+        .filter((set) => set.length > 0);
 
-        if (valueSets.length === 0) return;
+    if (valueSets.length === 0) return;
 
-        let combinations: any[][] = [[]];
-        for (const valueSet of valueSets) {
-            const temp: any[][] = [];
-            for (const existing of combinations) {
-                for (const item of valueSet) {
-                    temp.push([...existing, item]);
-                }
+    let combinations: any[][] = [[]];
+    for (const valueSet of valueSets) {
+        const temp: any[][] = [];
+        for (const existing of combinations) {
+            for (const item of valueSet) {
+                temp.push([...existing, item]);
             }
-            combinations = temp;
         }
-
-        // Build a lookup of existing variants by their sorted attribute_values key
-        const existingMap = new Map<string, ProductVariantData>();
-        for (const v of variants.value) {
-            const key = [...v.attribute_values].sort().join('-');
-            existingMap.set(key, v);
-        }
-
-        variants.value = combinations.map((combo) => {
-            const newKey = combo
-                .map((c: any) => c.value_id)
-                .sort()
-                .join('-');
-            const existing = existingMap.get(newKey);
-            return {
-                attribute_values: combo.map((c: any) => c.value_id).sort(),
-                attribute_details: combo,
-                sku:
-                    existing?.sku ||
-                    (initialValues.sku_prefix ? initialValues.sku_prefix + '-' : '') +
-                        combo
-                            .map((c: any) => c.value)
-                            .join('-')
-                            .toUpperCase()
-                            .replace(/ /g, '-'),
-                purchase_price: existing?.purchase_price ?? (purchasePrice.value || 0),
-                sale_price: existing?.sale_price ?? (salePrice.value || 0),
-                stock: existing?.stock ?? 0
-            };
-        });
-
-        groupByAttributeIndex.value = 0;
-        expandedKeys.value = {};
-        variantsOutOfSync.value = false;
-        // Auto-expand all groups after computed recalculates
-        nextTick(() => expandAll());
+        combinations = temp;
     }
+
+    // Build a lookup of existing variants by their sorted attribute_values key
+    const existingMap = new Map<string, ProductVariantData>();
+    for (const v of variants.value) {
+        const key = [...v.attribute_values].sort().join('-');
+        existingMap.set(key, v);
+    }
+
+    variants.value = combinations.map((combo) => {
+        const newKey = combo
+            .map((c: any) => c.value_id)
+            .sort()
+            .join('-');
+        const existing = existingMap.get(newKey);
+        return {
+            id: existing?.id,
+            attribute_values: combo.map((c: any) => c.value_id).sort(),
+            attribute_details: combo,
+            sku:
+                existing?.sku ||
+                (initialValues.sku_prefix ? initialValues.sku_prefix + '-' : '') +
+                    combo
+                        .map((c: any) => c.value)
+                        .join('-')
+                        .toUpperCase()
+                        .replace(/ /g, '-'),
+            purchase_price: existing?.purchase_price ?? (purchasePrice.value || 0),
+            sale_price: existing?.sale_price ?? (salePrice.value || 0),
+            stock: existing?.stock ?? 0,
+            reserved_stock: existing?.reserved_stock ?? 0,
+            available_stock: existing?.available_stock ?? 0
+        };
+    });
+
+    // Set groupBy to the first attribute that participated in variant generation
+    const participatingAttrIds = new Set(valueSets.flatMap((vs) => vs.map((v: any) => v.attribute_id)));
+    const firstIndex = selectedAttributes.value.findIndex((attr) => participatingAttrIds.has(attr.id));
+    groupByAttributeIndex.value = firstIndex >= 0 ? firstIndex : 0;
+    expandedKeys.value = {};
+    variantsOutOfSync.value = false;
+    // Auto-expand all groups after computed recalculates
+    nextTick(() => expandAll());
 }
 
 // Get child label (non-grouping attribute details)
@@ -905,7 +921,22 @@ onMounted(async () => {
 
                             <div class="flex flex-col gap-1.5">
                                 <FloatLabel variant="on">
-                                    <Select id="product_supplier" v-model="selectedSupplierId" :options="allSuppliers" optionLabel="name" optionValue="id" :disabled="loading.isFormSending" class="w-full" showClear filter />
+                                    <Select id="product_supplier" v-model="selectedSupplierId" :options="allSuppliers" optionLabel="name" optionValue="id" :disabled="loading.isFormSending" class="w-full" showClear filter>
+                                        <template #value="{ value }">
+                                            <div v-if="value" class="flex items-center gap-2">
+                                                <img v-if="allSuppliers.find((s) => s.id === value)?.logo?.url" :src="allSuppliers.find((s) => s.id === value)?.logo?.url" alt="supplier logo" class="w-6 h-6 rounded object-cover" />
+                                                <i v-else class="pi pi-building text-sm text-surface-400"></i>
+                                                <span>{{ allSuppliers.find((s) => s.id === value)?.name }}</span>
+                                            </div>
+                                        </template>
+                                        <template #option="{ option }">
+                                            <div class="flex items-center gap-2">
+                                                <img v-if="option.logo?.url" :src="option.logo.url" alt="supplier logo" class="w-6 h-6 rounded object-cover" />
+                                                <i v-else class="pi pi-building text-sm text-surface-400"></i>
+                                                <span>{{ option.name }}</span>
+                                            </div>
+                                        </template>
+                                    </Select>
                                     <label for="product_supplier">{{ t('product.form.supplier') }}</label>
                                 </FloatLabel>
                                 <Message v-if="authStore.errors.supplier_id" severity="error" size="small">{{ authStore.errors?.supplier_id?.[0] }}</Message>
@@ -1022,7 +1053,7 @@ onMounted(async () => {
                                                             ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
                                                             : 'border-surface-200 dark:border-surface-600 hover:border-surface-300 dark:hover:border-surface-500 hover:shadow-sm'
                                                     "
-                                                    @click="toggleValue(attr.id, val.id)"
+                                                    @click="toggleValue(attr.id, val.id, attr.type)"
                                                 >
                                                     <span
                                                         class="relative inline-flex items-center justify-center w-6 h-6 rounded-full border border-surface-200 dark:border-surface-500 shrink-0 transition-transform duration-200"
@@ -1047,12 +1078,17 @@ onMounted(async () => {
                                                             ? 'border-primary bg-primary/10 text-primary font-medium'
                                                             : 'border-surface-200 dark:border-surface-600 text-surface-600 dark:text-surface-300 hover:border-surface-300 dark:hover:border-surface-500'
                                                     "
-                                                    @click="toggleValue(attr.id, val.id)"
+                                                    @click="toggleValue(attr.id, val.id, attr.type)"
                                                 >
                                                     {{ val.value }}
                                                 </div>
                                             </template>
                                         </div>
+                                        <!-- Inline hint: no value selected -->
+                                        <small v-if="!selectedValueIds[attr.id]?.length" class="text-orange-500 dark:text-orange-400 flex items-center gap-1 mt-1">
+                                            <i class="pi pi-info-circle text-xs"></i>
+                                            {{ t('product.form.select_at_least_one_value') }}
+                                        </small>
                                     </template>
 
                                     <!-- Free-form input types -->
@@ -1250,7 +1286,9 @@ onMounted(async () => {
                                 <Message v-if="variantsOutOfSync" severity="warn" :closable="false" class="!my-0">
                                     <div class="flex items-center justify-between w-full gap-4">
                                         <span class="text-sm">{{ t('product.form.variants_out_of_sync') }}</span>
-                                        <Button :label="t('product.form.regenerate')" icon="pi pi-sync" size="small" severity="warn" @click="generateVariantMatrix" />
+                                        <span v-tooltip.top="!canGenerateVariants ? t('product.form.generate_needs_values') : undefined">
+                                            <Button :label="t('product.form.regenerate')" icon="pi pi-sync" size="small" severity="warn" :disabled="!canGenerateVariants" @click="generateVariantMatrix" />
+                                        </span>
                                     </div>
                                 </Message>
 
@@ -1327,13 +1365,15 @@ onMounted(async () => {
                                     <i class="pi pi-th-large text-2xl text-surface-300 dark:text-surface-500"></i>
                                 </div>
                                 <p class="text-sm text-surface-400 text-center max-w-md">{{ t('product.form.no_variants_hint') }}</p>
-                                <Button
-                                    :label="t('product.form.generate_matrix')"
-                                    icon="pi pi-sync"
-                                    :disabled="selectedAttributes.length === 0 || loading.isFormSending"
-                                    @click="generateVariantMatrix"
-                                    class="!bg-gradient-to-r !from-blue-500 !to-purple-500 !border-0 !text-white px-8 py-2.5 text-sm font-semibold shadow-lg hover:shadow-xl transition-shadow"
-                                />
+                                <span v-tooltip.top="!canGenerateVariants ? t('product.form.generate_needs_values') : undefined">
+                                    <Button
+                                        :label="t('product.form.generate_matrix')"
+                                        icon="pi pi-sync"
+                                        :disabled="!canGenerateVariants || loading.isFormSending"
+                                        @click="generateVariantMatrix"
+                                        class="!bg-gradient-to-r !from-blue-500 !to-purple-500 !border-0 !text-white px-8 py-2.5 text-sm font-semibold shadow-lg hover:shadow-xl transition-shadow"
+                                    />
+                                </span>
                             </div>
                         </div>
                     </div>

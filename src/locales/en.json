@@ -113,6 +113,11 @@
             "new": "New",
             "more": "more",
             "delete_selected": "Delete selected",
+            "bulk_update_status": "Update Status",
+            "bulk_mark_as": "Mark as",
+            "bulk_activate": "Activate",
+            "bulk_deactivate": "Deactivate",
+            "bulk_selected": "selected",
             "export": "Export",
             "apply": "Apply",
             "clear": "Clear",
@@ -129,6 +134,7 @@
             "select_plans": "Select Plans",
             "select_status": "Select Status",
             "select_type": "Select Type",
+            "select_shops": "Select shops...",
             "not_verified": "Not Verified",
             "address": "Address",
             "addresses": "Addresses",
@@ -202,6 +208,10 @@
             "delete_selected": {
                 "title": "Delete selected {entity}",
                 "message": "Are you sure you want to delete the selected {entity}?"
+            },
+            "bulk_action": {
+                "title": "Confirm Action",
+                "message": "Are you sure you want to apply \"{action}\" to {count} {entity}?"
             }
         },
         "toasts": {
@@ -213,10 +223,13 @@
                 "summary": "{entity} updated",
                 "detail": "The {entity} has been updated successfully"
             },
+            "update": {
+                "summary": "{entity} updated",
+                "detail": "The {entity} has been updated successfully"
+            },
             "delete": {
-                "unlock_column": "Unlock this column",
-                "clear_all_filters": "Clear all filters",
-                "reorder_columns": "Drag to reorder columns"
+                "summary": "{entity} deleted",
+                "detail": "The {entity} has been deleted successfully"
             },
             "delete_selected": {
                 "summary": "Selected {entity} deleted",
@@ -718,7 +731,11 @@
             "products": "Products",
             "id_ref": "ID",
             "select_category": "Select a category",
-            "select_category_hint": "Choose a category from the tree to view details"
+            "select_category_hint": "Choose a category from the tree to view details",
+            "expand_all": "Expand All",
+            "collapse_all": "Collapse All",
+            "direct": "Direct",
+            "created_at": "Created"
         },
         "placeholders": {
             "select_parent": "Select parent category...",
@@ -886,7 +903,9 @@
             "product_info_tip": "Product Info",
             "product_info_tip_desc": "Toggle the Active switch to make this product visible to customers. Inactive products are only visible to managers.",
             "select_date": "Select a date...",
-            "enter_value": "Enter a value..."
+            "enter_value": "Enter a value...",
+            "select_at_least_one_value": "Select at least one value",
+            "generate_needs_values": "Select at least two values for an attribute to generate variants"
         },
         "show": {
             "subtitle": "View product details and inventory.",
@@ -971,6 +990,7 @@
             "dr": "Dr"
         },
         "types": {
+            "phone": "Phone",
             "email": "Email",
             "landline": "Landline",
             "mobile": "Mobile",
@@ -1257,7 +1277,9 @@
             "quick_customer_name": "Customer name",
             "quick_customer_phone": "Phone number",
             "view_history": "View History",
-            "last_order": "Last order: {date}"
+            "last_order": "Last order: {date}",
+            "blocked_customer_warning": "This customer is blocked. Are you sure you want to add them to this order?",
+            "out_of_stock_warning": "This product is out of stock. Are you sure you want to add it to this order?"
         },
         "messages": {
             "no_products": "No products added. Click '+ Add Product' to start.",

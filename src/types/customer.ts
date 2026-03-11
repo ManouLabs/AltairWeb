@@ -44,6 +44,20 @@ export interface CustomerData {
         delivered: number;
         returned: number;
     } | null;
+    order_stats?: {
+        total_spent: number;
+        total_orders: number;
+        delivered_orders: number;
+        success_rate: number;
+        avg_order_value: number;
+    } | null;
+    recent_orders?: {
+        id: number;
+        reference: string;
+        status: string;
+        total: number;
+        date: string;
+    }[];
     created_at?: string;
     updated_at?: string;
 }

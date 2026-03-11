@@ -86,6 +86,7 @@ const onFormSubmit = () => {
     }
 
     loading.startFormSending();
+    loading.startPageLoading();
 
     const serviceAction = action.value === ACTIONS.CREATE ? (data: CategoryFormData) => useCategoryService.storeCategory(data) : (data: CategoryFormData) => useCategoryService.updateCategory(record.value.id!, data);
 
@@ -99,6 +100,7 @@ const onFormSubmit = () => {
         })
         .finally(() => {
             loading.stopFormSending();
+            loading.stopPageLoading();
         });
 };
 

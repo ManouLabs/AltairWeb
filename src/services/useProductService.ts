@@ -59,5 +59,11 @@ export const useProductService = {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         return response.data;
+    },
+
+    async bulkUpdate(ids: number[], field: string, value: boolean): Promise<{ message: string }> {
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.patch<{ message: string }>('/api/admin/products/bulk-update', { ids, field, value });
+        return response.data;
     }
 };

@@ -69,7 +69,7 @@ function isOutsideClicked(event) {
     <div class="layout-wrapper" :class="containerClass">
         <DynamicDialog />
         <ConfirmPopup></ConfirmPopup>
-
+        <ConfirmDialog group="dialog"></ConfirmDialog>
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
         <div :class="layoutMainContainer">

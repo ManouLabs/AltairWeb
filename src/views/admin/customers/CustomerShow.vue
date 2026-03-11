@@ -2,6 +2,7 @@
 import { useCustomerService } from '@/services/useCustomerService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { ACTIONS, useShowToast } from '@/utilities/toast';
 import dayjs from '@/plugins/dayjs';
 import type { CustomerData, Address, City, Region, ContactMethod } from '@/types/customer';
 import { onMounted, ref, computed } from 'vue';
@@ -15,9 +16,14 @@ const router = useRouter();
 const authStore = useAuthStore();
 const loadingStore = useLoading();
 const { t } = useI18n();
+const { showToast } = useShowToast();
 
 const customer = ref<CustomerData | null>(null);
 const loading = ref(true);
+
+// Block dialog state
+const blockDialogVisible = ref(false);
+const blockingReason = ref('');
 
 onMounted(async () => {
     try {
@@ -64,47 +70,86 @@ const reputation = computed(() => {
     return mapReputation(customer.value?.reputation);
 });
 
-// --- Fake order stats (orders module not yet built) ---
+// --- Real order stats (from API) ---
 
-interface FakeOrder {
-    id: string;
-    status: string;
-    statusSeverity: string;
-    date: string;
-    amount: number;
+const orderStats = computed(() => customer.value?.order_stats ?? {
+    total_spent: 0,
+    total_orders: 0,
+    delivered_orders: 0,
+    success_rate: 0,
+    avg_order_value: 0,
+});
+
+const recentOrders = computed(() => customer.value?.recent_orders ?? []);
+
+// Map order status to PrimeVue Tag severity
+function statusSeverity(status: string): string {
+    const map: Record<string, string> = {
+        pending: 'warn',
+        confirmed: 'info',
+        shipping: 'info',
+        delivered: 'success',
+        cancelled: 'danger',
+        returned: 'danger',
+    };
+    return map[status] ?? 'secondary';
 }
 
-const fakeOrders = computed<FakeOrder[]>(() => {
-    if (!customer.value) return [];
-    return [
-        { id: `#ORD-2024-${8831 + customer.value.id}`, status: 'DELIVERED', statusSeverity: 'success', date: '2024-10-24', amount: 240.0 },
-        { id: `#ORD-2024-${8822 + customer.value.id}`, status: 'IN TRANSIT', statusSeverity: 'info', date: '2024-10-23', amount: 125.5 },
-        { id: `#ORD-2024-${8791 + customer.value.id}`, status: 'DELIVERED', statusSeverity: 'success', date: '2024-10-20', amount: 89.0 },
-        { id: `#ORD-2024-${8745 + customer.value.id}`, status: 'FAILED', statusSeverity: 'danger', date: '2024-10-18', amount: 310.2 }
-    ];
-});
+function statusLabel(status: string): string {
+    return status ? status.charAt(0).toUpperCase() + status.slice(1) : '';
+}
 
-const totalSpent = computed(() => {
-    return fakeOrders.value.reduce((sum, o) => sum + o.amount, 0);
-});
+const isBlocked = computed(() => customer.value?.status === 'blocked');
 
-const successRate = computed(() => {
-    if (reputation.value.percentage !== null) return reputation.value.percentage;
-    return 0;
-});
-
-const avgOrderValue = computed(() => {
-    if (fakeOrders.value.length === 0) return 0;
-    return totalSpent.value / fakeOrders.value.length;
-});
+const cardClass = computed(() =>
+    isBlocked.value
+        ? '!shadow-sm !rounded-3xl !border !bg-[#fff1f2] !border-[#ffe4e6] dark:!bg-[rgba(244,63,94,0.08)] dark:!border-[rgba(244,63,94,0.2)]'
+        : '!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl'
+);
 
 function goBack(): void {
     router.push({ name: 'customers' });
 }
 
 function editCustomer(): void {
-    // Navigate back to customer list — the edit dialog is triggered from there
     router.push({ name: 'customers' });
+}
+
+// --- Block / Unblock ---
+
+function openBlockDialog(): void {
+    if (!customer.value) return;
+
+    if (customer.value.status === 'blocked') {
+        // Unblock directly
+        toggleBlock(false);
+    } else {
+        // Show dialog to get reason
+        blockingReason.value = '';
+        blockDialogVisible.value = true;
+    }
+}
+
+async function confirmBlock(): Promise<void> {
+    if (blockingReason.value.length < 10) return;
+    blockDialogVisible.value = false;
+    await toggleBlock(true, blockingReason.value);
+}
+
+async function toggleBlock(blocked: boolean, reason?: string): Promise<void> {
+    if (!customer.value) return;
+    loadingStore.startPageLoading();
+    try {
+        const res = await useCustomerService.blockCustomer(customer.value.id, blocked, reason);
+        customer.value.status = res.data.status;
+        customer.value.status_label = res.data.status_label;
+        customer.value.blocking_reason = res.data.blocking_reason;
+        showToast('success', ACTIONS.UPDATE, 'customer', 'tc');
+    } catch (error) {
+        showToast('error', ACTIONS.UPDATE, 'customer', 'tc', error);
+    } finally {
+        loadingStore.stopPageLoading();
+    }
 }
 </script>
 
@@ -179,7 +224,7 @@ function editCustomer(): void {
                 <!-- LEFT PANEL -->
                 <div class="space-y-6">
                     <!-- Profile Card -->
-                    <Card class="!shadow-sm !border !border-surface-200 dark:!border-surface-700 !rounded-3xl">
+                    <Card :class="cardClass">
                         <template #content>
                             <div class="flex flex-col items-center">
                                 <!-- Avatar -->
@@ -215,6 +260,17 @@ function editCustomer(): void {
 
                                 <Divider />
 
+                                <!-- Blocking Reason -->
+                                <div v-if="isBlocked && customer.blocking_reason" class="w-full rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-4 py-3 mb-2">
+                                    <div class="flex items-start gap-2">
+                                        <i class="pi pi-ban text-red-500 text-sm mt-0.5"></i>
+                                        <div>
+                                            <span class="text-xs font-semibold text-red-600 dark:text-red-400 uppercase">{{ t('customer.columns.blocking_reason') }}</span>
+                                            <p class="text-sm text-red-700 dark:text-red-300 mt-1 leading-relaxed">{{ customer.blocking_reason }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Action Buttons -->
                                 <div class="flex gap-2 w-full">
                                     <Button
@@ -225,6 +281,7 @@ function editCustomer(): void {
                                         outlined
                                         class="flex-1"
                                         size="small"
+                                        @click="openBlockDialog"
                                     />
                                 </div>
                             </div>
@@ -272,8 +329,7 @@ function editCustomer(): void {
                             <template #content>
                                 <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('customer.show.total_spent') }}</span>
                                 <div class="flex items-end gap-2 mt-2">
-                                    <span class="text-2xl font-bold">${{ totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-                                    <Tag value="↑ 12%" severity="success" rounded class="!text-xs" />
+                                    <span class="text-2xl font-bold">DA {{ orderStats.total_spent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
                                 </div>
                             </template>
                         </Card>
@@ -283,8 +339,7 @@ function editCustomer(): void {
                             <template #content>
                                 <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('customer.show.success_rate') }}</span>
                                 <div class="flex items-end gap-2 mt-2">
-                                    <span class="text-2xl font-bold">{{ successRate }}%</span>
-                                    <Tag v-if="successRate > 0" value="↓ 4.2%" severity="danger" rounded class="!text-xs" />
+                                    <span class="text-2xl font-bold">{{ orderStats.success_rate }}%</span>
                                 </div>
                             </template>
                         </Card>
@@ -294,7 +349,7 @@ function editCustomer(): void {
                             <template #content>
                                 <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('customer.show.avg_order_value') }}</span>
                                 <div class="flex items-end gap-2 mt-2">
-                                    <span class="text-2xl font-bold">${{ avgOrderValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                                    <span class="text-2xl font-bold">DA {{ orderStats.avg_order_value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
                                 </div>
                             </template>
                         </Card>
@@ -309,11 +364,15 @@ function editCustomer(): void {
                             </div>
                         </template>
                         <template #content>
-                            <DataTable :value="fakeOrders" size="small" stripedRows>
-                                <Column field="id" :header="t('customer.show.order_id')" class="font-semibold" />
+                            <DataTable v-if="recentOrders.length" :value="recentOrders" size="small" stripedRows>
+                                <Column field="reference" :header="t('customer.show.order_id')" class="font-semibold">
+                                    <template #body="{ data }">
+                                        #{{ data.reference }}
+                                    </template>
+                                </Column>
                                 <Column field="status" :header="t('customer.show.status')">
                                     <template #body="{ data }">
-                                        <Tag :value="data.status" :severity="data.statusSeverity" />
+                                        <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
                                     </template>
                                 </Column>
                                 <Column field="date" :header="t('customer.show.date')">
@@ -321,16 +380,41 @@ function editCustomer(): void {
                                         {{ dayjs(data.date).format('ll') }}
                                     </template>
                                 </Column>
-                                <Column field="amount" :header="t('customer.show.amount')" class="text-right">
+                                <Column field="total" :header="t('customer.show.amount')" class="text-right">
                                     <template #body="{ data }">
-                                        <span class="font-semibold">${{ data.amount.toFixed(2) }}</span>
+                                        <span class="font-semibold">DA {{ data.total.toFixed(2) }}</span>
                                     </template>
                                 </Column>
                             </DataTable>
+                            <div v-else class="flex flex-col items-center justify-center py-8 gap-3">
+                                <i class="pi pi-shopping-cart text-3xl text-surface-300 dark:text-surface-600"></i>
+                                <p class="text-sm text-surface-400">{{ t('customer.show.no_orders_yet') }}</p>
+                            </div>
                         </template>
                     </Card>
                 </div>
             </div>
         </template>
+
+        <!-- Block Reason Dialog -->
+        <Dialog v-model:visible="blockDialogVisible" :header="t('customer.show.block') + ' ' + t('entity.customer')" modal :style="{ width: '28rem' }">
+            <div class="space-y-4">
+                <p class="text-sm text-surface-600 dark:text-surface-300">{{ t('customer.labels.block_warning') }}</p>
+                <Textarea
+                    v-model="blockingReason"
+                    :placeholder="t('customer.columns.blocking_reason')"
+                    rows="3"
+                    class="w-full"
+                    autofocus
+                />
+                <small v-if="blockingReason.length > 0 && blockingReason.length < 10" class="text-red-500 text-xs">
+                    {{ t('customer.labels.blocking_reason_min') }}
+                </small>
+            </div>
+            <template #footer>
+                <Button :label="t('common.labels.cancel')" severity="secondary" outlined @click="blockDialogVisible = false" />
+                <Button :label="t('customer.show.block')" icon="pi pi-ban" severity="danger" :disabled="blockingReason.length < 10" @click="confirmBlock" />
+            </template>
+        </Dialog>
     </div>
 </template>

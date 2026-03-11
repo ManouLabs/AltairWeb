@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useFakeStats } from '@/composables/useFakeStats';
+
 import { useCategoryService } from '@/services/useCategoryService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
@@ -19,7 +19,16 @@ const confirm = useConfirm();
 const dialog = useDialog();
 const loadingStore = useLoading();
 const { showToast } = useShowToast();
-const { getFakeTotalCount, getFakeSalesImpact, getFakeSalesImpactValue, getFakeAvgPrice, getFakeSubCategoryProductCount, getFakeCategoryReference } = useFakeStats();
+// Get total products count for a category including all descendants
+function getTotalProductsCount(categoryId: number): number {
+    const category = records.value.find((c: CategoryData) => c.id === categoryId);
+    let count = category?.products_count || 0;
+    const children = records.value.filter((c: CategoryData) => c.parent_id === categoryId);
+    for (const child of children) {
+        count += getTotalProductsCount(child.id);
+    }
+    return count;
+}
 
 const formComponent = defineAsyncComponent(() => import('./partials/Form.vue'));
 
@@ -96,6 +105,31 @@ watch(searchQuery, (val) => {
 const clearSearch = () => {
     searchQuery.value = '';
 };
+
+function getAllTreeKeys(nodes: any[]): string[] {
+    let keys: string[] = [];
+    for (const node of nodes) {
+        keys.push(node.key);
+        if (node.children) keys = keys.concat(getAllTreeKeys(node.children));
+    }
+    return keys;
+}
+
+const allExpanded = computed(() => {
+    const allKeys = getAllTreeKeys(treeNodes.value);
+    return allKeys.length > 0 && allKeys.every((k) => expandedKeys.value[k]);
+});
+
+function toggleExpandAll(): void {
+    const allKeys = getAllTreeKeys(treeNodes.value);
+    if (allExpanded.value) {
+        expandedKeys.value = {};
+    } else {
+        const keys: Record<string, boolean> = {};
+        allKeys.forEach((k) => (keys[k] = true));
+        expandedKeys.value = keys;
+    }
+}
 
 // Fetch records
 function fetchRecords(): void {
@@ -177,7 +211,7 @@ function editRecord(category: CategoryData | null = null): void {
     authStore.errors = {};
     dialog.open(formComponent, {
         props: {
-            style: { width: '32rem' },
+            style: { width: '48rem' },
             breakpoints: { '960px': '90vw' },
             modal: true
         },
@@ -277,6 +311,7 @@ function confirmDeleteRecord(category: CategoryData | null = null): void {
             severity: 'danger'
         },
         accept: () => {
+            loadingStore.startPageLoading();
             useCategoryService
                 .deleteCategories([cat.id])
                 .then(() => {
@@ -289,6 +324,9 @@ function confirmDeleteRecord(category: CategoryData | null = null): void {
                 })
                 .catch((error: any) => {
                     console.error('Error deleting category:', error);
+                })
+                .finally(() => {
+                    loadingStore.stopPageLoading();
                 });
         }
     });
@@ -414,6 +452,11 @@ onUnmounted(() => {
                         </Tree>
                     </div>
 
+                    <!-- Expand / Collapse All -->
+                    <div class="flex justify-center px-4 pb-2">
+                        <Button :label="allExpanded ? t('category.labels.collapse_all') : t('category.labels.expand_all')" :icon="allExpanded ? 'pi pi-minus' : 'pi pi-plus'" size="small" text severity="secondary" @click="toggleExpandAll" />
+                    </div>
+
                     <!-- Add Root Category Button -->
                     <div
                         class="flex items-center justify-center gap-2 p-4 mx-8 mb-8 border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-lg text-surface-400 dark:text-surface-400 text-md font-semibold cursor-pointer transition-all hover:border-primary hover:text-primary hover:bg-primary-50 dark:hover:bg-primary-900/20"
@@ -464,21 +507,19 @@ onUnmounted(() => {
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-surface-200 dark:border-surface-700">
                             <div class="text-left">
                                 <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.total_products') }}</span>
-                                <span class="text-lg font-bold">{{ getFakeTotalCount(record.id).toLocaleString() }}</span>
+                                <span class="text-lg font-bold">{{ getTotalProductsCount(record.id).toLocaleString() }}</span>
                             </div>
                             <div class="text-left">
                                 <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.subcategories') }}</span>
                                 <span class="text-lg font-bold">{{ selectedChildren.length }}</span>
                             </div>
                             <div class="text-left">
-                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.sales_impact') }}</span>
-                                <span class="text-lg font-bold" :class="getFakeSalesImpactValue(record.id) >= 0 ? 'text-green-500' : 'text-red-500'">
-                                    {{ getFakeSalesImpact(record.id) }}
-                                </span>
+                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.total_products') }} ({{ t('category.labels.direct') }})</span>
+                                <span class="text-lg font-bold">{{ record.products_count || 0 }}</span>
                             </div>
                             <div class="text-left">
-                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.avg_price') }}</span>
-                                <span class="text-lg font-bold">{{ getFakeAvgPrice(record.id) }}</span>
+                                <span class="block text-[10px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 mb-1">{{ t('category.labels.created_at') }}</span>
+                                <span class="text-lg font-bold">{{ record.created_at ? new Date(record.created_at).toLocaleDateString() : '-' }}</span>
                             </div>
                         </div>
                     </template>
@@ -493,16 +534,7 @@ onUnmounted(() => {
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                     <!-- Existing sub-categories -->
-                    <Card
-                        v-for="child in selectedChildren"
-                        :key="child.id"
-                        class="cursor-pointer !bg-surface-0 dark:!bg-surface-900 border border-surface-200 dark:border-surface-700 group"
-                        :pt="{ content: { class: '!p-4' } }"
-                        @click="
-                            record = child;
-                            selectedKeys = { [String(child.id)]: true };
-                        "
-                    >
+                    <Card v-for="child in selectedChildren" :key="child.id" class="!bg-surface-0 dark:!bg-surface-900 border border-surface-200 dark:border-surface-700 group" :pt="{ content: { class: '!p-4' } }">
                         <template #content>
                             <div class="flex justify-between items-start mb-4">
                                 <Avatar :icon="child.icon || 'pi pi-folder'" shape="square" size="large" :style="{ backgroundColor: (child.icon_color || '#8B5CF6') + '20', color: child.icon_color || '#8B5CF6', borderRadius: '12px' }" />
@@ -524,15 +556,15 @@ onUnmounted(() => {
                                         text
                                         rounded
                                         size="small"
-                                        @click.stop="confirmDeleteRecord(child)"
+                                        @click="confirmDeleteRecord(child)"
                                         v-if="authStore.hasPermission('delete_categories')"
                                     />
                                 </div>
                             </div>
                             <h4 class="text-[17px] font-bold m-0 mb-3.5 text-surface-900 dark:text-surface-0">{{ child.name }}</h4>
                             <div class="flex justify-between items-center">
-                                <span class="text-xs text-surface-500 dark:text-surface-400">{{ getFakeSubCategoryProductCount(child.id) }} {{ t('category.labels.products') }}</span>
-                                <Tag :value="'ID: ' + getFakeCategoryReference(child.id)" severity="secondary" class="!text-[10px]" />
+                                <span class="text-xs text-surface-500 dark:text-surface-400">{{ child.products_count || 0 }} {{ t('category.labels.products') }}</span>
+                                <Tag :value="'ID: #' + child.id" severity="secondary" class="!text-[10px]" />
                             </div>
                         </template>
                     </Card>

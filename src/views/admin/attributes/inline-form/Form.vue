@@ -3,10 +3,11 @@ import { useAttributeService } from '@/services/useAttributeService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
-import { attributeSchema, ATTRIBUTE_TYPES } from '@/validations/attribute';
+import { attributeSchema } from '@/validations/attribute';
 import { validate, validateField } from '@/validations/validate';
+import { ATTRIBUTE_TYPES } from '@/types/attribute';
 import type { AttributeFormData } from '@/types/attribute';
-import { inject, onMounted, ref, computed } from 'vue';
+import { inject, onMounted, ref, computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const authStore = useAuthStore();
@@ -41,10 +42,12 @@ const onBlurField = (path: string) => {
 
 // Whether the selected type supports values
 const supportsValues = computed(() => {
-    return record.value.type === 'dropdown' || record.value.type === 'multiselect' || record.value.type === 'color';
+    return record.value.type === 'dropdown' || record.value.type === 'multiselect' || record.value.type === 'radio' || record.value.type === 'color';
 });
 
 const isColor = computed(() => record.value.type === 'color');
+const isBoolean = computed(() => record.value.type === 'boolean');
+const booleanLabels = reactive({ yes: '', no: '' });
 
 // Add a new value entry
 function addValue(): void {
@@ -57,17 +60,22 @@ function removeValue(index: number): void {
     record.value.values.forEach((v, i) => (v.sort_order = i));
 }
 
-// Type configuration for visual cards
-const typeConfig: Record<string, { icon: string; color: string }> = {
-    dropdown: { icon: 'pi pi-chevron-down', color: '#3B82F6' },
-    text: { icon: 'pi pi-align-left', color: '#64748B' },
-    color: { icon: 'pi pi-palette', color: '#10B981' },
-    multiselect: { icon: 'pi pi-list-check', color: '#F59E0B' },
-    date: { icon: 'pi pi-calendar', color: '#8B5CF6' },
-    numeric: { icon: 'pi pi-hashtag', color: '#06B6D4' },
-    boolean: { icon: 'pi pi-check-square', color: '#10B981' },
-    radio: { icon: 'pi pi-circle', color: '#EF4444' }
-};
+// Attribute type keys for template iteration
+const attributeTypeKeys = Object.keys(ATTRIBUTE_TYPES) as (keyof typeof ATTRIBUTE_TYPES)[];
+
+function handleTypeChange(type: string): void {
+    record.value.type = type;
+    authStore.clearErrors(['type']);
+
+    const typesWithOptions = ['dropdown', 'multiselect', 'radio', 'color'];
+    if (typesWithOptions.includes(type)) {
+        if (record.value.values.length === 0) {
+            record.value.values.push({ value: '', color: type === 'color' ? '000000' : undefined, sort_order: 0 });
+        }
+    } else {
+        record.value.values = [];
+    }
+}
 
 // Category name resolved from the parent context
 const categoryName = ref<string>('');
@@ -153,13 +161,13 @@ onMounted(() => {
                 <label class="block text-sm font-medium mb-2">{{ t('attribute.form.type') }} *</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div
-                        v-for="attrType in ATTRIBUTE_TYPES"
+                        v-for="attrType in attributeTypeKeys"
                         :key="attrType"
                         class="cursor-pointer border rounded-lg p-3 text-center transition-all duration-200 hover:shadow-md"
                         :class="[record.type === attrType ? 'border-primary bg-primary/5 shadow-sm ring-2 ring-primary/30' : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600']"
-                        @click="record.type = attrType"
+                        @click="handleTypeChange(attrType)"
                     >
-                        <i :class="typeConfig[attrType]?.icon" class="text-xl mb-1" :style="{ color: typeConfig[attrType]?.color }"></i>
+                        <i :class="ATTRIBUTE_TYPES[attrType]?.icon" class="text-xl mb-1" :style="{ color: ATTRIBUTE_TYPES[attrType]?.color }"></i>
                         <div class="text-xs font-medium mt-1">{{ t(`attribute.types.${attrType}`) }}</div>
                     </div>
                 </div>
@@ -179,12 +187,32 @@ onMounted(() => {
                     <div v-else class="space-y-2">
                         <div v-for="(val, index) in record.values" :key="index" class="flex items-center gap-2">
                             <span class="text-xs text-surface-400 w-6 text-center">{{ index + 1 }}</span>
-                            <InputText v-model="val.value" :placeholder="t('attribute.form.value_placeholder')" class="flex-1" size="small" :disabled="loading.isFormSending" />
+                            <InputText v-model="val.value" :placeholder="t('attribute.form.value_placeholder')" class="flex-1" size="small" :disabled="loading.isFormSending" @input="() => authStore.clearErrors(['values', `values.${index}.value`])" />
                             <template v-if="isColor">
                                 <ColorPicker v-model="val.color" format="hex" :disabled="loading.isFormSending" />
                                 <InputText v-model="val.color" class="w-24" size="small" maxlength="6" placeholder="FF0000" :disabled="loading.isFormSending" />
                             </template>
                             <Button icon="pi pi-times" severity="danger" text rounded size="small" @click="removeValue(index)" :disabled="loading.isFormSending" />
+                        </div>
+                    </div>
+                    <Message v-if="authStore.errors?.['values']?.[0] || authStore.errors?.['values.0.value']?.[0]" severity="error" size="small" class="mt-2">
+                        {{ t((authStore.errors?.['values']?.[0] || authStore.errors?.['values.0.value']?.[0]) ?? '') }}
+                    </Message>
+                </div>
+            </transition>
+
+            <!-- Boolean Yes/No Labels -->
+            <transition name="fade">
+                <div v-if="isBoolean" class="col-span-1 border border-surface-200 dark:border-surface-700 rounded-lg p-4 bg-surface-0 dark:bg-surface-900">
+                    <h3 class="text-sm font-semibold mb-3">{{ t('attribute.form.values') }}</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">{{ t('attribute.form.yes_label') }}</label>
+                            <InputText v-model="booleanLabels.yes" :placeholder="t('attribute.form.yes_placeholder')" class="w-full" size="small" :disabled="loading.isFormSending" />
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">{{ t('attribute.form.no_label') }}</label>
+                            <InputText v-model="booleanLabels.no" :placeholder="t('attribute.form.no_placeholder')" class="w-full" size="small" :disabled="loading.isFormSending" />
                         </div>
                     </div>
                 </div>

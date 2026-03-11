@@ -14,6 +14,7 @@ import { computed, defineAsyncComponent, markRaw, onMounted, ref, watch } from '
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useDialog } from 'primevue/usedialog';
+import { useConfirm } from 'primevue/useconfirm';
 import FormHeader from '@/components/FormHeader.vue';
 import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
 import ReputationBadge from '@/components/common/ReputationBadge.vue';
@@ -25,6 +26,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const loading = useLoading();
 const { showToast } = useShowToast();
+const confirm = useConfirm();
 
 const isEdit = computed(() => !!route.params.id);
 const orderId = computed(() => (route.params.id ? Number(route.params.id) : null));
@@ -45,13 +47,11 @@ const regions = ref<any[]>([]);
 
 const searchCustomer = async (event: any): Promise<void> => {
     const query = event.query?.trim() || '';
-    if (!query) {
-        filteredCustomers.value = [];
-        return;
-    }
     customerSearching.value = true;
     try {
-        const res = await useCustomerService.getCustomers({ filters: { global: { value: query, matchMode: 'contains' } }, rows: 15 });
+        const params: any = { rows: query ? 15 : 5 };
+        if (query) params.filters = { global: { value: query, matchMode: 'contains' } };
+        const res = await useCustomerService.getCustomers(params);
         filteredCustomers.value = res.data || [];
     } catch (e) {
         console.error('Customer search failed:', e);
@@ -62,9 +62,30 @@ const searchCustomer = async (event: any): Promise<void> => {
 };
 
 const onCustomerSelect = (event: any): void => {
-    record.value.customer_id = event.value.id;
-    selectedCustomer.value = event.value;
-    authStore.clearErrors(['customer_id']);
+    const customer = event.value;
+    if (customer.status === 'blocked') {
+        confirm.require({
+            group: 'dialog',
+            message: t('order.labels.blocked_customer_warning'),
+            header: t('common.labels.confirm'),
+            icon: 'pi pi-exclamation-triangle',
+            acceptProps: { label: t('common.labels.yes'), severity: 'danger' },
+            rejectProps: { label: t('common.labels.cancel'), severity: 'secondary', outlined: true },
+            accept: () => {
+                record.value.customer_id = customer.id;
+                selectedCustomer.value = customer;
+                authStore.clearErrors(['customer_id']);
+            },
+            reject: () => {
+                selectedCustomer.value = null;
+                record.value.customer_id = null;
+            }
+        });
+    } else {
+        record.value.customer_id = customer.id;
+        selectedCustomer.value = customer;
+        authStore.clearErrors(['customer_id']);
+    }
 };
 
 const onCustomerClear = (): void => {
@@ -209,12 +230,10 @@ const onBlurField = (path: string): void => {
 // Product search
 const searchProduct = async (event: any): Promise<void> => {
     const query = event.query?.trim() || '';
-    if (!query) {
-        filteredProducts.value = [];
-        return;
-    }
     try {
-        const res = await useProductService.getProducts({ filters: { global: { value: query, matchMode: 'contains' } }, rows: 15 });
+        const params: any = { rows: query ? 15 : 5 };
+        if (query) params.filters = { global: { value: query, matchMode: 'contains' } };
+        const res = await useProductService.getProducts(params);
         filteredProducts.value = res.products || [];
     } catch (e) {
         console.error('Product search failed:', e);
@@ -223,17 +242,36 @@ const searchProduct = async (event: any): Promise<void> => {
 };
 
 function addProductFromSearch(product: any): void {
-    record.value.items.push({
-        product_id: product.id,
-        product_variant_id: null,
-        product_name: product.name,
-        variant_label: null,
-        sku: product.sku_prefix || null,
-        quantity: 1,
-        unit_price: Number(product.sale_price) || 0,
-        stock: product.available_stock ?? product.total_stock ?? null
-    });
-    productSearch.value = '';
+    const stock = product.available_stock ?? product.total_stock ?? null;
+
+    const doAdd = () => {
+        record.value.items.push({
+            product_id: product.id,
+            product_variant_id: null,
+            product_name: product.name,
+            variant_label: null,
+            sku: product.sku_prefix || null,
+            quantity: 1,
+            unit_price: Number(product.sale_price) || 0,
+            stock
+        });
+        productSearch.value = '';
+    };
+
+    if (stock !== null && stock <= 0) {
+        confirm.require({
+            group: 'dialog',
+            message: t('order.labels.out_of_stock_warning'),
+            header: t('common.labels.confirm'),
+            icon: 'pi pi-exclamation-triangle',
+            acceptProps: { label: t('common.labels.yes'), severity: 'danger' },
+            rejectProps: { label: t('common.labels.cancel'), severity: 'secondary', outlined: true },
+            accept: () => doAdd(),
+            reject: () => { productSearch.value = ''; }
+        });
+    } else {
+        doAdd();
+    }
 }
 
 function addCustomItem(): void {
@@ -306,26 +344,44 @@ async function loadOrder(): Promise<void> {
     }
 }
 
-// Auto-fetch shipping fee
-async function fetchShippingFee(): Promise<void> {
-    if (!record.value.shipper_id || !record.value.shipping_type) return;
+// Cached shipping fees for both types
+const shippingFees = ref<{ home_delivery: number; stop_desk: number }>({ home_delivery: 0, stop_desk: 0 });
+
+// Auto-fetch both shipping fees when shipper or customer changes
+async function fetchShippingFees(): Promise<void> {
+    if (!record.value.shipper_id) return;
     const customer = selectedCustomer.value;
     const customerAddress = customer?.addresses?.[0];
     const regionId = customerAddress?.region?.id || customerAddress?.region;
     if (!regionId) return;
 
     try {
-        const response = await useOrderService.getShippingFee(record.value.shipper_id, regionId, record.value.shipping_type);
-        record.value.shipping_fee = Number(response.shipping_fee) || 0;
+        const response = await useOrderService.getShippingFee(record.value.shipper_id, regionId);
+        shippingFees.value = { home_delivery: Number(response.home_delivery) || 0, stop_desk: Number(response.stop_desk) || 0 };
+        // Apply the fee for the currently selected shipping type
+        applyShippingFee();
     } catch (error) {
-        console.error('Error fetching shipping fee:', error);
+        console.error('Error fetching shipping fees:', error);
     }
 }
 
+function applyShippingFee(): void {
+    record.value.shipping_fee = record.value.shipping_type === 'home_delivery' ? shippingFees.value.home_delivery : shippingFees.value.stop_desk;
+}
+
+// Fetch both fees when shipper or customer changes
 watch(
-    () => [record.value.shipper_id, record.value.shipping_type, record.value.customer_id],
+    () => [record.value.shipper_id, record.value.customer_id],
     () => {
-        fetchShippingFee();
+        fetchShippingFees();
+    }
+);
+
+// Apply cached fee instantly when shipping type changes (no API call)
+watch(
+    () => record.value.shipping_type,
+    () => {
+        applyShippingFee();
     }
 );
 
@@ -530,9 +586,11 @@ onMounted(async () => {
                                 :placeholder="t('order.labels.search_customer')"
                                 :disabled="loading.isFormSending"
                                 :loading="customerSearching"
+                                dropdown
                                 fluid
                                 :minLength="1"
                                 class="flex-1"
+                                :pt="{ dropdown: { class: '!border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-900' } }"
                                 :invalid="!!authStore.errors?.['customer_id']?.[0]"
                                 @complete="searchCustomer"
                                 @item-select="onCustomerSelect"
@@ -550,6 +608,7 @@ onMounted(async () => {
                                                 <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full leading-none" :style="{ color: getReputation(option).color, backgroundColor: getReputation(option).bgColor }">
                                                     {{ getReputation(option).label }}
                                                 </span>
+                                                <Tag v-if="option.status === 'blocked'" severity="danger" :value="t('customer.labels.blocked')" icon="pi pi-ban" class="!text-[9px] !py-0 !px-1.5" />
                                             </div>
                                             <!-- Contact details -->
                                             <div class="flex items-center gap-3 text-[11px] text-surface-400 mb-1.5">
@@ -569,12 +628,15 @@ onMounted(async () => {
 
                         <!-- Customer Info Card (after selection) -->
                         <div v-if="selectedCustomer && selectedCustomer.id" class="p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 mb-8">
+                            <Message v-if="selectedCustomer.status === 'blocked'" severity="warn" icon="pi pi-exclamation-triangle" :closable="false" class="mb-4">
+                                {{ t('order.labels.blocked_customer_warning') }}
+                            </Message>
                             <!-- Header: avatar + name + close -->
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center gap-3">
                                     <div class="relative">
                                         <InitialsAvatar :name="selectedCustomer.name" size="lg" />
-                                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-surface-800 rounded-full"></span>
+                                        <span class="absolute bottom-0 right-0 w-3 h-3 border-2 border-white dark:border-surface-800 rounded-full" :class="selectedCustomer.status === 'blocked' ? 'bg-red-500' : 'bg-green-500'"></span>
                                     </div>
                                     <span class="font-bold text-surface-800 dark:text-surface-100">{{ selectedCustomer.name }}</span>
                                 </div>
@@ -785,9 +847,10 @@ onMounted(async () => {
                                     optionLabel="name"
                                     :placeholder="t('order.placeholders.scan_or_search')"
                                     class="flex-1 border-none"
-                                    :pt="{ pcInputText: { root: { class: 'border-none shadow-none w-full' } } }"
+                                    :pt="{ pcInputText: { root: { class: 'border-none shadow-none w-full' } }, dropdown: { class: '!border-surface-0 dark:border-surface-600 bg-surface-50 dark:bg-surface-900' } }"
                                     @complete="searchProduct"
                                     @item-select="(e: any) => addProductFromSearch(e.value)"
+                                    dropdown
                                     forceSelection
                                 >
                                     <template #option="{ option }">
@@ -818,10 +881,10 @@ onMounted(async () => {
                                     <tr class="border-b border-surface-200 dark:border-surface-700">
                                         <th class="text-left py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-10">#</th>
                                         <th class="text-left py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider">{{ t('order.columns.product') }}</th>
-                                        <th class="text-left py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-24">{{ t('order.columns.sku') }}</th>
-                                        <th class="text-center py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-28">{{ t('order.columns.qty') }}</th>
-                                        <th class="text-right py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-32">{{ t('order.columns.price') }}</th>
-                                        <th class="text-right py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-28">{{ t('order.columns.item_total') }}</th>
+                                        <th class="text-left py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-28">{{ t('order.columns.sku') }}</th>
+                                        <th class="text-center py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-24">{{ t('order.columns.qty') }}</th>
+                                        <th class="text-center py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-36">{{ t('order.columns.price') }}</th>
+                                        <th class="text-right py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-36">{{ t('order.columns.item_total') }}</th>
                                         <th class="w-10"></th>
                                     </tr>
                                 </thead>
@@ -870,8 +933,8 @@ onMounted(async () => {
                                                 </button>
                                             </div>
                                         </td>
-                                        <td class="py-4 px-2 text-right">
-                                            <InputNumber v-model="item.unit_price" mode="currency" currency="DZD" locale="fr-DZ" class="w-28" size="small" :min="0" />
+                                        <td class="py-4 px-2 text-center">
+                                            <InputNumber v-model="item.unit_price" mode="currency" currency="DZD" locale="fr-DZ" :style="{ width: '10rem' }" :pt="{ pcInputText: { root: { style: 'width: 100%' } } }" size="small" :min="0" />
                                         </td>
                                         <td class="py-4 px-2 text-right font-bold text-surface-800 dark:text-surface-100">{{ (item.quantity * item.unit_price).toLocaleString('fr-DZ') }} DA</td>
                                         <td class="py-4 px-2 text-center">

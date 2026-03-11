@@ -30,5 +30,11 @@ export const useSubscriptionService = {
         await apiClient.get('/sanctum/csrf-cookie');
         const response = await apiClient.patch<ToggleActiveSubscriptionResponse>(`/api/admin/subscriptions/${subscriptionId}/toggle`);
         return response.data;
+    },
+
+    async bulkUpdate(ids: number[], field: string, value: boolean): Promise<{ message: string }> {
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.patch<{ message: string }>('/api/admin/subscriptions/bulk-update', { ids, field, value });
+        return response.data;
     }
 };

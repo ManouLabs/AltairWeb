@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BulkActionBar from '@/components/BulkActionBar.vue';
+import type { BulkAction } from '@/components/BulkActionBar.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
@@ -8,7 +10,9 @@ import { useDynamicColumns } from '@/composables/useDynamicColumns';
 import { useLock } from '@/composables/useLock';
 import { useRowEffects } from '@/composables/useRowEffects';
 import { useOrderService } from '@/services/useOrderService';
+import { useShopService } from '@/services/useShopService';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useLoading } from '@/stores/useLoadingStore';
 import { findRecordIndex } from '@/utilities/helper';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { OrderData } from '@/types/order';
@@ -21,14 +25,18 @@ import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
 
 const { t } = useI18n();
 const authStore = useAuthStore();
+const loading = useLoading();
 const confirm = useConfirm();
 const router = useRouter();
 const { showToast } = useShowToast();
 
 const defaultFiltersConfig = {
     reference: FilterMatchMode.CONTAINS,
+    customer: FilterMatchMode.CONTAINS,
     status: FilterMatchMode.EQUALS,
-    source: FilterMatchMode.EQUALS
+    source: FilterMatchMode.EQUALS,
+    shop: FilterMatchMode.EQUALS,
+    payment_status: FilterMatchMode.EQUALS
 };
 
 const dataLoaded = ref(false);
@@ -147,6 +155,7 @@ function confirmDeleteRecord(event: MouseEvent | null, orderIds: number[]): void
                         const index = findRecordIndex(records, id);
                         if (index !== -1) records.value.splice(index, 1);
                     });
+                    selectedRecords.value = [];
                     showToast('success', ACTIONS.DELETE, 'order', 'tc');
                 })
                 .catch((error: any) => {
@@ -215,10 +224,76 @@ const shippingTypeIcon = (type: string) => {
     return type === 'home_delivery' ? 'pi pi-home' : 'pi pi-building';
 };
 
+const allShops = ref<{ id: number; name: string }[]>([]);
+
+async function loadShops(): Promise<void> {
+    try {
+        const data = await useShopService.getShops();
+        allShops.value = (data.data || []).map((s: any) => ({ id: s.id, name: s.name }));
+    } catch (e) {
+        console.error('Failed to load shops');
+    }
+}
+
 onMounted(() => {
     initialize();
     subscribeToEcho();
+    loadShops();
 });
+
+// ── Bulk Actions ────────────────────────────────────────────
+const bulkActions = computed<BulkAction[]>(() => [
+    {
+        key: 'status',
+        label: t('common.labels.bulk_update_status'),
+        type: 'select',
+        options: [
+            { label: t('order.statuses.pending'), value: 'pending' },
+            { label: t('order.statuses.confirmed'), value: 'confirmed' },
+            { label: t('order.statuses.shipping'), value: 'shipping' },
+            { label: t('order.statuses.delivered'), value: 'delivered' },
+            { label: t('order.statuses.cancelled'), value: 'cancelled' },
+            { label: t('order.statuses.returned'), value: 'returned' }
+        ]
+    },
+    {
+        key: 'mark_as',
+        label: t('common.labels.bulk_mark_as'),
+        type: 'select',
+        options: [
+            { label: t('order.payment_statuses.paid'), value: 'paid' },
+            { label: t('order.payment_statuses.not_paid'), value: 'not_paid' }
+        ]
+    }
+]);
+
+async function handleBulkAction(payload: { key: string; value?: string }): Promise<void> {
+    const ids = selectedRecords.value.map((r: OrderData) => r.id);
+    if (!ids.length || !payload.value) return;
+
+    loading.startPageLoading();
+    try {
+        if (payload.key === 'status') {
+            await useOrderService.bulkUpdateOrders(ids, 'status', payload.value);
+        } else if (payload.key === 'mark_as') {
+            await useOrderService.bulkUpdateOrders(ids, 'payment_status', payload.value);
+        }
+        const field = payload.key === 'status' ? 'status' : 'payment_status';
+        ids.forEach((id) => {
+            const index = findRecordIndex(records, id);
+            if (index !== -1) {
+                records.value[index][field] = payload.value!;
+                markHighlight(id, 'updated');
+            }
+        });
+        showToast('success', ACTIONS.UPDATE, 'orders');
+        selectedRecords.value = [];
+    } catch (error) {
+        showToast('error', ACTIONS.UPDATE, 'orders', undefined, error);
+    } finally {
+        loading.stopPageLoading();
+    }
+}
 
 onUnmounted(() => {
     if (subscription.value) subscription.value.stopListening('DataStream');
@@ -276,20 +351,6 @@ onUnmounted(() => {
                     <Toolbar class="w-full">
                         <template #start>
                             <div class="flex space-x-2">
-                                <Button
-                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.orders') })"
-                                    :label="t('common.labels.delete_selected')"
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    @click="
-                                        confirmDeleteRecord(
-                                            $event,
-                                            selectedRecords.map((r: OrderData) => r.id)
-                                        )
-                                    "
-                                    outlined
-                                    :disabled="!selectedRecords || !selectedRecords.length"
-                                />
                                 <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                             </div>
                         </template>
@@ -313,7 +374,18 @@ onUnmounted(() => {
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
 
                 <!-- Reference Column -->
-                <Column columnKey="reference" field="reference" :frozen="frozenColumns.reference" v-if="selectedColumns.some((c: Column) => c.field === 'reference')" sortable class="min-w-36">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="reference"
+                    field="reference"
+                    :frozen="frozenColumns.reference"
+                    v-if="selectedColumns.some((c: Column) => c.field === 'reference')"
+                    sortable
+                    class="min-w-36"
+                >
                     <template #header>
                         <HeaderCell
                             :text="t('order.columns.reference')"
@@ -335,10 +407,28 @@ onUnmounted(() => {
                             </div>
                         </DataCell>
                     </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
                 </Column>
 
                 <!-- Customer Column -->
-                <Column columnKey="customer" field="customer" v-if="selectedColumns.some((c: Column) => c.field === 'customer')" class="min-w-52">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="customer"
+                    field="customer"
+                    v-if="selectedColumns.some((c: Column) => c.field === 'customer')"
+                    class="min-w-52"
+                >
                     <template #header>
                         <HeaderCell :text="t('order.columns.customer')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
@@ -364,6 +454,15 @@ onUnmounted(() => {
                                 <ReputationBadge :reputation="data.customer.reputation" size="sm" />
                             </div>
                         </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <InputText v-model="filterModel.value" size="small" :placeholder="t('order.columns.customer')" />
+                            <InputGroupAddon>
+                                <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
                     </template>
                 </Column>
 
@@ -391,7 +490,17 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 6. Status Column (with icon) -->
-                <Column columnKey="status" field="status" v-if="selectedColumns.some((c: Column) => c.field === 'status')" sortable class="min-w-28">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="status"
+                    field="status"
+                    v-if="selectedColumns.some((c: Column) => c.field === 'status')"
+                    sortable
+                    class="min-w-28"
+                >
                     <template #header>
                         <HeaderCell :text="t('order.columns.status')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
@@ -400,10 +509,44 @@ onUnmounted(() => {
                             <Tag :value="t(`order.statuses.${data.status}`)" :severity="statusSeverity(data.status)" :icon="statusIcon(data.status)" />
                         </DataCell>
                     </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <Select
+                                v-model="filterModel.value"
+                                :options="[
+                                    { label: t('order.statuses.pending'), value: 'pending' },
+                                    { label: t('order.statuses.confirmed'), value: 'confirmed' },
+                                    { label: t('order.statuses.shipping'), value: 'shipping' },
+                                    { label: t('order.statuses.delivered'), value: 'delivered' },
+                                    { label: t('order.statuses.cancelled'), value: 'cancelled' },
+                                    { label: t('order.statuses.returned'), value: 'returned' }
+                                ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                :placeholder="t('order.columns.status')"
+                                class="w-full"
+                                size="small"
+                            />
+                            <InputGroupAddon>
+                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
                 </Column>
 
                 <!-- 3. Source Column (with icon) -->
-                <Column columnKey="source" field="source" v-if="selectedColumns.some((c: Column) => c.field === 'source')" sortable class="min-w-28">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="source"
+                    field="source"
+                    v-if="selectedColumns.some((c: Column) => c.field === 'source')"
+                    sortable
+                    class="min-w-28"
+                >
                     <template #header>
                         <HeaderCell :text="t('order.columns.source')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
@@ -415,6 +558,32 @@ onUnmounted(() => {
                             </div>
                             <span v-else class="text-muted-color">—</span>
                         </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <Select
+                                v-model="filterModel.value"
+                                :options="[
+                                    { label: t('order.sources.tiktok'), value: 'tiktok' },
+                                    { label: t('order.sources.whatsapp'), value: 'whatsapp' },
+                                    { label: t('order.sources.facebook'), value: 'facebook' },
+                                    { label: t('order.sources.youcan'), value: 'youcan' },
+                                    { label: t('order.sources.shopify'), value: 'shopify' },
+                                    { label: t('order.sources.woocommerce'), value: 'woocommerce' },
+                                    { label: t('order.sources.direct_website'), value: 'direct_website' },
+                                    { label: t('order.sources.other'), value: 'other' }
+                                ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                :placeholder="t('order.columns.source')"
+                                class="w-full"
+                                size="small"
+                            />
+                            <InputGroupAddon>
+                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
                     </template>
                 </Column>
 
@@ -435,7 +604,7 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 1. Shop Column (with icon, no image field exists) -->
-                <Column columnKey="shop" field="shop" v-if="selectedColumns.some((c: Column) => c.field === 'shop')" class="min-w-28">
+                <Column :showClearButton="false" :showApplyButton="false" :showFilterMatchModes="false" :showFilterOperator="false" columnKey="shop" field="shop" v-if="selectedColumns.some((c: Column) => c.field === 'shop')" class="min-w-28">
                     <template #header>
                         <HeaderCell :text="t('order.columns.shop')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
@@ -448,6 +617,15 @@ onUnmounted(() => {
                             <span v-else class="text-muted-color">—</span>
                         </DataCell>
                     </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <Select v-model="filterModel.value" :options="allShops" optionLabel="name" optionValue="id" :placeholder="t('order.columns.shop')" class="w-full" size="small" />
+                            <InputGroupAddon>
+                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
+                    </template>
                 </Column>
 
                 <!-- 2. Shipper Column (with icon) -->
@@ -459,7 +637,7 @@ onUnmounted(() => {
                         <DataCell>
                             <div v-if="data.shipper" class="flex items-center gap-2">
                                 <i class="pi pi-truck text-surface-500"></i>
-                                <div>
+                                <div class="flex flex-col">
                                     <span class="text-sm block">{{ data.shipper.name }}</span>
                                     <span v-if="data.shipper.type" class="text-[10px] text-surface-400 capitalize">{{ data.shipper.type }}</span>
                                 </div>
@@ -506,7 +684,16 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 7. Payment Status Column (with icon) -->
-                <Column columnKey="payment_status" field="payment_status" v-if="selectedColumns.some((c: Column) => c.field === 'payment_status')" class="min-w-28">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="payment_status"
+                    field="payment_status"
+                    v-if="selectedColumns.some((c: Column) => c.field === 'payment_status')"
+                    class="min-w-28"
+                >
                     <template #header>
                         <HeaderCell :text="t('order.columns.payment_status')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
                     </template>
@@ -514,6 +701,26 @@ onUnmounted(() => {
                         <DataCell>
                             <Tag :value="t(`order.payment_statuses.${data.payment_status}`)" :severity="paymentSeverity(data.payment_status)" :icon="paymentIcon(data.payment_status)" />
                         </DataCell>
+                    </template>
+                    <template #filter="{ filterModel, applyFilter }">
+                        <InputGroup>
+                            <Select
+                                v-model="filterModel.value"
+                                :options="[
+                                    { label: t('order.payment_statuses.paid'), value: 'paid' },
+                                    { label: t('order.payment_statuses.not_paid'), value: 'not_paid' }
+                                ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                :placeholder="t('order.columns.payment_status')"
+                                class="w-full"
+                                size="small"
+                            />
+                            <InputGroupAddon>
+                                <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
+                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                            </InputGroupAddon>
+                        </InputGroup>
                     </template>
                 </Column>
 
@@ -550,6 +757,20 @@ onUnmounted(() => {
                     </div>
                 </template>
             </DataTable>
+
+            <!-- Bulk Action Bar -->
+            <BulkActionBar
+                :selectedCount="selectedRecords.length"
+                :entityLabel="t('entity.orders').toLowerCase()"
+                :actions="bulkActions"
+                @action="handleBulkAction"
+                @delete="
+                    confirmDeleteRecord(
+                        null,
+                        selectedRecords.map((r: OrderData) => r.id)
+                    )
+                "
+            />
         </template>
     </div>
 </template>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import ActiveToggleButton from '@/components/ActiveToggleButton.vue';
+import BulkActionBar from '@/components/BulkActionBar.vue';
+import type { BulkAction } from '@/components/BulkActionBar.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
@@ -255,6 +257,43 @@ onUnmounted(() => {
         subscription.value.stopListening('DataStream');
     }
 });
+
+// ── Bulk Actions ────────────────────────────────────────────
+const bulkActions = computed<BulkAction[]>(() => [
+    {
+        key: 'mark_as',
+        label: t('common.labels.bulk_mark_as'),
+        type: 'select',
+        options: [
+            { label: t('common.labels.active'), value: 'active' },
+            { label: t('common.labels.inactive'), value: 'inactive' }
+        ]
+    }
+]);
+
+async function handleBulkAction(payload: { key: string; value?: string }): Promise<void> {
+    const ids = selectedRecords.value.map((r: ProductData) => r.id);
+    if (!ids.length || !payload.value) return;
+
+    loading.startPageLoading();
+    try {
+        await useProductService.bulkUpdate(ids, 'active', payload.value === 'active');
+        const newValue = payload.value === 'active';
+        ids.forEach((id) => {
+            const index = findRecordIndex(records, id);
+            if (index !== -1) {
+                records.value[index].active = newValue;
+                markHighlight(id, 'updated');
+            }
+        });
+        showToast('success', ACTIONS.UPDATE, 'product', 'tc');
+        selectedRecords.value = [];
+    } catch (error) {
+        showToast('error', ACTIONS.UPDATE, 'product', 'tc', error);
+    } finally {
+        loading.stopPageLoading();
+    }
+}
 </script>
 
 <template>
@@ -338,22 +377,6 @@ onUnmounted(() => {
                     <Toolbar class="w-full">
                         <template #start>
                             <div class="flex space-x-2">
-                                <Button
-                                    v-if="authStore.hasPermission('delete_products')"
-                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.products') })"
-                                    :label="t('common.labels.delete_selected')"
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    @click="
-                                        confirmDeleteRecord(
-                                            $event,
-                                            selectedRecords.map((record: ProductData) => record.id)
-                                        )
-                                    "
-                                    outlined
-                                    :disabled="!selectedRecords || !selectedRecords.length"
-                                    :loading="isDeleting"
-                                />
                                 <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                             </div>
                         </template>
@@ -627,6 +650,19 @@ onUnmounted(() => {
                     </div>
                 </template>
             </DataTable>
+
+            <BulkActionBar
+                :selectedCount="selectedRecords.length"
+                :entityLabel="t('entity.products').toLowerCase()"
+                :actions="bulkActions"
+                @action="handleBulkAction"
+                @delete="
+                    confirmDeleteRecord(
+                        null,
+                        selectedRecords.map((r: ProductData) => r.id)
+                    )
+                "
+            />
         </template>
     </div>
 </template>

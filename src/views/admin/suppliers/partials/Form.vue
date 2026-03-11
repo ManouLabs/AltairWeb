@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FormSkeleton from './FormSkeleton.vue';
 import { useRegionService } from '@/services/useRegionService';
 import { useSupplierService } from '@/services/useSupplierService';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -6,9 +7,9 @@ import { useLoading } from '@/stores/useLoadingStore';
 import { ACTIONS, useShowToast } from '@/utilities/toast';
 import { supplierSchema } from '@/validations/supplier';
 import { validate, validateField } from '@/validations/validate';
-import type { SupplierData } from '@/types/supplier';
+import { SUPPLIER_TYPES, type SupplierData, type SupplierType } from '@/types/supplier';
 import type { Region } from '@/types/region';
-import { inject, onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -33,22 +34,21 @@ const dialogRef = inject<DialogRef>('dialogRef');
 const action = ref<string>('');
 const regions = ref<Region[]>([]);
 const schema = supplierSchema;
+const formReady = ref(false);
 
 const contactMethodOptions = [
     { value: 'phone', label: t('contact.types.phone'), icon: 'pi pi-phone' },
     { value: 'email', label: t('contact.types.email'), icon: 'pi pi-envelope' }
 ];
 
-// Supplier type options with icons
-const supplierTypes = [
-    { label: t('supplier.types.manufacturer'), value: 'manufacturer', icon: 'pi pi-cog' },
-    { label: t('supplier.types.wholesaler'), value: 'wholesaler', icon: 'pi pi-warehouse' },
-    { label: t('supplier.types.distributor'), value: 'distributor', icon: 'pi pi-truck' },
-    { label: t('supplier.types.importer'), value: 'importer', icon: 'pi pi-globe' },
-    { label: t('supplier.types.service_provider'), value: 'service_provider', icon: 'pi pi-wrench' },
-    { label: t('supplier.types.agent_broker'), value: 'agent_broker', icon: 'pi pi-users' },
-    { label: t('supplier.types.other'), value: 'other', icon: 'pi pi-ellipsis-h' }
-];
+// Supplier type options derived from centralized config
+const supplierTypes = computed(() =>
+    (Object.keys(SUPPLIER_TYPES) as SupplierType[]).map((key) => ({
+        value: key,
+        label: t(`supplier.types.${key}`),
+        icon: SUPPLIER_TYPES[key].icon
+    }))
+);
 
 // Form state
 const record: Ref<any> = ref({
@@ -205,11 +205,14 @@ onMounted(async () => {
             };
         }
     }
+
+    formReady.value = true;
 });
 </script>
 
 <template>
-    <div class="flex flex-col gap-6 p-6">
+    <FormSkeleton v-if="!formReady" />
+    <div v-else class="flex flex-col gap-6 p-6">
         <!-- Logo Upload Area -->
         <FileUploadField
             v-model="record.files"
@@ -274,7 +277,7 @@ onMounted(async () => {
         <!-- CONTACT METHODS Section (inline repeater) -->
         <div>
             <div class="border border-surface-200 dark:border-surface-700 rounded-xl p-6">
-                <h3 class="text-lg font-semibold mb-4">{{ t('common.labels.contact_methods') }}</h3>
+                <h3 class="text-lg font-semibold mb-4">{{ t('contact.labels.contact_methods') }}</h3>
                 <div class="flex flex-wrap items-center gap-2">
                     <!-- Existing method chips -->
                     <div v-for="(contactMethod, methodIndex) in record.contactMethods" :key="methodIndex" class="flex items-center gap-1 bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-md pl-1 pr-2 py-0.5">
@@ -327,6 +330,9 @@ onMounted(async () => {
                 </div>
 
                 <!-- Validation errors for methods -->
+                <Message v-if="authStore.errors?.['contactMethods']?.[0]" severity="error" size="small" class="mt-2">
+                    {{ authStore.errors?.['contactMethods']?.[0] }}
+                </Message>
                 <template v-for="(contactMethod, methodIndex) in record.contactMethods" :key="`err_${methodIndex}`">
                     <Message v-if="authStore.errors?.[`contactMethods.${methodIndex}.value`]?.[0]" severity="error" size="small" class="mt-2">
                         {{ authStore.errors?.[`contactMethods.${methodIndex}.value`]?.[0] }}

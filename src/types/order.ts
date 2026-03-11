@@ -91,6 +91,7 @@ export interface DeleteOrdersResponse {
 }
 
 export interface ShippingFeeResponse {
-    shipping_fee: number;
+    home_delivery: number;
+    stop_desk: number;
     message?: string;
 }

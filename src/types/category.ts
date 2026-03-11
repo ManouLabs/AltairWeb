@@ -19,6 +19,7 @@ export interface CategoryData {
         name: string;
     } | null;
     children?: CategoryData[];
+    products_count?: number;
 }
 
 export interface CategoryFormData {

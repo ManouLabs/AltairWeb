@@ -31,11 +31,20 @@ export const useOrderService = {
         return response.data;
     },
 
-    async getShippingFee(shipperId: number, regionId: number, shippingType: string): Promise<ShippingFeeResponse> {
+    async bulkUpdateOrders(orderIds: number[], field: string, value: string): Promise<{ message: string }> {
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.patch<{ message: string }>('/api/admin/orders/bulk-update', {
+            orders: orderIds,
+            field,
+            value
+        });
+        return response.data;
+    },
+
+    async getShippingFee(shipperId: number, regionId: number): Promise<ShippingFeeResponse> {
         const response = await apiClient.post<ShippingFeeResponse>('/api/admin/orders/shipping-fee', {
             shipper_id: shipperId,
-            region_id: regionId,
-            shipping_type: shippingType
+            region_id: regionId
         });
         return response.data;
     }
