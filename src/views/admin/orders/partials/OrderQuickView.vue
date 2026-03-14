@@ -120,7 +120,7 @@ function getCustomerEmail(order: OrderData): string | null {
 </script>
 
 <template>
-    <Drawer v-model:visible="visible" position="right" :header="order?.reference ?? '...'" :style="{ width: '32rem' }" :blockScroll="true">
+    <Drawer v-model:visible="visible" position="right" :header="order?.reference ?? '...'" :style="{ width: '36rem' }" :blockScroll="true">
         <!-- Skeleton while loading -->
         <OrderQuickViewSkeleton v-if="loading" />
 

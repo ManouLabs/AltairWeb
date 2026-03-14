@@ -269,6 +269,35 @@
         "sign_up": "Sign up for a new account",
         "error": "Login error"
     },
+    "forgot_password_page": {
+        "title": "Forgot your password?",
+        "description": "Enter your email address and we'll send you a link to reset your password.",
+        "hero_title": "Reset your password",
+        "hero_description": "Don't worry, it happens to the best of us. Enter your email and we'll help you get back into your account.",
+        "email": "Email address",
+        "email_placeholder": "name{'@'}company.com",
+        "send_link": "Send Reset Link",
+        "back_to_login": "Back to login",
+        "check_inbox": "Check your inbox",
+        "sent_to": "We've sent a recovery link to",
+        "follow_instructions": "Please follow the instructions to reset your password.",
+        "didnt_receive": "Didn't receive the email?",
+        "resend_link": "Resend Link",
+        "error": "Failed to send reset link"
+    },
+    "reset_password_page": {
+        "title": "Set a new password",
+        "description": "Choose a strong password to secure your account.",
+        "hero_title": "Almost there!",
+        "hero_description": "Create a new password for your account. Make sure it's secure and easy to remember.",
+        "email": "Email address",
+        "new_password": "New password",
+        "confirm_password": "Confirm password",
+        "reset_button": "Reset Password",
+        "back_to_login": "Back to login",
+        "success": "Password reset successfully",
+        "error": "Failed to reset password"
+    },
     "logout": {
         "error": "Logout error"
     },

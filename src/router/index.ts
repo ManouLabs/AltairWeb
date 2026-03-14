@@ -210,6 +210,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/pages/auth/Login.vue'),
         meta: { requiresGuest: true }
     },
+    {
+        path: '/auth/forgot-password',
+        name: 'forgot-password',
+        component: () => import('@/views/pages/auth/ForgotPassword.vue'),
+        meta: { requiresGuest: true }
+    },
+    {
+        path: '/password-reset/:token',
+        name: 'reset-password',
+        component: () => import('@/views/pages/auth/ResetPassword.vue'),
+        meta: { requiresGuest: true }
+    },
     { path: '/auth/access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
     { path: '/auth/error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') },
     {

@@ -135,6 +135,10 @@ function viewRecord(row: OrderData): void {
     drawerVisible.value = true;
 }
 
+function onRowClick(event: any): void {
+    viewRecord(event.data);
+}
+
 function confirmDeleteRecord(event: MouseEvent | null, orderIds: number[]): void {
     confirm.require({
         modal: true,
@@ -290,11 +294,12 @@ onUnmounted(() => {
                 removableSort
                 scrollable
                 rowHover
+                @row-click="onRowClick"
                 size="small"
                 :pt="{
                     table: { style: 'min-width: 90rem' },
                     bodyrow: ({ props }: { props: { frozenRow: boolean } }) => ({
-                        class: [{ 'font-bold': props.frozenRow }]
+                        class: ['cursor-pointer', { 'font-bold': props.frozenRow }]
                     })
                 }"
             >
@@ -351,7 +356,7 @@ onUnmounted(() => {
                         <DataCell>
                             <div class="flex items-center gap-2" :class="{ 'font-bold': frozenColumns.reference || highlights[data.id] }">
                                 <div>
-                                    <span class="font-mono text-primary font-semibold cursor-pointer hover:underline" @click="viewRecord(data)">{{ data.reference }}</span>
+                                    <span class="font-mono text-primary font-semibold cursor-pointer hover:underline" @click.stop="editRecord(data)">{{ data.reference }}</span>
                                     <div class="text-xs text-surface-400 mt-0.5">{{ data.created_at ? new Date(data.created_at).toLocaleDateString() : '—' }}</div>
                                 </div>
                                 <DataTableHighlightTag v-if="highlights[data.id]" :state="highlights[data.id]" />
@@ -377,11 +382,12 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     columnKey="customer"
                     field="customer"
+                    :frozen="frozenColumns.customer"
                     v-if="selectedColumns.some((c: Column) => c.field === 'customer')"
                     class="min-w-52"
                 >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.customer')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.customer')" :frozen="frozenColumns.customer" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('customer')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -418,9 +424,9 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 5. Products Column -->
-                <Column columnKey="products" field="products" v-if="selectedColumns.some((c: Column) => c.field === 'products')" class="min-w-44">
+                <Column columnKey="products" field="products" :frozen="frozenColumns.products" v-if="selectedColumns.some((c: Column) => c.field === 'products')" class="min-w-44">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.products')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.products')" :frozen="frozenColumns.products" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('products')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -448,12 +454,13 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     columnKey="status"
                     field="status"
+                    :frozen="frozenColumns.status"
                     v-if="selectedColumns.some((c: Column) => c.field === 'status')"
                     sortable
                     class="min-w-28"
                 >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.status')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.status')" :frozen="frozenColumns.status" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('status')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -494,12 +501,13 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     columnKey="source"
                     field="source"
+                    :frozen="frozenColumns.source"
                     v-if="selectedColumns.some((c: Column) => c.field === 'source')"
                     sortable
                     class="min-w-28"
                 >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.source')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.source')" :frozen="frozenColumns.source" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('source')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -539,9 +547,9 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 4. Shipping Type Column (with icon) -->
-                <Column columnKey="shipping_type" field="shipping_type" v-if="selectedColumns.some((c: Column) => c.field === 'shipping_type')" class="min-w-32">
+                <Column columnKey="shipping_type" field="shipping_type" :frozen="frozenColumns.shipping_type" v-if="selectedColumns.some((c: Column) => c.field === 'shipping_type')" class="min-w-32">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.shipping_type')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.shipping_type')" :frozen="frozenColumns.shipping_type" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('shipping_type')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -555,9 +563,9 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 1. Shop Column (with icon, no image field exists) -->
-                <Column :showClearButton="false" :showApplyButton="false" :showFilterMatchModes="false" :showFilterOperator="false" columnKey="shop" field="shop" v-if="selectedColumns.some((c: Column) => c.field === 'shop')" class="min-w-28">
+                <Column :showClearButton="false" :showApplyButton="false" :showFilterMatchModes="false" :showFilterOperator="false" columnKey="shop" field="shop" :frozen="frozenColumns.shop" v-if="selectedColumns.some((c: Column) => c.field === 'shop')" class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.shop')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.shop')" :frozen="frozenColumns.shop" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('shop')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -580,9 +588,9 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 2. Shipper Column (with icon) -->
-                <Column columnKey="shipper" field="shipper" v-if="selectedColumns.some((c: Column) => c.field === 'shipper')" class="min-w-28">
+                <Column columnKey="shipper" field="shipper" :frozen="frozenColumns.shipper" v-if="selectedColumns.some((c: Column) => c.field === 'shipper')" class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.shipper')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.shipper')" :frozen="frozenColumns.shipper" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('shipper')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -599,9 +607,9 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 9. Subtotal Column -->
-                <Column columnKey="subtotal" field="subtotal" v-if="selectedColumns.some((c: Column) => c.field === 'subtotal')" sortable class="min-w-28">
+                <Column columnKey="subtotal" field="subtotal" :frozen="frozenColumns.subtotal" v-if="selectedColumns.some((c: Column) => c.field === 'subtotal')" sortable class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.subtotal')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.subtotal')" :frozen="frozenColumns.subtotal" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('subtotal')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -611,9 +619,9 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 8. Shipping Fee Column -->
-                <Column columnKey="shipping_fee" field="shipping_fee" v-if="selectedColumns.some((c: Column) => c.field === 'shipping_fee')" sortable class="min-w-28">
+                <Column columnKey="shipping_fee" field="shipping_fee" :frozen="frozenColumns.shipping_fee" v-if="selectedColumns.some((c: Column) => c.field === 'shipping_fee')" sortable class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.shipping_fee')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.shipping_fee')" :frozen="frozenColumns.shipping_fee" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('shipping_fee')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -623,9 +631,9 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- Total Column -->
-                <Column columnKey="total" field="total" v-if="selectedColumns.some((c: Column) => c.field === 'total')" sortable class="min-w-28">
+                <Column columnKey="total" field="total" :frozen="frozenColumns.total" v-if="selectedColumns.some((c: Column) => c.field === 'total')" sortable class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.total')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.total')" :frozen="frozenColumns.total" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('total')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -642,11 +650,12 @@ onUnmounted(() => {
                     :showFilterOperator="false"
                     columnKey="payment_status"
                     field="payment_status"
+                    :frozen="frozenColumns.payment_status"
                     v-if="selectedColumns.some((c: Column) => c.field === 'payment_status')"
                     class="min-w-28"
                 >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.payment_status')" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" />
+                        <HeaderCell :text="t('order.columns.payment_status')" :frozen="frozenColumns.payment_status" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('payment_status')" />
                     </template>
                     <template #body="{ data }">
                         <DataCell>

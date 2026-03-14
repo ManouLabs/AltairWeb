@@ -2,37 +2,48 @@
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLoading } from '@/stores/useLoadingStore';
 import { useShowToast } from '@/utilities/toast';
+import apiClient from '@/services/axios';
 import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const { showToast } = useShowToast();
 const loading = useLoading();
 const router = useRouter();
-const email = ref('');
-const password = ref('');
-const rememberMe = ref(false);
+const route = useRoute();
 const authStore = useAuthStore();
 
-// Redirect to admin if already logged in
+const token = ref('');
+const email = ref('');
+const password = ref('');
+const password_confirmation = ref('');
+
 onMounted(() => {
     loading.stopPageLoading();
+    authStore.clearErrors();
     if (authStore.isLoggedIn) {
         router.push('/admin');
     }
+    token.value = String(route.params.token || '');
+    email.value = String(route.query.email || '');
 });
 
-const loginUser = async () => {
+const resetPassword = async () => {
     try {
+        authStore.clearErrors();
         loading.startFormSending();
-        await authStore.login(email.value, password.value, rememberMe.value);
-        authStore.redirectUser();
+        await apiClient.get('/sanctum/csrf-cookie');
+        const response = await apiClient.post('/reset-password', {
+            token: token.value,
+            email: email.value,
+            password: password.value,
+            password_confirmation: password_confirmation.value
+        });
+        showToast('success', response.data.status || t('reset_password_page.success'), 'password', 'tc');
+        router.push({ name: 'login' });
     } catch (error) {
-        // If it's a specific validation error pushed by backend check
-        if (authStore.errors.email && authStore.errors.email[0].includes('subscription')) {
-            showToast('error', authStore.errors.email[0], 'login', 'tc', error);
-        } else {
-            showToast('error', 'error', 'login', 'tc', error);
-        }
+        authStore.processError(error, t('reset_password_page.error'));
     } finally {
         loading.stopFormSending();
     }
@@ -58,8 +69,8 @@ const loginUser = async () => {
 
             <!-- Main Message -->
             <div class="relative z-10 max-w-md">
-                <h1 class="text-5xl font-extrabold leading-tight mb-6 text-white">Welcome back!</h1>
-                <p class="text-lg text-white/90 leading-relaxed">Log in to manage your COD orders, track payments in real-time, and streamline your e-commerce logistics with ease.</p>
+                <h1 class="text-5xl font-extrabold leading-tight mb-6 text-white">{{ t('reset_password_page.hero_title') }}</h1>
+                <p class="text-lg text-white/90 leading-relaxed">{{ t('reset_password_page.hero_description') }}</p>
             </div>
 
             <!-- Footer: Social Proof -->
@@ -73,7 +84,7 @@ const loginUser = async () => {
             </div>
         </div>
 
-        <!-- ======================== RIGHT SIDE: LOGIN FORM ======================== -->
+        <!-- ======================== RIGHT SIDE: FORM ======================== -->
         <div class="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 md:p-24 bg-white dark:bg-surface-950">
             <div class="w-full max-w-[440px] flex flex-col">
                 <!-- Mobile Logo -->
@@ -86,13 +97,13 @@ const loginUser = async () => {
 
                 <!-- Heading -->
                 <div class="mb-10">
-                    <h2 class="text-3xl font-extrabold text-surface-900 dark:text-white mb-2">{{ $t('login.welcome') }}</h2>
-                    <p class="text-surface-500 dark:text-surface-400">{{ $t('login.sign_in_message') || 'Enter your credentials to access your dashboard' }}</p>
+                    <h2 class="text-3xl font-extrabold text-surface-900 dark:text-white mb-2">{{ t('reset_password_page.title') }}</h2>
+                    <p class="text-surface-500 dark:text-surface-400">{{ t('reset_password_page.description') }}</p>
                 </div>
 
-                <!-- Login Form -->
-                <form @submit.prevent="loginUser" class="space-y-6">
-                    <!-- Email Field -->
+                <!-- Form -->
+                <form @submit.prevent="resetPassword" class="space-y-6">
+                    <!-- Email Field (readonly, pre-filled) -->
                     <div>
                         <FloatLabel variant="on" class="w-full">
                             <IconField>
@@ -101,17 +112,17 @@ const loginUser = async () => {
                                     id="email"
                                     type="email"
                                     v-model="email"
-                                    class="w-full"
                                     :invalid="authStore.errors.email ? true : false"
-                                    @input="() => authStore.clearErrors(['email'])"
+                                    readonly
+                                    class="w-full !bg-surface-100 dark:!bg-surface-800 !text-surface-500"
                                 />
                             </IconField>
-                            <label for="email">{{ $t('login.email') }} *</label>
+                            <label for="email">{{ t('reset_password_page.email') }}</label>
                         </FloatLabel>
                         <Message v-if="authStore.errors.email" severity="error" size="small">{{ authStore.errors.email[0] }}</Message>
                     </div>
 
-                    <!-- Password Field -->
+                    <!-- New Password Field -->
                     <div>
                         <FloatLabel variant="on" class="w-full">
                             <IconField>
@@ -119,7 +130,6 @@ const loginUser = async () => {
                                 <Password
                                     id="password"
                                     v-model="password"
-                                    :feedback="false"
                                     toggleMask
                                     class="w-full"
                                     inputClass="w-full"
@@ -127,68 +137,49 @@ const loginUser = async () => {
                                     @input="() => authStore.clearErrors(['password'])"
                                 />
                             </IconField>
-                            <label for="password">{{ $t('login.password') }} *</label>
+                            <label for="password">{{ t('reset_password_page.new_password') }} *</label>
                         </FloatLabel>
                         <Message v-if="authStore.errors.password" severity="error" size="small">{{ authStore.errors.password[0] }}</Message>
                     </div>
 
-                    <!-- Remember Me + Forgot Password -->
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <Checkbox inputId="remember" v-model="rememberMe" :binary="true" class="!mr-2" />
-                            <label for="remember" class="text-sm text-surface-600 dark:text-surface-400 cursor-pointer">
-                                {{ $t('login.remember_me') || 'Remember this device' }}
-                            </label>
-                        </div>
-                        <router-link :to="{ name: 'forgot-password' }" class="text-sm font-bold text-codly-purple-500 hover:underline transition-all">
-                            {{ $t('login.forgot_password') }}
-                        </router-link>
+                    <!-- Confirm Password Field -->
+                    <div>
+                        <FloatLabel variant="on" class="w-full">
+                            <IconField>
+                                <InputIcon class="pi pi-shield" />
+                                <Password
+                                    id="password_confirmation"
+                                    v-model="password_confirmation"
+                                    :feedback="false"
+                                    toggleMask
+                                    class="w-full"
+                                    inputClass="w-full"
+                                    :invalid="authStore.errors.password_confirmation ? true : false"
+                                    @input="() => authStore.clearErrors(['password_confirmation'])"
+                                />
+                            </IconField>
+                            <label for="password_confirmation">{{ t('reset_password_page.confirm_password') }} *</label>
+                        </FloatLabel>
+                        <Message v-if="authStore.errors.password_confirmation" severity="error" size="small">{{ authStore.errors.password_confirmation[0] }}</Message>
                     </div>
 
-                    <!-- Login Button -->
+                    <!-- Submit Button -->
                     <Button
                         type="submit"
-                        :label="$t('login.sign_in')"
+                        :label="t('reset_password_page.reset_button')"
                         :loading="loading.isFormSending"
                         icon="pi pi-lock"
                         class="w-full !py-3.5 !rounded-lg !font-bold !text-base !shadow-lg !shadow-codly-purple-500/20 hover:!shadow-codly-purple-500/40 !transition-all !duration-200"
                         style="background: linear-gradient(90deg, #7f13ec 0%, #a855f7 100%); border: none"
                     />
-
-                    <!-- Divider -->
-                    <div class="relative flex items-center py-2">
-                        <div class="flex-grow border-t border-surface-200 dark:border-surface-700"></div>
-                        <span class="flex-shrink mx-4 text-surface-400 text-xs font-semibold uppercase tracking-wider">{{ $t('login.or_continue_with') || 'or continue with' }}</span>
-                        <div class="flex-grow border-t border-surface-200 dark:border-surface-700"></div>
-                    </div>
-
-                    <!-- Social Login -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <Button outlined class="!px-4 !py-2.5 !rounded-lg !border-surface-200 dark:!border-surface-700 !bg-white dark:!bg-surface-900 hover:!bg-surface-50 dark:hover:!bg-surface-800 !transition-colors">
-                            <template #default>
-                                <div class="flex items-center justify-center gap-2 w-full">
-                                    <i class="pi pi-google text-sm"></i>
-                                    <span class="text-sm font-bold text-surface-700 dark:text-surface-300">Google</span>
-                                </div>
-                            </template>
-                        </Button>
-                        <Button outlined class="!px-4 !py-2.5 !rounded-lg !border-surface-200 dark:!border-surface-700 !bg-white dark:!bg-surface-900 hover:!bg-surface-50 dark:hover:!bg-surface-800 !transition-colors">
-                            <template #default>
-                                <div class="flex items-center justify-center gap-2 w-full">
-                                    <i class="pi pi-facebook text-sm"></i>
-                                    <span class="text-sm font-bold text-surface-700 dark:text-surface-300">Facebook</span>
-                                </div>
-                            </template>
-                        </Button>
-                    </div>
                 </form>
 
-                <!-- Sign Up Link -->
-                <div class="mt-12 text-center">
-                    <p class="text-surface-600 dark:text-surface-400">
-                        {{ $t('login.no_account') || "Don't have an account?" }}
-                        <a href="#" class="text-codly-purple-500 font-bold hover:underline">{{ $t('login.sign_up') || 'Sign up for a new account' }}</a>
-                    </p>
+                <!-- Back to Login -->
+                <div class="mt-8 text-center">
+                    <router-link :to="{ name: 'login' }" class="text-codly-purple-500 font-bold hover:underline inline-flex items-center gap-2">
+                        <i class="pi pi-arrow-left text-sm"></i>
+                        {{ t('reset_password_page.back_to_login') }}
+                    </router-link>
                 </div>
             </div>
 
@@ -201,5 +192,4 @@ const loginUser = async () => {
         </div>
     </div>
 </template>
-
 
