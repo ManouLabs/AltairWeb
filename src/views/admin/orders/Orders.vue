@@ -8,6 +8,7 @@ import ReputationBadge from '@/components/common/ReputationBadge.vue';
 import { useDataTable } from '@/composables/useDataTable';
 import { useDynamicColumns } from '@/composables/useDynamicColumns';
 import { useLock } from '@/composables/useLock';
+import { useOrderHelpers } from '@/composables/useOrderHelpers';
 import { useRowEffects } from '@/composables/useRowEffects';
 import { useOrderService } from '@/services/useOrderService';
 import { useShopService } from '@/services/useShopService';
@@ -22,6 +23,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
+import OrderQuickView from './partials/OrderQuickView.vue';
 
 const { t } = useI18n();
 const authStore = useAuthStore();
@@ -40,6 +42,8 @@ const defaultFiltersConfig = {
 };
 
 const dataLoaded = ref(false);
+const drawerVisible = ref(false);
+const drawerOrderId = ref<number | null>(null);
 
 const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
     (params: any) =>
@@ -127,7 +131,8 @@ function editRecord(row: OrderData): void {
 }
 
 function viewRecord(row: OrderData): void {
-    router.push({ name: 'order-show', params: { id: row.id } });
+    drawerOrderId.value = row.id;
+    drawerVisible.value = true;
 }
 
 function confirmDeleteRecord(event: MouseEvent | null, orderIds: number[]): void {
@@ -168,61 +173,7 @@ function confirmDeleteRecord(event: MouseEvent | null, orderIds: number[]): void
     });
 }
 
-// --- Status helpers ---
-
-const statusSeverity = (status: string) => {
-    const map: Record<string, string> = {
-        pending: 'warn',
-        confirmed: 'info',
-        shipping: 'info',
-        delivered: 'success',
-        cancelled: 'danger',
-        returned: 'danger'
-    };
-    return map[status] || 'secondary';
-};
-
-const statusIcon = (status: string) => {
-    const map: Record<string, string> = {
-        pending: 'pi pi-clock',
-        confirmed: 'pi pi-check',
-        shipping: 'pi pi-truck',
-        delivered: 'pi pi-check-circle',
-        cancelled: 'pi pi-times-circle',
-        returned: 'pi pi-replay'
-    };
-    return map[status] || 'pi pi-question-circle';
-};
-
-const paymentSeverity = (status: string) => {
-    return status === 'paid' ? 'success' : 'warn';
-};
-
-const paymentIcon = (status: string) => {
-    return status === 'paid' ? 'pi pi-check-circle' : 'pi pi-clock';
-};
-
-// --- Source icon helper ---
-
-const sourceIcon = (source: string) => {
-    const map: Record<string, string> = {
-        tiktok: 'pi pi-tiktok',
-        whatsapp: 'pi pi-whatsapp',
-        facebook: 'pi pi-facebook',
-        youcan: 'pi pi-shopping-cart',
-        shopify: 'pi pi-shopping-cart',
-        woocommerce: 'pi pi-shopping-cart',
-        direct_website: 'pi pi-globe',
-        other: 'pi pi-ellipsis-h'
-    };
-    return map[source] || 'pi pi-question-circle';
-};
-
-// --- Shipping type icon helper ---
-
-const shippingTypeIcon = (type: string) => {
-    return type === 'home_delivery' ? 'pi pi-home' : 'pi pi-building';
-};
+const { statusSeverity, statusIcon, paymentSeverity, paymentIcon, sourceIcon, shippingTypeIcon } = useOrderHelpers();
 
 const allShops = ref<{ id: number; name: string }[]>([]);
 
@@ -248,12 +199,12 @@ const bulkActions = computed<BulkAction[]>(() => [
         label: t('common.labels.bulk_update_status'),
         type: 'select',
         options: [
-            { label: t('order.statuses.pending'), value: 'pending' },
-            { label: t('order.statuses.confirmed'), value: 'confirmed' },
-            { label: t('order.statuses.shipping'), value: 'shipping' },
-            { label: t('order.statuses.delivered'), value: 'delivered' },
-            { label: t('order.statuses.cancelled'), value: 'cancelled' },
-            { label: t('order.statuses.returned'), value: 'returned' }
+            { label: t('order.statuses.pending'), value: 'pending', icon: 'pi pi-clock', severity: 'warn' },
+            { label: t('order.statuses.confirmed'), value: 'confirmed', icon: 'pi pi-check', severity: 'info' },
+            { label: t('order.statuses.shipping'), value: 'shipping', icon: 'pi pi-truck', severity: 'info' },
+            { label: t('order.statuses.delivered'), value: 'delivered', icon: 'pi pi-check-circle', severity: 'success' },
+            { label: t('order.statuses.cancelled'), value: 'cancelled', icon: 'pi pi-times-circle', severity: 'danger' },
+            { label: t('order.statuses.returned'), value: 'returned', icon: 'pi pi-replay', severity: 'danger' }
         ]
     },
     {
@@ -261,8 +212,8 @@ const bulkActions = computed<BulkAction[]>(() => [
         label: t('common.labels.bulk_mark_as'),
         type: 'select',
         options: [
-            { label: t('order.payment_statuses.paid'), value: 'paid' },
-            { label: t('order.payment_statuses.not_paid'), value: 'not_paid' }
+            { label: t('order.payment_statuses.paid'), value: 'paid', icon: 'pi pi-check-circle', severity: 'success' },
+            { label: t('order.payment_statuses.not_paid'), value: 'not_paid', icon: 'pi pi-clock', severity: 'warn' }
         ]
     }
 ]);
@@ -274,9 +225,9 @@ async function handleBulkAction(payload: { key: string; value?: string }): Promi
     loading.startPageLoading();
     try {
         if (payload.key === 'status') {
-            await useOrderService.bulkUpdateOrders(ids, 'status', payload.value);
+            await useOrderService.bulkUpdate(ids, 'status', payload.value);
         } else if (payload.key === 'mark_as') {
-            await useOrderService.bulkUpdateOrders(ids, 'payment_status', payload.value);
+            await useOrderService.bulkUpdate(ids, 'payment_status', payload.value);
         }
         const field = payload.key === 'status' ? 'status' : 'payment_status';
         ids.forEach((id) => {
@@ -506,7 +457,7 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <Tag :value="t(`order.statuses.${data.status}`)" :severity="statusSeverity(data.status)" :icon="statusIcon(data.status)" />
+                            <Tag :value="t(`order.statuses.${data.status}`)" :severity="statusSeverity(data.status)" :icon="statusIcon(data.status)" class="!capitalize py-1.5 px-2.5" />
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
@@ -699,7 +650,7 @@ onUnmounted(() => {
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <Tag :value="t(`order.payment_statuses.${data.payment_status}`)" :severity="paymentSeverity(data.payment_status)" :icon="paymentIcon(data.payment_status)" />
+                            <Tag :value="t(`order.payment_statuses.${data.payment_status}`)" :severity="paymentSeverity(data.payment_status)" :icon="paymentIcon(data.payment_status)" class="!capitalize" />
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
@@ -772,5 +723,7 @@ onUnmounted(() => {
                 "
             />
         </template>
+
+        <OrderQuickView v-model:visible="drawerVisible" :order-id="drawerOrderId" />
     </div>
 </template>

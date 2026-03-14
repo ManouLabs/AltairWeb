@@ -216,7 +216,7 @@ const openDialog = () => {
                 title: currentRecord.id ? t('common.titles.edit', { entity: t('entity.subscription') }) : t('common.titles.add', { entity: t('entity.subscription') }),
                 description: t('subscription.form.subtitle'),
                 icon: currentRecord.id ? 'pi pi-book' : 'pi pi-plus-circle',
-                iconColor: '#8B5CF6'
+                iconColor: '#3B82F6'
             }))
         },
         onClose: (result) => {
@@ -242,7 +242,7 @@ const openDialog = () => {
     });
 };
 
-function confirmDeleteRecord(event: Event | null, subscriptionIds: number[]) {
+function confirmDeleteRecord(event: MouseEvent | null, subscriptionIds: number[]): void {
     confirm.require({
         modal: true,
         target: (event?.currentTarget as HTMLElement) ?? undefined,

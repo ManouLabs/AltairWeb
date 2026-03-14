@@ -190,10 +190,10 @@ const openDialog = () => {
     });
 };
 
-function confirmDeleteRecord(event: any, cityIds: any[]) {
+function confirmDeleteRecord(event: MouseEvent | null, cityIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event?.currentTarget,
+        target: event?.currentTarget as HTMLElement,
         message: cityIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.cities') }) : t('common.confirmations.delete.message', { entity: t('entity.city') }),
         icon: 'pi pi-info-circle',
         rejectProps: {

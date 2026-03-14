@@ -1291,6 +1291,29 @@
             "scan_to_add": "Scan item to add...",
             "percentage": "Discount %",
             "amount": "Amount"
+        },
+        "quick_view": {
+            "order_journey": "Order Journey",
+            "customer": "Customer",
+            "summary": "Summary",
+            "items": "Items",
+            "details": "Details",
+            "tracking": "Tracking",
+            "discount": "Discount",
+            "grand_total": "Total",
+            "note": "Note",
+            "source": "Source",
+            "shipping_type": "Shipping Type",
+            "shop": "Shop",
+            "shipper": "Shipper",
+            "edit_order": "Edit",
+            "no_activities": "No activity recorded yet.",
+            "created_order": "Order Created",
+            "updated_order": "Order Updated",
+            "by": "by",
+            "changed": "Changed",
+            "from": "from",
+            "to": "to"
         }
     }
 }

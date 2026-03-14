@@ -2,14 +2,30 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+export interface BulkActionOption {
+    label: string;
+    value: string;
+    icon?: string;
+    severity?: string;
+}
+
 export interface BulkAction {
     key: string;
     label: string;
     icon?: string;
     severity?: string;
     type?: 'button' | 'select';
-    options?: { label: string; value: string }[];
+    options?: BulkActionOption[];
 }
+
+const severityColorMap: Record<string, string> = {
+    success: 'var(--p-green-500)',
+    info: 'var(--p-blue-500)',
+    warn: 'var(--p-yellow-500)',
+    danger: 'var(--p-red-500)',
+    secondary: 'var(--p-surface-500)',
+    contrast: 'var(--p-surface-900)'
+};
 
 const props = withDefaults(
     defineProps<{
@@ -67,7 +83,15 @@ function onSelectAction(action: BulkAction, value: string): void {
                         size="small"
                         class="min-w-36"
                         @update:modelValue="(val: string) => onSelectAction(action, val)"
-                    />
+                    >
+                        <template #option="{ option }">
+                            <div class="flex items-center gap-2">
+                                <i v-if="option.icon" :class="option.icon" class="text-sm w-4 mt-0.5 text-center flex-shrink-0" :style="option.severity ? { color: severityColorMap[option.severity] || '' } : {}" />
+                                <span v-else-if="option.severity" class="rounded-full flex-shrink-0" :style="{ backgroundColor: severityColorMap[option.severity] || 'var(--p-surface-400)' }" />
+                                <span>{{ option.label }}</span>
+                            </div>
+                        </template>
+                    </Select>
 
                     <!-- Button type action -->
                     <Button v-else :label="action.label" :icon="action.icon" :severity="(action.severity as any) || 'secondary'" size="small" outlined @click="emit('action', { key: action.key })" />

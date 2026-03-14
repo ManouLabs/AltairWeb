@@ -7,6 +7,7 @@ const authStore = useAuthStore();
 const loading = useLoading();
 
 onMounted(() => {
+    authStore.verifySession();
     loading.stopPageLoading();
 });
 

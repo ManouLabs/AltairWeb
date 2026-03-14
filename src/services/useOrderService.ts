@@ -1,6 +1,6 @@
 // src/services/useOrderService.ts
 import apiClient from '@/services/axios';
-import type { DeleteOrdersResponse, OrderApiResponse, OrderFormData, OrdersResponse, ShippingFeeResponse } from '@/types/order';
+import type { DeleteOrdersResponse, OrderActivity, OrderApiResponse, OrderFormData, OrdersResponse, ShippingFeeResponse } from '@/types/order';
 
 export const useOrderService = {
     async getOrders(params: Record<string, unknown> = {}): Promise<OrdersResponse> {
@@ -31,7 +31,7 @@ export const useOrderService = {
         return response.data;
     },
 
-    async bulkUpdateOrders(orderIds: number[], field: string, value: string): Promise<{ message: string }> {
+    async bulkUpdate(orderIds: number[], field: string, value: string): Promise<{ message: string }> {
         await apiClient.get('/sanctum/csrf-cookie');
         const response = await apiClient.patch<{ message: string }>('/api/admin/orders/bulk-update', {
             orders: orderIds,
@@ -46,6 +46,11 @@ export const useOrderService = {
             shipper_id: shipperId,
             region_id: regionId
         });
+        return response.data;
+    },
+
+    async getOrderActivities(orderId: number): Promise<{ activities: OrderActivity[] }> {
+        const response = await apiClient.get<{ activities: OrderActivity[] }>(`/api/admin/orders/${orderId}/activities`);
         return response.data;
     }
 };

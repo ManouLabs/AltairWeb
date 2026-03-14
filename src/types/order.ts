@@ -95,3 +95,15 @@ export interface ShippingFeeResponse {
     stop_desk: number;
     message?: string;
 }
+
+export interface OrderActivity {
+    id: number;
+    event: string;
+    description: string;
+    properties: {
+        attributes?: Record<string, unknown>;
+        old?: Record<string, unknown>;
+    };
+    causer: string;
+    created_at: string;
+}

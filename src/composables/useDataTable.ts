@@ -62,7 +62,7 @@ export function useDataTable<T extends { id: number | string }>(dataFetcher: Dat
     const loading = useLoading();
     const lazyParams: Ref<LazyParams> = ref({});
     const total: Ref<number> = ref(0);
-    const rows: Ref<number> = ref(10);
+    const rows: Ref<number> = ref(5);
     const records: Ref<T[]> = ref([]);
     const selectedRecords: Ref<T[]> = ref([]);
     const recordDataTable: Ref<DataTableRef | null> = ref(null);

@@ -123,25 +123,33 @@ const settingsMenu = computed(() => [
         ]
     }
 ]);
+
+const hasVisibleMainMenu = computed(() => mainMenu.value.some((item) => item.visible !== false));
+const hasVisibleProductsMenu = computed(() => productsMenu.value.some((item) => item.visible !== false));
+const hasVisibleSettingsMenu = computed(() => settingsMenu.value.some((item) => item.visible !== false));
 </script>
 
 <template>
     <div>
         <!-- Main Menu section -->
-        <p class="menu-section-label">{{ t('navigation.sections.main_menu') }}</p>
-        <ul class="layout-menu">
-            <template v-for="(item, i) in mainMenu" :key="'main-' + i">
-                <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
-            </template>
-        </ul>
+        <template v-if="hasVisibleMainMenu">
+            <p class="menu-section-label">{{ t('navigation.sections.main_menu') }}</p>
+            <ul class="layout-menu">
+                <template v-for="(item, i) in mainMenu" :key="'main-' + i">
+                    <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
+                </template>
+            </ul>
+        </template>
 
         <!-- Products section -->
-        <p class="menu-section-label">{{ t('navigation.sections.products') }}</p>
-        <ul class="layout-menu">
-            <template v-for="(item, i) in productsMenu" :key="'products-' + i">
-                <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
-            </template>
-        </ul>
+        <template v-if="hasVisibleProductsMenu">
+            <p class="menu-section-label">{{ t('navigation.sections.products') }}</p>
+            <ul class="layout-menu">
+                <template v-for="(item, i) in productsMenu" :key="'products-' + i">
+                    <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
+                </template>
+            </ul>
+        </template>
 
         <!-- SaaS section -->
         <template v-if="authStore.user?.roles?.includes('Super Admin')">
@@ -154,11 +162,13 @@ const settingsMenu = computed(() => [
         </template>
 
         <!-- Settings section -->
-        <p class="menu-section-label">{{ t('navigation.sections.settings') }}</p>
-        <ul class="layout-menu">
-            <template v-for="(item, i) in settingsMenu" :key="'settings-' + i">
-                <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
-            </template>
-        </ul>
+        <template v-if="hasVisibleSettingsMenu">
+            <p class="menu-section-label">{{ t('navigation.sections.settings') }}</p>
+            <ul class="layout-menu">
+                <template v-for="(item, i) in settingsMenu" :key="'settings-' + i">
+                    <app-menu-item v-if="item.visible !== false" :item="item" :index="i" :root="false"></app-menu-item>
+                </template>
+            </ul>
+        </template>
     </div>
 </template>

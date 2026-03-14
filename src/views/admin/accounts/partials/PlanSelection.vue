@@ -44,7 +44,7 @@ const selectPlan = (planId: number) => {
 };
 
 const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+    return new Intl.NumberFormat('fr-DZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price) + ' DA';
 };
 
 onMounted(async () => {

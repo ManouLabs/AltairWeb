@@ -140,7 +140,7 @@ function openDialog(record: SupplierData | null, actionType: string): void {
                 title: isEdit ? t('common.titles.edit', { entity: t('entity.supplier') }) : t('supplier.form.title'),
                 description: t('supplier.form.subtitle'),
                 icon: isEdit ? 'pi pi-building' : 'pi pi-plus-circle',
-                iconColor: '#8B5CF6'
+                iconColor: '#3B82F6'
             }))
         },
         onClose: (result) => {

@@ -156,6 +156,18 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        async verifySession(): Promise<void> {
+            if (!this.user) return;
+            try {
+                await this.fetchUser();
+                this.startSessionTimer();
+            } catch {
+                this.clearSessionTimer();
+                this.user = null;
+                this.permissions = [];
+            }
+        },
+
         handleSessionExpired(): void {
             this.clearSessionTimer();
             this.user = null;

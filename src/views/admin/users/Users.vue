@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BulkActionBar from '@/components/BulkActionBar.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
@@ -335,21 +336,6 @@ onUnmounted(() => {
                     <Toolbar class="w-full">
                         <template #start>
                             <div class="flex space-x-2">
-                                <Button
-                                    v-if="authStore.hasPermission('delete_users')"
-                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.users') })"
-                                    :label="t('common.labels.delete_selected')"
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    @click="
-                                        confirmDeleteRecord(
-                                            $event,
-                                            selectedRecords.map((record: User) => record.id)
-                                        )
-                                    "
-                                    outlined
-                                    :disabled="!selectedRecords || !selectedRecords.length"
-                                />
                                 <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                             </div>
                         </template>
@@ -636,6 +622,18 @@ onUnmounted(() => {
                     </template>
                 </Column>
             </DataTable>
+
+            <BulkActionBar
+                :selectedCount="selectedRecords.length"
+                :entityLabel="t('entity.users').toLowerCase()"
+                :actions="[]"
+                @delete="
+                    confirmDeleteRecord(
+                        null,
+                        selectedRecords.map((r: User) => r.id)
+                    )
+                "
+            />
         </template>
     </div>
 </template>

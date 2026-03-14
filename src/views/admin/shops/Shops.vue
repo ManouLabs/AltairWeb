@@ -171,10 +171,10 @@ const openDialog = (): void => {
     });
 };
 
-function confirmDeleteRecord(event: MouseEvent, shopIds: number[]): void {
+function confirmDeleteRecord(event: MouseEvent | null, shopIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event.currentTarget as HTMLElement,
+        target: event?.currentTarget as HTMLElement,
         message: shopIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.shops') }) : t('common.confirmations.delete.message', { entity: t('entity.shop') }),
         icon: 'pi pi-info-circle',
         rejectProps: { label: t('common.labels.cancel'), severity: 'secondary', icon: 'pi pi-times', outlined: true },

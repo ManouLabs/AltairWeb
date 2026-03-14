@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BulkActionBar from '@/components/BulkActionBar.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
 import { useDataTable } from '@/composables/useDataTable';
@@ -162,10 +163,10 @@ function editRecord(row: any) {
     router.push({ name: 'account-edit', params: { id: row.id } });
 }
 
-function confirmDeleteRecord(event: any, accountIds: any[]) {
+function confirmDeleteRecord(event: MouseEvent | null, accountIds: number[]): void {
     confirm.require({
         modal: true,
-        target: event?.currentTarget,
+        target: event?.currentTarget as HTMLElement,
         message: accountIds.length > 1 ? t('common.confirmations.delete_selected.message', { entity: t('entity.accounts') }) : t('common.confirmations.delete.message', { entity: t('entity.account') }),
         icon: 'pi pi-info-circle',
         rejectProps: {
@@ -261,20 +262,6 @@ onUnmounted(() => {
                     <Toolbar class="w-full">
                         <template #start>
                             <div class="flex space-x-2">
-                                <Button
-                                    v-tooltip.top="t('common.tooltips.delete_selected', { entity: t('entity.account') })"
-                                    :label="t('common.labels.delete_selected')"
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    @click="
-                                        confirmDeleteRecord(
-                                            $event,
-                                            selectedRecords.map((record: any) => record.id)
-                                        )
-                                    "
-                                    outlined
-                                    :disabled="!selectedRecords || !selectedRecords.length"
-                                />
                                 <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                             </div>
                         </template>
@@ -496,6 +483,18 @@ onUnmounted(() => {
                     </template>
                 </Column>
             </DataTable>
+
+            <BulkActionBar
+                :selectedCount="selectedRecords.length"
+                :entityLabel="t('entity.accounts').toLowerCase()"
+                :actions="[]"
+                @delete="
+                    confirmDeleteRecord(
+                        null,
+                        selectedRecords.map((record: any) => record.id)
+                    )
+                "
+            />
         </template>
     </div>
 </template>
