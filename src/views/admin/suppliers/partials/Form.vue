@@ -212,7 +212,7 @@ onMounted(async () => {
 
 <template>
     <FormSkeleton v-if="!formReady" />
-    <div v-else class="flex flex-col gap-6 p-6">
+    <form v-else @submit.prevent="saveRecord" class="flex flex-col gap-6 p-6">
         <!-- Logo Upload Area -->
         <FileUploadField
             v-model="record.files"
@@ -349,7 +349,7 @@ onMounted(async () => {
         <!-- Footer Actions -->
         <div class="flex justify-end gap-2 mt-4">
             <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" />
-            <Button :label="t('common.labels.save')" icon="pi pi-check" @click="saveRecord" :loading="loading.isFormSending" />
+            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
-    </div>
+    </form>
 </template>

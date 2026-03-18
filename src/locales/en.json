@@ -31,7 +31,9 @@
         "subscription": "Subscription",
         "subscriptions": "Subscriptions",
         "supplier": "Supplier",
-        "suppliers": "Suppliers"
+        "suppliers": "Suppliers",
+        "exchange": "Exchange",
+        "exchanges": "Exchanges"
     },
     "common": {
         "contents": {
@@ -48,7 +50,7 @@
             "no_search_results": "No search results found",
             "no_data_title": "No {entity} yet",
             "no_data_description": "Get started by creating your first {entity}.",
-            "no_permissions": "You do not have the necessary permisions. Please contact admins.",
+            "no_permissions": "You do not have the necessary permissions. Please contact admins.",
             "error": "An error occurred while processing your request",
             "access_denied": "Access denied",
             "not_found": "Not found",
@@ -72,8 +74,7 @@
             "invalid_mobile": "Enter a valid mobile number (e.g., 0553338529)",
             "invalid_landline": "Enter a valid landline number (e.g., 0212345678)",
             "min_value": "The value must be at least 1",
-            "min_length": "Must be at least 8 characters",
-            "passwords_dont_match": "Passwords do not match"
+            "min_length": "Must be at least 8 characters"
         },
         "titles": {
             "manage": "Manage {entity}",
@@ -197,7 +198,7 @@
             "max_size": "Max size",
             "accepted_formats": "Accepted formats"
         },
-        "paggination": {
+        "pagination": {
             "showing_to_of_entity": "Showing {first} to {last} of {totalRecords} {entity}"
         },
         "confirmations": {
@@ -269,6 +270,70 @@
         "sign_up": "Sign up for a new account",
         "error": "Login error"
     },
+    "auth": {
+        "privacy_policy": "Privacy Policy",
+        "terms_of_service": "Terms of Service",
+        "contact_support": "Contact Support"
+    },
+    "legal": {
+        "back_to_home": "Back to Home",
+        "all_rights_reserved": "All rights reserved.",
+        "privacy": {
+            "badge": "Your Privacy Matters",
+            "title": "Privacy Policy",
+            "last_updated": "Last updated: March 18, 2026",
+            "s1_title": "1. Introduction",
+            "s1_content": "At Codly, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our cash-on-delivery logistics platform. By using our services, you agree to the collection and use of information in accordance with this policy.",
+            "s2_title": "2. Information We Collect",
+            "s2_intro": "We collect information that you provide directly to us, including:",
+            "s2_item1": "Account information such as your name, email address, phone number, and company name when you register for an account.",
+            "s2_item2": "Order and transaction data including delivery addresses, product details, payment amounts, and shipping information.",
+            "s2_item3": "Customer data that you input into the platform, such as customer names, phone numbers, and delivery addresses.",
+            "s2_item4": "Usage data including log files, device information, IP addresses, and interaction patterns with our platform.",
+            "s3_title": "3. How We Use Your Information",
+            "s3_intro": "We use the information we collect to:",
+            "s3_item1": "Provide, maintain, and improve our platform and services.",
+            "s3_item2": "Process orders, manage deliveries, and facilitate cash-on-delivery transactions.",
+            "s3_item3": "Send you technical notices, updates, security alerts, and administrative messages.",
+            "s4_title": "4. Data Sharing & Disclosure",
+            "s4_content": "We do not sell your personal information. We may share your information with third-party shipping partners solely for the purpose of fulfilling delivery orders. All partners are bound by data protection agreements that ensure your data is handled securely and in compliance with applicable laws.",
+            "s5_title": "5. Data Security",
+            "s5_intro": "We implement industry-standard security measures to protect your data:",
+            "s5_item1": "All data is encrypted in transit using TLS 1.3 and at rest using AES-256 encryption.",
+            "s5_item2": "Access to personal data is restricted to authorized personnel only through role-based access controls.",
+            "s5_item3": "Regular security audits and penetration testing are conducted to identify and address vulnerabilities.",
+            "s5_item4": "Multi-factor authentication is available for all accounts.",
+            "s6_title": "6. Your Rights",
+            "s6_content": "You have the right to access, correct, or delete your personal data at any time through your account settings. You may also request a complete export of your data or ask us to restrict processing. To exercise any of these rights, please contact us at privacy{'@'}codly.app.",
+            "s7_title": "7. Contact Us",
+            "s7_content": "If you have any questions about this Privacy Policy, please contact us at privacy{'@'}codly.app or through the contact form on our website."
+        },
+        "terms": {
+            "badge": "Legal Agreement",
+            "title": "Terms of Service",
+            "last_updated": "Last updated: March 18, 2026",
+            "s1_title": "1. Acceptance of Terms",
+            "s1_content": "By accessing or using the Codly platform, you agree to be bound by these Terms of Service. If you do not agree to these terms, you may not access or use our services. These terms apply to all users, including merchants, administrators, and staff members.",
+            "s2_title": "2. Description of Service",
+            "s2_content": "Codly provides a SaaS platform for managing cash-on-delivery (COD) e-commerce logistics, including order management, customer tracking, shipping integration, product catalog management, and related services. We reserve the right to modify, suspend, or discontinue any part of the service at any time with reasonable notice.",
+            "s3_title": "3. Account Responsibilities",
+            "s3_intro": "When you create an account with Codly, you agree to:",
+            "s3_item1": "Provide accurate, current, and complete information during registration and keep it updated.",
+            "s3_item2": "Maintain the security and confidentiality of your login credentials and restrict access to your account.",
+            "s3_item3": "Accept responsibility for all activities that occur under your account.",
+            "s3_item4": "Notify us immediately of any unauthorized use of your account or any other breach of security.",
+            "s4_title": "4. Subscription & Billing",
+            "s4_content": "Access to Codly is provided through subscription plans with varying features and quotas. Subscription fees are billed according to the plan you select. We reserve the right to change pricing with 30 days' prior notice. Failure to pay may result in suspension or termination of your account.",
+            "s5_title": "5. Prohibited Uses",
+            "s5_content": "You may not use Codly for any illegal or unauthorized purpose, including but not limited to: violating intellectual property rights, transmitting malware or harmful code, attempting to gain unauthorized access to other accounts or systems, or using the platform to facilitate fraudulent transactions.",
+            "s6_title": "6. Intellectual Property",
+            "s6_content": "All content, features, and functionality of the Codly platform — including but not limited to text, graphics, logos, icons, software, and design — are owned by Codly and protected by international copyright, trademark, and other intellectual property laws. You may not reproduce, distribute, or create derivative works without our prior written consent.",
+            "s7_title": "7. Limitation of Liability",
+            "s7_content": "Codly shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform. Our total liability shall not exceed the amount paid by you in the twelve months preceding the claim. We do not guarantee uninterrupted or error-free operation of the service.",
+            "s8_title": "8. Contact",
+            "s8_content": "For any questions about these Terms of Service, please reach out to us at legal{'@'}codly.app."
+        }
+    },
     "forgot_password_page": {
         "title": "Forgot your password?",
         "description": "Enter your email address and we'll send you a link to reset your password.",
@@ -320,7 +385,8 @@
             "products": "Products",
             "suppliers": "Suppliers",
             "subscriptions": "Subscriptions",
-            "orders": "Orders"
+            "orders": "Orders",
+            "exchanges": "Exchanges"
         },
         "sections": {
             "main_menu": "Main Menu",
@@ -1264,10 +1330,13 @@
         "statuses": {
             "pending": "Pending",
             "confirmed": "Confirmed",
+            "in_preparation": "In Preparation",
+            "in_dispatch": "In Dispatch",
             "shipping": "Shipping",
             "delivered": "Delivered",
             "cancelled": "Cancelled",
-            "returned": "Returned"
+            "returned": "Returned",
+            "exchanged": "Exchanged"
         },
         "payment_statuses": {
             "paid": "Paid",
@@ -1308,7 +1377,8 @@
             "view_history": "View History",
             "last_order": "Last order: {date}",
             "blocked_customer_warning": "This customer is blocked. Are you sure you want to add them to this order?",
-            "out_of_stock_warning": "This product is out of stock. Are you sure you want to add it to this order?"
+            "out_of_stock_warning": "This product is out of stock. Are you sure you want to add it to this order?",
+            "see_exchange": "See Exchange"
         },
         "messages": {
             "no_products": "No products added. Click '+ Add Product' to start.",
@@ -1343,6 +1413,192 @@
             "changed": "Changed",
             "from": "from",
             "to": "to"
+        }
+    },
+    "home": {
+        "nav": {
+            "home": "Home",
+            "features": "Features",
+            "solutions": "Solutions",
+            "pricing": "Pricing",
+            "dashboard": "Dashboard",
+            "login": "Login",
+            "get_started": "Get Started"
+        },
+        "hero": {
+            "badge": "Simplify Cash on Delivery",
+            "title_line1": "Simplify Your",
+            "title_line2": "COD Workflow",
+            "description": "Automate deliveries, track shipments in real-time, and manage payouts — all from one powerful platform built for e-commerce.",
+            "cta_trial": "Start Free Trial",
+            "cta_demo": "Book a Demo",
+            "preview_hub": "Logistics Hub",
+            "preview_overview": "Overview",
+            "preview_live": "Live",
+            "preview_success_rate": "Success Rate",
+            "preview_rto_savings": "RTO Savings",
+            "preview_delivery_progress": "Delivery Progress",
+            "preview_revenue_today": "Revenue Today"
+        },
+        "trust_bar": {
+            "title": "Trusted by leading e-commerce platforms"
+        },
+        "features": {
+            "badge": "Built for E-commerce Scale",
+            "title": "Everything You Need to Run Your COD Business",
+            "subtitle": "A complete suite of tools to manage every aspect of your cash-on-delivery operations.",
+            "f_orders_title": "Order Management",
+            "f_orders_desc": "Create, track, and manage orders with real-time status updates and bulk operations.",
+            "f_exchanges_title": "Exchanges & Returns",
+            "f_exchanges_desc": "Process exchanges and returns seamlessly with automated credit and item tracking.",
+            "f_customers_title": "Customer Management",
+            "f_customers_desc": "Full customer profiles with order history, blocking, and contact management.",
+            "f_shops_title": "Multi-Shop Support",
+            "f_shops_desc": "Manage multiple storefronts from a single dashboard with per-shop analytics.",
+            "f_shippers_title": "Shipper Integration",
+            "f_shippers_desc": "Connect multiple delivery partners, compare rates, and auto-assign orders.",
+            "f_products_title": "Product Catalog",
+            "f_products_desc": "Manage products with variants, stock levels, images, and dynamic pricing.",
+            "f_categories_title": "Category Management",
+            "f_categories_desc": "Organize products with nested categories, icons, and color-coded hierarchy.",
+            "f_attributes_title": "Product Attributes",
+            "f_attributes_desc": "Define custom attributes like size, color, and material for rich product variants.",
+            "f_suppliers_title": "Supplier Management",
+            "f_suppliers_desc": "Track suppliers, manage purchase prices, and maintain vendor relationships.",
+            "f_users_title": "Users & Roles",
+            "f_users_desc": "Granular permissions with custom roles to control access across your team.",
+            "f_subscriptions_title": "Plans & Billing",
+            "f_subscriptions_desc": "Flexible subscription plans with usage quotas and automated billing cycles.",
+            "f_regions_title": "Regional Coverage",
+            "f_regions_desc": "Manage delivery zones with regions, cities, and location-based shipping fees."
+        },
+        "tracking": {
+            "badge": "Advanced Analytics",
+            "title": "Smart Tracking for Peace of Mind",
+            "description": "Give your customers and team real-time visibility. Our predictive tracking combines powerful data to reduce RTO rates by up to 40%.",
+            "feature_eta": "Real-time delivery ETAs",
+            "feature_sms": "Auto SMS/WhatsApp updates",
+            "feature_auto_sms": "Automated SMS/WhatsApp updates",
+            "delivery_success": "Successful Delivery",
+            "in_transit": "In Transit",
+            "package_ready": "Package Ready",
+            "time_2min": "2 min ago",
+            "time_5min": "5 min ago",
+            "time_12min": "12 min ago"
+        },
+        "payouts": {
+            "badge": "Financial Autopilot",
+            "title": "Automated Payouts, No More Waiting",
+            "description": "Stop chasing delivery partners for your money. Codly reconciles every cent and automates payouts directly to your bank account twice a week.",
+            "avg_settlement": "Avg. Settlement",
+            "settlement_value": "2 Days",
+            "transparency": "Transparency",
+            "transparency_value": "100%",
+            "available_balance": "Available Balance",
+            "auto_collections": "Automatic Collections",
+            "processing_fees": "Processing Fees",
+            "request_transfer": "Request Transfer Now"
+        },
+        "pricing": {
+            "badge": "Simple Pricing",
+            "title": "Simple, Transparent Pricing",
+            "subtitle": "Scale your business with plans that grow with you. No hidden fees.",
+            "per_month": "/month",
+            "recommended_badge": "Most Popular",
+            "cta_get_started": "Get Started",
+            "cta_contact_sales": "Contact Sales"
+        },
+        "footer": {
+            "tagline": "Simplifying COD logistics for e-commerce businesses everywhere.",
+            "product": "Product",
+            "features": "Features",
+            "pricing": "Pricing",
+            "integrations": "Integrations",
+            "api": "API",
+            "company": "Company",
+            "about": "About",
+            "blog": "Blog",
+            "careers": "Careers",
+            "contact": "Contact",
+            "resources": "Resources",
+            "documentation": "Documentation",
+            "help_center": "Help Center",
+            "community": "Community",
+            "legal": "Legal",
+            "privacy": "Privacy",
+            "terms": "Terms",
+            "security": "Security",
+            "copyright": "© 2026 Codly. All rights reserved."
+        }
+    },
+    "exchange": {
+        "columns": {
+            "reference": "Reference",
+            "order_ref": "Order",
+            "customer": "Customer",
+            "status": "Status",
+            "subtotal_adjustment": "Adjustment",
+            "cod_balance_due": "COD Balance",
+            "created_at": "Created At"
+        },
+        "statuses": {
+            "draft": "Draft",
+            "processing": "Processing",
+            "completed": "Completed",
+            "cancelled": "Cancelled"
+        },
+        "form": {
+            "title": "Process Exchange",
+            "subtitle": "Manage return items and select replacements for customer.",
+            "exchange_summary": "Exchange Summary",
+            "search_product": "Search product or scan...",
+            "add_extra_product": "Add extra product to this order",
+            "confirm_process": "Confirm & Process",
+            "confirm_description": "This will issue store credit for the difference and generate return labels.",
+            "note": "Note",
+            "note_placeholder": "Add a note about this exchange...",
+            "only_returned_tooltip": "Only returned orders can be exchanged",
+            "create_exchange": "Create Exchange",
+            "order_ref": "Order #{ref}",
+            "exchange_in_progress": "Exchange in progress",
+            "returning_item": "RETURNING ITEM",
+            "replacement_item": "REPLACEMENT ITEM",
+            "reason": "Reason",
+            "condition": "Condition",
+            "select_reason": "Select reason",
+            "select_condition": "Select condition",
+            "add": "ADD",
+            "kept_items": "Kept Items ({count})",
+            "exchange_out": "Exchange Out ({count})",
+            "exchange_in": "Exchange In ({count})",
+            "returned_items": "Returned Items ({count})",
+            "subtotal_adjustment": "Subtotal Adjustment",
+            "exchange_shipping": "Exchange Shipping",
+            "cod_balance_due": "COD BALANCE DUE",
+            "refund_to_credit": "Refund to Store Credit"
+        },
+        "actions": {
+            "kept": "Kept (No Action)",
+            "exchange": "Exchange",
+            "return_for_credit": "Return for Credit"
+        },
+        "reasons": {
+            "wrong_item_sent": "Wrong Item Sent",
+            "defective": "Defective",
+            "no_longer_needed": "No longer needed",
+            "wrong_size": "Wrong Size",
+            "other": "Other"
+        },
+        "conditions": {
+            "restock_like_new": "Restock (Like New)",
+            "damaged": "Damaged",
+            "unopened": "Unopened"
+        },
+        "badges": {
+            "kept": "Kept",
+            "exchange": "Exchange in progress",
+            "return_for_credit": "Return for Credit",
+            "returned": "Returned"
         }
     }
 }

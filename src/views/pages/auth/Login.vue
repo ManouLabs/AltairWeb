@@ -97,14 +97,7 @@ const loginUser = async () => {
                         <FloatLabel variant="on" class="w-full">
                             <IconField>
                                 <InputIcon class="pi pi-at" />
-                                <InputText
-                                    id="email"
-                                    type="email"
-                                    v-model="email"
-                                    class="w-full"
-                                    :invalid="authStore.errors.email ? true : false"
-                                    @input="() => authStore.clearErrors(['email'])"
-                                />
+                                <InputText id="email" type="email" v-model="email" class="w-full" :invalid="authStore.errors.email ? true : false" @input="() => authStore.clearErrors(['email'])" />
                             </IconField>
                             <label for="email">{{ $t('login.email') }} *</label>
                         </FloatLabel>
@@ -116,16 +109,7 @@ const loginUser = async () => {
                         <FloatLabel variant="on" class="w-full">
                             <IconField>
                                 <InputIcon class="pi pi-lock" />
-                                <Password
-                                    id="password"
-                                    v-model="password"
-                                    :feedback="false"
-                                    toggleMask
-                                    class="w-full"
-                                    inputClass="w-full"
-                                    :invalid="authStore.errors.password ? true : false"
-                                    @input="() => authStore.clearErrors(['password'])"
-                                />
+                                <Password id="password" v-model="password" :feedback="false" toggleMask class="w-full" inputClass="w-full" :invalid="authStore.errors.password ? true : false" @input="() => authStore.clearErrors(['password'])" />
                             </IconField>
                             <label for="password">{{ $t('login.password') }} *</label>
                         </FloatLabel>
@@ -183,23 +167,14 @@ const loginUser = async () => {
                     </div>
                 </form>
 
-                <!-- Sign Up Link -->
-                <div class="mt-12 text-center">
-                    <p class="text-surface-600 dark:text-surface-400">
-                        {{ $t('login.no_account') || "Don't have an account?" }}
-                        <a href="#" class="text-codly-purple-500 font-bold hover:underline">{{ $t('login.sign_up') || 'Sign up for a new account' }}</a>
-                    </p>
-                </div>
+
             </div>
 
             <!-- Footer Links -->
             <div class="mt-12 lg:mt-24 flex gap-6 text-xs text-surface-400 font-medium">
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Privacy Policy</a>
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Terms of Service</a>
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Contact Support</a>
+                <router-link to="/privacy-policy" class="hover:text-codly-purple-500 transition-colors">{{ $t('auth.privacy_policy') }}</router-link>
+                <router-link to="/terms-of-service" class="hover:text-codly-purple-500 transition-colors">{{ $t('auth.terms_of_service') }}</router-link>
             </div>
         </div>
     </div>
 </template>
-
-

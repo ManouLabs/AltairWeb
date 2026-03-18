@@ -197,8 +197,8 @@ onMounted(() => {
 
         <!-- Form Actions -->
         <div class="flex justify-end gap-3 pt-4 mt-2 border-t border-surface-200 dark:border-surface-700">
-            <Button :label="t('common.labels.cancel')" severity="secondary" text @click="closeDialog" :disabled="loading.isFormSending" />
-            <Button :label="t('common.labels.save')" type="submit" :loading="loading.isFormSending" rounded />
+            <Button :label="t('common.labels.cancel')" icon="pi pi-times" text @click="closeDialog" :disabled="loading.isFormSending" />
+            <Button :label="t('common.labels.save')" icon="pi pi-check" type="submit" :loading="loading.isFormSending" />
         </div>
     </form>
 </template>

@@ -16,9 +16,11 @@ import { useRoute, useRouter } from 'vue-router';
 import { useDialog } from 'primevue/usedialog';
 import { useConfirm } from 'primevue/useconfirm';
 import FormHeader from '@/components/FormHeader.vue';
+import CustomerCard from '@/components/common/CustomerCard.vue';
 import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
 import ReputationBadge from '@/components/common/ReputationBadge.vue';
 import { useReputation } from '@/composables/useReputation';
+import OrderFormSkeleton from './partials/OrderFormSkeleton.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -198,10 +200,13 @@ const sourceOptions = [
 const statusOptions = [
     { label: t('order.statuses.pending'), value: 'pending', icon: 'pi pi-clock', color: '#f59e0b' },
     { label: t('order.statuses.confirmed'), value: 'confirmed', icon: 'pi pi-check', color: '#3b82f6' },
+    { label: t('order.statuses.in_preparation'), value: 'in_preparation', icon: 'pi pi-cog', color: '#6366f1' },
+    { label: t('order.statuses.in_dispatch'), value: 'in_dispatch', icon: 'pi pi-send', color: '#8b5cf6' },
     { label: t('order.statuses.shipping'), value: 'shipping', icon: 'pi pi-truck', color: '#8b5cf6' },
     { label: t('order.statuses.delivered'), value: 'delivered', icon: 'pi pi-check-circle', color: '#22c55e' },
     { label: t('order.statuses.cancelled'), value: 'cancelled', icon: 'pi pi-times-circle', color: '#ef4444' },
-    { label: t('order.statuses.returned'), value: 'returned', icon: 'pi pi-replay', color: '#f97316' }
+    { label: t('order.statuses.returned'), value: 'returned', icon: 'pi pi-replay', color: '#f97316' },
+    { label: t('order.statuses.exchanged'), value: 'exchanged', icon: 'pi pi-arrows-h', color: '#eab308' }
 ];
 
 // Computed totals
@@ -231,9 +236,7 @@ const onBlurField = (path: string): void => {
 const searchProduct = async (event: any): Promise<void> => {
     const query = event.query?.trim() || '';
     try {
-        const params: any = { rows: query ? 15 : 5 };
-        if (query) params.filters = { global: { value: query, matchMode: 'contains' } };
-        const res = await useProductService.getProducts(params);
+        const res = await useProductService.getProductsList(query || undefined, query ? 15 : 5);
         filteredProducts.value = res.products || [];
     } catch (e) {
         console.error('Product search failed:', e);
@@ -241,8 +244,15 @@ const searchProduct = async (event: any): Promise<void> => {
     }
 };
 
+function getProductStock(product: any): number {
+    if (product.stock_type === 'variant' && product.variants?.length) {
+        return product.variants.reduce((sum: number, v: any) => sum + (v.available_stock ?? v.stock ?? 0), 0);
+    }
+    return product.available_stock ?? product.total_stock ?? 0;
+}
+
 function addProductFromSearch(product: any): void {
-    const stock = product.available_stock ?? product.total_stock ?? null;
+    const stock = getProductStock(product);
 
     const doAdd = () => {
         record.value.items.push({
@@ -267,7 +277,9 @@ function addProductFromSearch(product: any): void {
             acceptProps: { label: t('common.labels.yes'), severity: 'danger' },
             rejectProps: { label: t('common.labels.cancel'), severity: 'secondary', outlined: true },
             accept: () => doAdd(),
-            reject: () => { productSearch.value = ''; }
+            reject: () => {
+                productSearch.value = '';
+            }
         });
     } else {
         doAdd();
@@ -298,7 +310,7 @@ function updateItemQuantity(index: number, delta: number): void {
 // Load data
 async function loadLookups(): Promise<void> {
     try {
-        const [shopRes, shipperRes] = await Promise.all([useShopService.getShops(), useShipperService.getShippers({})]);
+        const [shopRes, shipperRes] = await Promise.all([useShopService.getShopsList(), useShipperService.getShippersList()]);
         shops.value = shopRes.data || [];
         shippers.value = shipperRes.data || [];
     } catch (error) {
@@ -436,119 +448,7 @@ onMounted(async () => {
     <div class="max-w-[1400px] mx-auto">
         <!-- Skeleton Loading -->
         <template v-if="loading.isPageLoading">
-            <!-- Top Bar Skeleton -->
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-3">
-                    <Skeleton shape="circle" size="2.5rem" />
-                    <div>
-                        <Skeleton width="14rem" height="1.5rem" class="mb-1" />
-                        <Skeleton width="8rem" height="0.875rem" />
-                    </div>
-                </div>
-                <Skeleton width="5rem" height="1.75rem" borderRadius="9999px" />
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column Skeleton -->
-                <div class="lg:col-span-2 flex flex-col gap-6">
-                    <!-- Customer Section Skeleton -->
-                    <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center gap-2 mb-4">
-                            <Skeleton shape="circle" size="1.25rem" />
-                            <Skeleton width="10rem" height="1.25rem" />
-                        </div>
-                        <Skeleton width="100%" height="2.75rem" borderRadius="0.5rem" class="mb-4" />
-                        <Skeleton width="10rem" height="2.25rem" borderRadius="0.5rem" />
-                    </div>
-
-                    <!-- Products Section Skeleton -->
-                    <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center gap-2 mb-4">
-                            <Skeleton shape="circle" size="1.25rem" />
-                            <Skeleton width="8rem" height="1.25rem" />
-                        </div>
-                        <Skeleton width="100%" height="2.75rem" borderRadius="0.5rem" class="mb-4" />
-                        <!-- Fake product rows -->
-                        <div class="flex flex-col gap-3">
-                            <div v-for="n in 2" :key="n" class="flex items-center gap-4 p-3 border border-surface-200 dark:border-surface-700 rounded-lg">
-                                <Skeleton shape="circle" size="2rem" />
-                                <div class="flex-1">
-                                    <Skeleton width="60%" height="0.875rem" class="mb-1" />
-                                    <Skeleton width="30%" height="0.75rem" />
-                                </div>
-                                <Skeleton width="4rem" height="2rem" borderRadius="0.375rem" />
-                                <Skeleton width="5rem" height="0.875rem" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Order Details Section Skeleton -->
-                    <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl p-6 shadow-sm">
-                        <div class="flex items-center gap-2 mb-4">
-                            <Skeleton shape="circle" size="1.25rem" />
-                            <Skeleton width="9rem" height="1.25rem" />
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <Skeleton v-for="n in 4" :key="n" width="100%" height="2.75rem" borderRadius="0.5rem" />
-                        </div>
-                        <!-- Shipping type + Source -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-                            <Skeleton width="100%" height="2.75rem" borderRadius="0.5rem" />
-                            <Skeleton width="100%" height="2.75rem" borderRadius="0.5rem" />
-                        </div>
-                        <!-- Status + Payment -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-                            <Skeleton width="100%" height="2.75rem" borderRadius="0.5rem" />
-                            <div class="flex gap-2">
-                                <Skeleton width="50%" height="2.75rem" borderRadius="0.75rem" />
-                                <Skeleton width="50%" height="2.75rem" borderRadius="0.75rem" />
-                            </div>
-                        </div>
-                        <!-- Note -->
-                        <Skeleton width="100%" height="5rem" borderRadius="0.5rem" class="mt-4" />
-                    </div>
-                </div>
-
-                <!-- Right Column Skeleton (Pricing) -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl p-6 shadow-sm sticky top-6">
-                        <div class="flex items-center gap-2 mb-6">
-                            <Skeleton shape="circle" size="1.25rem" />
-                            <Skeleton width="10rem" height="1.25rem" />
-                        </div>
-                        <div class="flex flex-col gap-4">
-                            <!-- Subtotal -->
-                            <div class="flex items-center justify-between">
-                                <Skeleton width="5rem" height="0.875rem" />
-                                <Skeleton width="6rem" height="0.875rem" />
-                            </div>
-                            <Divider />
-                            <!-- Discount -->
-                            <div class="flex items-center justify-between">
-                                <Skeleton width="5rem" height="0.875rem" />
-                                <Skeleton width="5rem" height="0.875rem" />
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <Skeleton width="100%" height="2rem" borderRadius="0.375rem" />
-                                <Skeleton width="100%" height="2rem" borderRadius="0.375rem" />
-                            </div>
-                            <Divider />
-                            <!-- Shipping -->
-                            <div class="flex items-center justify-between">
-                                <Skeleton width="6rem" height="0.875rem" />
-                                <Skeleton width="5rem" height="0.875rem" />
-                            </div>
-                            <Skeleton width="100%" height="2rem" borderRadius="0.375rem" />
-                            <Divider />
-                            <!-- Grand Total -->
-                            <Skeleton width="100%" height="3rem" borderRadius="0.5rem" />
-                            <!-- Buttons -->
-                            <Skeleton width="100%" height="2.75rem" borderRadius="0.5rem" class="mt-2" />
-                            <Skeleton width="100%" height="2.25rem" borderRadius="0.5rem" />
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <OrderFormSkeleton />
         </template>
 
         <!-- Real Content -->
@@ -627,56 +527,17 @@ onMounted(async () => {
                         </div>
 
                         <!-- Customer Info Card (after selection) -->
-                        <div v-if="selectedCustomer && selectedCustomer.id" class="p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 mb-8">
-                            <Message v-if="selectedCustomer.status === 'blocked'" severity="warn" icon="pi pi-exclamation-triangle" :closable="false" class="mb-4">
-                                {{ t('order.labels.blocked_customer_warning') }}
-                            </Message>
-                            <!-- Header: avatar + name + close -->
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="relative">
-                                        <InitialsAvatar :name="selectedCustomer.name" size="lg" />
-                                        <span class="absolute bottom-0 right-0 w-3 h-3 border-2 border-white dark:border-surface-800 rounded-full" :class="selectedCustomer.status === 'blocked' ? 'bg-red-500' : 'bg-green-500'"></span>
-                                    </div>
-                                    <span class="font-bold text-surface-800 dark:text-surface-100">{{ selectedCustomer.name }}</span>
-                                </div>
-                                <Button
-                                    icon="pi pi-times"
-                                    text
-                                    rounded
-                                    size="small"
-                                    severity="secondary"
-                                    @click="
-                                        onCustomerClear();
-                                        selectedCustomer = null;
-                                    "
-                                />
-                            </div>
-
-                            <!-- Body: Customer Details (left) + Reputation (right) -->
-                            <div class="flex items-start gap-6">
-                                <!-- Left: Contact Info -->
-                                <div class="flex-1 flex flex-col gap-2 text-xs text-surface-600 dark:text-surface-300">
-                                    <div class="flex items-center gap-2">
-                                        <i class="pi pi-phone text-surface-400 text-[11px]"></i>
-                                        <span>{{ getCustomerDetails(selectedCustomer).phone }}</span>
-                                    </div>
-                                    <div v-if="getCustomerDetails(selectedCustomer).email" class="flex items-center gap-2">
-                                        <i class="pi pi-envelope text-surface-400 text-[11px]"></i>
-                                        <span>{{ getCustomerDetails(selectedCustomer).email }}</span>
-                                    </div>
-                                    <div v-if="getCustomerDetails(selectedCustomer).address" class="flex items-center gap-2">
-                                        <i class="pi pi-map-marker text-surface-400 text-[11px]"></i>
-                                        <span>{{ getCustomerDetails(selectedCustomer).address }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Right: Reputation -->
-                                <div class="w-1/2">
-                                    <ReputationBadge :reputation="selectedCustomer.reputation" size="md" />
-                                </div>
-                            </div>
-                        </div>
+                        <CustomerCard
+                            v-if="selectedCustomer && selectedCustomer.id"
+                            :customer="selectedCustomer"
+                            size="lg"
+                            closable
+                            class="mb-8"
+                            @close="
+                                onCustomerClear();
+                                selectedCustomer = null;
+                            "
+                        />
 
                         <!-- Shop, Shipper, Shipping Type, Source -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -863,8 +724,8 @@ onMounted(async () => {
                                                 <div class="text-xs text-surface-400">{{ option.sku_prefix || '—' }} · {{ Number(option.sale_price || 0).toLocaleString('fr-DZ') }} DA</div>
                                             </div>
                                             <Tag
-                                                :value="(option.available_stock ?? option.total_stock ?? 0) > 0 ? `${option.available_stock ?? option.total_stock} ${t('common.labels.in_stock')}` : t('common.labels.out_of_stock')"
-                                                :severity="(option.available_stock ?? option.total_stock ?? 0) > 5 ? 'success' : (option.available_stock ?? option.total_stock ?? 0) > 0 ? 'warn' : 'danger'"
+                                                :value="getProductStock(option) > 0 ? `${getProductStock(option)} ${t('common.labels.in_stock')}` : t('common.labels.out_of_stock')"
+                                                :severity="getProductStock(option) > 5 ? 'success' : getProductStock(option) > 0 ? 'warn' : 'danger'"
                                                 class="text-[10px]"
                                             />
                                         </div>
@@ -882,7 +743,7 @@ onMounted(async () => {
                                         <th class="text-left py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-10">#</th>
                                         <th class="text-left py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider">{{ t('order.columns.product') }}</th>
                                         <th class="text-left py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-28">{{ t('order.columns.sku') }}</th>
-                                        <th class="text-center py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-24">{{ t('order.columns.qty') }}</th>
+                                        <th class="text-center py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-36">{{ t('order.columns.qty') }}</th>
                                         <th class="text-center py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-36">{{ t('order.columns.price') }}</th>
                                         <th class="text-right py-3 px-2 font-semibold text-surface-500 dark:text-surface-400 uppercase text-xs tracking-wider w-36">{{ t('order.columns.item_total') }}</th>
                                         <th class="w-10"></th>
@@ -914,33 +775,30 @@ onMounted(async () => {
                                             <span class="text-xs font-mono text-surface-500 bg-surface-100 dark:bg-surface-700 px-2 py-1 rounded">{{ item.sku || '—' }}</span>
                                         </td>
                                         <td class="py-4 px-2">
-                                            <div class="flex items-center justify-center gap-0">
-                                                <button
-                                                    type="button"
-                                                    class="w-8 h-8 flex items-center justify-center rounded-l-lg border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors cursor-pointer"
-                                                    @click="updateItemQuantity(index, -1)"
-                                                    :disabled="item.quantity <= 1"
-                                                >
-                                                    <i class="pi pi-minus text-[10px]"></i>
-                                                </button>
-                                                <div class="w-10 h-8 flex items-center justify-center border-y border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-900 font-bold text-sm">{{ item.quantity }}</div>
-                                                <button
-                                                    type="button"
-                                                    class="w-8 h-8 flex items-center justify-center rounded-r-lg border border-surface-300 dark:border-surface-600 bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors cursor-pointer"
-                                                    @click="updateItemQuantity(index, 1)"
-                                                >
-                                                    <i class="pi pi-plus text-[10px]"></i>
-                                                </button>
-                                            </div>
+                                            <InputNumber
+                                                v-model="item.quantity"
+                                                showButtons
+                                                buttonLayout="horizontal"
+                                                :min="1"
+                                                :step="1"
+                                                size="small"
+                                                :style="{ width: '9rem' }"
+                                                :pt="{ pcInputText: { root: { class: 'text-center font-bold', style: 'width: 4rem; padding: 0.25rem;' } } }"
+                                            >
+                                                <template #incrementbuttonicon>
+                                                    <span class="pi pi-plus text-[10px]" />
+                                                </template>
+                                                <template #decrementbuttonicon>
+                                                    <span class="pi pi-minus text-[10px]" />
+                                                </template>
+                                            </InputNumber>
                                         </td>
                                         <td class="py-4 px-2 text-center">
                                             <InputNumber v-model="item.unit_price" mode="currency" currency="DZD" locale="fr-DZ" :style="{ width: '10rem' }" :pt="{ pcInputText: { root: { style: 'width: 100%' } } }" size="small" :min="0" />
                                         </td>
                                         <td class="py-4 px-2 text-right font-bold text-surface-800 dark:text-surface-100">{{ (item.quantity * item.unit_price).toLocaleString('fr-DZ') }} DA</td>
                                         <td class="py-4 px-2 text-center">
-                                            <button type="button" class="text-surface-400 hover:text-red-500 transition-colors cursor-pointer" @click="removeItem(index)">
-                                                <i class="pi pi-times text-sm"></i>
-                                            </button>
+                                            <Button icon="pi pi-times" text rounded severity="danger" size="small" @click="removeItem(index)" />
                                         </td>
                                     </tr>
                                     <!-- Scan to add row -->
@@ -970,7 +828,7 @@ onMounted(async () => {
                             <!-- Status with icon -->
                             <div>
                                 <FloatLabel variant="on" class="w-full">
-                                    <Select id="status" v-model="record.status" :options="statusOptions" optionLabel="label" optionValue="value" :disabled="loading.isFormSending" class="w-full">
+                                    <Select id="status" v-model="record.status" :options="statusOptions" optionLabel="label" optionValue="value" :disabled="loading.isFormSending || record.status === 'exchanged'" class="w-full">
                                         <template #value="{ value }">
                                             <div v-if="value" class="flex items-center gap-2">
                                                 <i :class="statusOptions.find((s) => s.value === value)?.icon" :style="{ color: statusOptions.find((s) => s.value === value)?.color }" class="text-sm"></i>

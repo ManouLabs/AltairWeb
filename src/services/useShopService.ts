@@ -48,6 +48,11 @@ export const useShopService = {
         return response.data;
     },
 
+    async getShopsList(): Promise<ShopsResponse> {
+        const response = await apiClient.get<ShopsResponse>('/api/admin/shops/active');
+        return response.data;
+    },
+
     async storeShop(shopData: ShopFormData): Promise<ShopApiResponse> {
         await apiClient.get('/sanctum/csrf-cookie');
 

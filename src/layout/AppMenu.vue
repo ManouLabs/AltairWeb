@@ -23,6 +23,12 @@ const mainMenu = computed(() => [
         visible: can('view_orders')
     },
     {
+        label: t('navigation.side_bar.exchanges'),
+        icon: 'pi pi-fw pi-arrows-h',
+        to: '/admin/exchanges',
+        visible: can('view_exchanges')
+    },
+    {
         label: t('navigation.side_bar.customers'),
         icon: 'pi pi-fw pi-id-card',
         to: '/admin/customers',

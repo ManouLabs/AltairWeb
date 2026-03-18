@@ -213,7 +213,7 @@ watch(resolvedCategoryId, (newCatId, oldCatId) => {
 // Load categories
 async function loadCategories(): Promise<void> {
     try {
-        const data = await useCategoryService.getAllCategories();
+        const data = await useCategoryService.getCategoriesList();
         allCategories.value = data.categories || [];
         nextTick(() => expandAllCategoryNodes());
     } catch (e) {
@@ -283,13 +283,8 @@ function openCreateCategory(parentId: number | null = null): void {
 // Load attributes
 async function loadAttributes(): Promise<void> {
     try {
-        const data = await useAttributeService.getAttributes({
-            rows: 100,
-            page: 1,
-            sortField: 'name',
-            sortOrder: '1'
-        });
-        allAttributes.value = data.attributes || [];
+        const data = await useAttributeService.getAttributesList();
+        allAttributes.value = data.data || [];
     } catch (e) {
         console.error('Failed to load attributes');
     }

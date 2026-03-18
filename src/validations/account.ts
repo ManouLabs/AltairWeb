@@ -137,7 +137,7 @@ export const accountSchema = z.object({
                     password_confirmation: z.preprocess((v) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }))
                 })
                 .refine((data) => data.password === data.password_confirmation, {
-                    message: 'common.messages.passwords_dont_match',
+                    message: 'common.messages.password_mismatch',
                     path: ['password_confirmation']
                 })
         )

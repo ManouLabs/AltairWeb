@@ -3,18 +3,13 @@ import apiClient from '@/services/axios';
 import type { CategoryFormData, CategoriesResponse, CategoryApiResponse, DeleteCategoriesResponse, ToggleActiveCategoryResponse } from '@/types/category';
 
 export const useCategoryService = {
-    async getCategories(params: Record<string, unknown> = {}): Promise<CategoriesResponse> {
-        const response = await apiClient.post<CategoriesResponse>('/api/admin/categories/filter', { params });
-        return response.data;
-    },
-
     async getAllCategories(): Promise<CategoriesResponse> {
         const response = await apiClient.get<CategoriesResponse>('/api/admin/allcategories');
         return response.data;
     },
 
-    async getCategoryTree(): Promise<CategoriesResponse> {
-        const response = await apiClient.get<CategoriesResponse>('/api/admin/categories/tree');
+    async getCategoriesList(): Promise<CategoriesResponse> {
+        const response = await apiClient.get<CategoriesResponse>('/api/admin/categories/active');
         return response.data;
     },
 

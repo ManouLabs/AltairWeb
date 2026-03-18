@@ -438,7 +438,7 @@ async function handleBulkAction(payload: { key: string; value?: string }): Promi
                 :totalRecords="total"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.subscription') })"
+                :currentPageReportTemplate="t('common.pagination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.subscription') })"
                 resizableColumns
                 columnResizeMode="expand"
                 reorderableColumns
@@ -738,7 +738,7 @@ async function handleBulkAction(payload: { key: string; value?: string }): Promi
                             <Select v-model="filterModel.value" :options="activeOptions" optionLabel="label" optionValue="value" size="small" class="w-full" />
                             <InputGroupAddon>
                                 <Button size="small" v-tooltip.top="t('common.labels.apply')" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="filterModel.value == null" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                                <Button :disabled="!filterModel.value" size="small" v-tooltip.top="t('common.labels.clear', 'filter')" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
                     </template>

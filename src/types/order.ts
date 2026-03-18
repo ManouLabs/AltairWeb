@@ -40,6 +40,7 @@ export interface OrderData {
     shop: { id: number; name: string } | null;
     shipper: { id: number; name: string; type: string } | null;
     items: OrderItemData[];
+    exchange_id?: number | null;
     created_at?: string;
     updated_at?: string;
 }

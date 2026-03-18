@@ -8,6 +8,11 @@ export const useAttributeService = {
         return response.data;
     },
 
+    async getAttributesList(): Promise<{ data: any[] }> {
+        const response = await apiClient.get<{ data: any[] }>('/api/admin/attributes/active');
+        return response.data;
+    },
+
     async getAttribute(attributeId: number): Promise<AttributeApiResponse> {
         const response = await apiClient.get<AttributeApiResponse>(`/api/admin/attributes/${attributeId}`);
         return response.data;

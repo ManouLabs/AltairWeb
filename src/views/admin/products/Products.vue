@@ -354,7 +354,7 @@ async function handleBulkAction(payload: { key: string; value?: string }): Promi
                 :totalRecords="total"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.products') })"
+                :currentPageReportTemplate="t('common.pagination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.products') })"
                 resizableColumns
                 columnResizeMode="expand"
                 reorderableColumns

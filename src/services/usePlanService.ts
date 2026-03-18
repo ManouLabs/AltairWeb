@@ -1,8 +1,13 @@
 // src/services/usePlanService.ts
 import apiClient from '@/services/axios';
-import type { PlansFilterParams, PlansResponse, PlanFormData, PlanApiResponse, ToggleActivePlanResponse, ToggleRecommendedPlanResponse, DeletePlansResponse } from '@/types/plan';
+import type { Plan, PlansFilterParams, PlansResponse, PlanFormData, PlanApiResponse, ToggleActivePlanResponse, ToggleRecommendedPlanResponse, DeletePlansResponse } from '@/types/plan';
 
 export const usePlanService = {
+    async getPublicPlans(): Promise<Plan[]> {
+        const response = await apiClient.get<{ data: Plan[] }>('/api/plans');
+        return response.data.data;
+    },
+
     async getPlans(params: PlansFilterParams = {}): Promise<PlansResponse> {
         const response = await apiClient.post<PlansResponse>('/api/admin/plans/filter', { params });
         return response.data;

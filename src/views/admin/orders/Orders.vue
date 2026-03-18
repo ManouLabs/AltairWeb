@@ -3,6 +3,7 @@ import BulkActionBar from '@/components/BulkActionBar.vue';
 import type { BulkAction } from '@/components/BulkActionBar.vue';
 import DataTableHighlightTag from '@/components/DataTableHighlightTag.vue';
 import RowActionMenu from '@/components/common/RowActionMenu.vue';
+import CustomerCard from '@/components/common/CustomerCard.vue';
 import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
 import ReputationBadge from '@/components/common/ReputationBadge.vue';
 import { useDataTable } from '@/composables/useDataTable';
@@ -135,6 +136,16 @@ function viewRecord(row: OrderData): void {
     drawerVisible.value = true;
 }
 
+function createExchange(row: OrderData): void {
+    router.push({ name: 'exchange-create', query: { order_id: row.id } });
+}
+
+function viewExchange(row: OrderData): void {
+    if (row.exchange_id) {
+        router.push({ name: 'exchange-edit', params: { id: row.exchange_id } });
+    }
+}
+
 function onRowClick(event: any): void {
     viewRecord(event.data);
 }
@@ -183,7 +194,7 @@ const allShops = ref<{ id: number; name: string }[]>([]);
 
 async function loadShops(): Promise<void> {
     try {
-        const data = await useShopService.getShops();
+        const data = await useShopService.getShopsList();
         allShops.value = (data.data || []).map((s: any) => ({ id: s.id, name: s.name }));
     } catch (e) {
         console.error('Failed to load shops');
@@ -205,10 +216,13 @@ const bulkActions = computed<BulkAction[]>(() => [
         options: [
             { label: t('order.statuses.pending'), value: 'pending', icon: 'pi pi-clock', severity: 'warn' },
             { label: t('order.statuses.confirmed'), value: 'confirmed', icon: 'pi pi-check', severity: 'info' },
+            { label: t('order.statuses.in_preparation'), value: 'in_preparation', icon: 'pi pi-cog', severity: 'info' },
+            { label: t('order.statuses.in_dispatch'), value: 'in_dispatch', icon: 'pi pi-send', severity: 'info' },
             { label: t('order.statuses.shipping'), value: 'shipping', icon: 'pi pi-truck', severity: 'info' },
             { label: t('order.statuses.delivered'), value: 'delivered', icon: 'pi pi-check-circle', severity: 'success' },
             { label: t('order.statuses.cancelled'), value: 'cancelled', icon: 'pi pi-times-circle', severity: 'danger' },
-            { label: t('order.statuses.returned'), value: 'returned', icon: 'pi pi-replay', severity: 'danger' }
+            { label: t('order.statuses.returned'), value: 'returned', icon: 'pi pi-replay', severity: 'danger' },
+            { label: t('order.statuses.exchanged'), value: 'exchanged', icon: 'pi pi-arrows-h', severity: 'warn' }
         ]
     },
     {
@@ -283,7 +297,7 @@ onUnmounted(() => {
                 :totalRecords="total"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-                :currentPageReportTemplate="t('common.paggination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.orders') })"
+                :currentPageReportTemplate="t('common.pagination.showing_to_of_entity', { first: '{first}', last: '{last}', totalRecords: '{totalRecords}', entity: t('entity.orders') })"
                 resizableColumns
                 columnResizeMode="expand"
                 reorderableColumns
@@ -387,29 +401,19 @@ onUnmounted(() => {
                     class="min-w-52"
                 >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.customer')" :frozen="frozenColumns.customer" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('customer')" />
+                        <HeaderCell
+                            :text="t('order.columns.customer')"
+                            :frozen="frozenColumns.customer"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('customer')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <div v-if="data.customer" class="flex items-start gap-2.5">
-                                <InitialsAvatar :name="data.customer.name" size="sm" class="mt-0.5" />
-                                <div class="flex-1 min-w-0">
-                                    <span class="font-semibold text-sm text-surface-800 dark:text-surface-100 truncate block">{{ data.customer.name }}</span>
-                                    <div class="flex items-center gap-2 text-[10px] text-surface-400 mt-0.5">
-                                        <span v-if="data.customer.phone || data.customer.contactMethods?.find((c: any) => c.type === 'phone')" class="flex items-center gap-0.5">
-                                            <i class="pi pi-phone text-[9px]"></i> {{ data.customer.phone || data.customer.contactMethods?.find((c: any) => c.type === 'phone')?.value }}
-                                        </span>
-                                        <span v-if="data.customer.email || data.customer.contactMethods?.find((c: any) => c.type === 'email')" class="flex items-center gap-0.5 truncate">
-                                            <i class="pi pi-envelope text-[9px]"></i> {{ data.customer.email || data.customer.contactMethods?.find((c: any) => c.type === 'email')?.value }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                            <CustomerCard v-if="data.customer" :customer="data.customer" size="sm" />
                             <span v-else class="text-muted-color">—</span>
-                            <!-- Reputation bar -->
-                            <div v-if="data.customer" class="mt-1">
-                                <ReputationBadge :reputation="data.customer.reputation" size="sm" />
-                            </div>
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
@@ -426,7 +430,14 @@ onUnmounted(() => {
                 <!-- 5. Products Column -->
                 <Column columnKey="products" field="products" :frozen="frozenColumns.products" v-if="selectedColumns.some((c: Column) => c.field === 'products')" class="min-w-44">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.products')" :frozen="frozenColumns.products" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('products')" />
+                        <HeaderCell
+                            :text="t('order.columns.products')"
+                            :frozen="frozenColumns.products"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('products')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -460,11 +471,22 @@ onUnmounted(() => {
                     class="min-w-28"
                 >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.status')" :frozen="frozenColumns.status" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('status')" />
+                        <HeaderCell
+                            :text="t('order.columns.status')"
+                            :frozen="frozenColumns.status"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('status')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
-                            <Tag :value="t(`order.statuses.${data.status}`)" :severity="statusSeverity(data.status)" :icon="statusIcon(data.status)" class="!capitalize py-1.5 px-2.5" />
+                            <div class="flex items-center gap-1.5">
+                                <Tag :value="t(`order.statuses.${data.status}`)" :severity="statusSeverity(data.status)" :icon="statusIcon(data.status)" class="!capitalize py-1.5 px-2.5" />
+                                <Button v-if="data.status === 'returned'" v-tooltip.top="t('exchange.form.create_exchange')" icon="pi pi-arrows-h" rounded size="small" @click.stop="createExchange(data)" />
+                                <Button v-else-if="data.status === 'exchanged'" v-tooltip.top="t('order.labels.see_exchange')" icon="pi pi-eye" text rounded size="small" @click.stop="viewExchange(data)" />
+                            </div>
                         </DataCell>
                     </template>
                     <template #filter="{ filterModel, applyFilter }">
@@ -474,10 +496,13 @@ onUnmounted(() => {
                                 :options="[
                                     { label: t('order.statuses.pending'), value: 'pending' },
                                     { label: t('order.statuses.confirmed'), value: 'confirmed' },
+                                    { label: t('order.statuses.in_preparation'), value: 'in_preparation' },
+                                    { label: t('order.statuses.in_dispatch'), value: 'in_dispatch' },
                                     { label: t('order.statuses.shipping'), value: 'shipping' },
                                     { label: t('order.statuses.delivered'), value: 'delivered' },
                                     { label: t('order.statuses.cancelled'), value: 'cancelled' },
-                                    { label: t('order.statuses.returned'), value: 'returned' }
+                                    { label: t('order.statuses.returned'), value: 'returned' },
+                                    { label: t('order.statuses.exchanged'), value: 'exchanged' }
                                 ]"
                                 optionLabel="label"
                                 optionValue="value"
@@ -487,7 +512,7 @@ onUnmounted(() => {
                             />
                             <InputGroupAddon>
                                 <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                                <Button :disabled="!filterModel.value" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
                     </template>
@@ -507,7 +532,14 @@ onUnmounted(() => {
                     class="min-w-28"
                 >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.source')" :frozen="frozenColumns.source" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('source')" />
+                        <HeaderCell
+                            :text="t('order.columns.source')"
+                            :frozen="frozenColumns.source"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('source')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -540,7 +572,7 @@ onUnmounted(() => {
                             />
                             <InputGroupAddon>
                                 <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                                <Button :disabled="!filterModel.value" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
                     </template>
@@ -549,7 +581,14 @@ onUnmounted(() => {
                 <!-- 4. Shipping Type Column (with icon) -->
                 <Column columnKey="shipping_type" field="shipping_type" :frozen="frozenColumns.shipping_type" v-if="selectedColumns.some((c: Column) => c.field === 'shipping_type')" class="min-w-32">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.shipping_type')" :frozen="frozenColumns.shipping_type" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('shipping_type')" />
+                        <HeaderCell
+                            :text="t('order.columns.shipping_type')"
+                            :frozen="frozenColumns.shipping_type"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('shipping_type')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -563,9 +602,26 @@ onUnmounted(() => {
                 </Column>
 
                 <!-- 1. Shop Column (with icon, no image field exists) -->
-                <Column :showClearButton="false" :showApplyButton="false" :showFilterMatchModes="false" :showFilterOperator="false" columnKey="shop" field="shop" :frozen="frozenColumns.shop" v-if="selectedColumns.some((c: Column) => c.field === 'shop')" class="min-w-28">
+                <Column
+                    :showClearButton="false"
+                    :showApplyButton="false"
+                    :showFilterMatchModes="false"
+                    :showFilterOperator="false"
+                    columnKey="shop"
+                    field="shop"
+                    :frozen="frozenColumns.shop"
+                    v-if="selectedColumns.some((c: Column) => c.field === 'shop')"
+                    class="min-w-28"
+                >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.shop')" :frozen="frozenColumns.shop" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('shop')" />
+                        <HeaderCell
+                            :text="t('order.columns.shop')"
+                            :frozen="frozenColumns.shop"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('shop')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -581,7 +637,7 @@ onUnmounted(() => {
                             <Select v-model="filterModel.value" :options="allShops" optionLabel="name" optionValue="id" :placeholder="t('order.columns.shop')" class="w-full" size="small" />
                             <InputGroupAddon>
                                 <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                                <Button :disabled="!filterModel.value" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
                     </template>
@@ -590,7 +646,14 @@ onUnmounted(() => {
                 <!-- 2. Shipper Column (with icon) -->
                 <Column columnKey="shipper" field="shipper" :frozen="frozenColumns.shipper" v-if="selectedColumns.some((c: Column) => c.field === 'shipper')" class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.shipper')" :frozen="frozenColumns.shipper" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('shipper')" />
+                        <HeaderCell
+                            :text="t('order.columns.shipper')"
+                            :frozen="frozenColumns.shipper"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('shipper')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -609,7 +672,14 @@ onUnmounted(() => {
                 <!-- 9. Subtotal Column -->
                 <Column columnKey="subtotal" field="subtotal" :frozen="frozenColumns.subtotal" v-if="selectedColumns.some((c: Column) => c.field === 'subtotal')" sortable class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.subtotal')" :frozen="frozenColumns.subtotal" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('subtotal')" />
+                        <HeaderCell
+                            :text="t('order.columns.subtotal')"
+                            :frozen="frozenColumns.subtotal"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('subtotal')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -621,7 +691,14 @@ onUnmounted(() => {
                 <!-- 8. Shipping Fee Column -->
                 <Column columnKey="shipping_fee" field="shipping_fee" :frozen="frozenColumns.shipping_fee" v-if="selectedColumns.some((c: Column) => c.field === 'shipping_fee')" sortable class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.shipping_fee')" :frozen="frozenColumns.shipping_fee" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('shipping_fee')" />
+                        <HeaderCell
+                            :text="t('order.columns.shipping_fee')"
+                            :frozen="frozenColumns.shipping_fee"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('shipping_fee')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -633,7 +710,14 @@ onUnmounted(() => {
                 <!-- Total Column -->
                 <Column columnKey="total" field="total" :frozen="frozenColumns.total" v-if="selectedColumns.some((c: Column) => c.field === 'total')" sortable class="min-w-28">
                     <template #header>
-                        <HeaderCell :text="t('order.columns.total')" :frozen="frozenColumns.total" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('total')" />
+                        <HeaderCell
+                            :text="t('order.columns.total')"
+                            :frozen="frozenColumns.total"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('total')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -655,7 +739,14 @@ onUnmounted(() => {
                     class="min-w-28"
                 >
                     <template #header>
-                        <HeaderCell :text="t('order.columns.payment_status')" :frozen="frozenColumns.payment_status" :reorderTooltip="t('common.tooltips.reorder_columns')" :lockTooltip="t('common.tooltips.lock_column')" :unlockTooltip="t('common.tooltips.unlock_column')" @toggle="toggleColumnFrozen('payment_status')" />
+                        <HeaderCell
+                            :text="t('order.columns.payment_status')"
+                            :frozen="frozenColumns.payment_status"
+                            :reorderTooltip="t('common.tooltips.reorder_columns')"
+                            :lockTooltip="t('common.tooltips.lock_column')"
+                            :unlockTooltip="t('common.tooltips.unlock_column')"
+                            @toggle="toggleColumnFrozen('payment_status')"
+                        />
                     </template>
                     <template #body="{ data }">
                         <DataCell>
@@ -678,7 +769,7 @@ onUnmounted(() => {
                             />
                             <InputGroupAddon>
                                 <Button size="small" icon="pi pi-check" severity="primary" @click="applyFilter()" />
-                                <Button :disabled="filterModel.value === null" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
+                                <Button :disabled="!filterModel.value" size="small" outlined icon="pi pi-times" severity="danger" @click="((filterModel.value = null), applyFilter())" />
                             </InputGroupAddon>
                         </InputGroup>
                     </template>
@@ -692,6 +783,13 @@ onUnmounted(() => {
                                 :actions="[
                                     { label: t('common.labels.view'), icon: 'pi pi-eye', command: () => viewRecord(data) },
                                     { label: t('common.labels.edit'), icon: 'pi pi-pencil', command: () => editRecord(data) },
+                                    {
+                                        label: data.status === 'exchanged' ? t('order.labels.see_exchange') : t('entity.exchange'),
+                                        icon: 'pi pi-arrows-h',
+                                        command: () => data.status === 'exchanged' ? viewExchange(data) : createExchange(data),
+                                        disabled: data.status !== 'returned' && data.status !== 'exchanged',
+                                        tooltip: data.status === 'exchanged' ? undefined : t('exchange.form.only_returned_tooltip')
+                                    },
                                     { label: t('common.labels.delete'), icon: 'pi pi-trash', severity: 'danger', command: () => confirmDeleteRecord(null, [data.id]) }
                                 ]"
                             />

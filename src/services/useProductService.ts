@@ -8,6 +8,13 @@ export const useProductService = {
         return response.data;
     },
 
+    async getProductsList(search?: string, limit?: number): Promise<ProductsResponse> {
+        const response = await apiClient.get<ProductsResponse>('/api/admin/products/active', {
+            params: { search, limit }
+        });
+        return response.data;
+    },
+
     async getProduct(id: number): Promise<ProductApiResponse> {
         const response = await apiClient.get<ProductApiResponse>(`/api/admin/products/${id}`);
         return response.data;
@@ -47,17 +54,6 @@ export const useProductService = {
     async generateVariants(productId: number, attributeIds: number[], selectedValueIds: number[]): Promise<GenerateVariantsResponse> {
         await apiClient.get('/sanctum/csrf-cookie');
         const response = await apiClient.post<GenerateVariantsResponse>(`/api/admin/products/${productId}/variants`, { attribute_ids: attributeIds, selected_value_ids: selectedValueIds });
-        return response.data;
-    },
-
-    async uploadImage(productId: number, file: File): Promise<ProductApiResponse> {
-        await apiClient.get('/sanctum/csrf-cookie');
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('_method', 'PUT');
-        const response = await apiClient.post<ProductApiResponse>(`/api/admin/products/${productId}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
         return response.data;
     },
 

@@ -99,18 +99,15 @@ const sendResetLink = async () => {
                     <h2 class="text-3xl font-extrabold text-surface-900 dark:text-white mb-3">{{ t('forgot_password_page.check_inbox') }}</h2>
                     <p class="text-surface-500 dark:text-surface-400 leading-relaxed mb-8">
                         {{ t('forgot_password_page.sent_to') }}
-                        <span class="font-bold text-surface-900 dark:text-white">{{ email }}</span>.
+                        <span class="font-bold text-surface-900 dark:text-white">{{ email }}</span
+                        >.
                         {{ t('forgot_password_page.follow_instructions') }}
                     </p>
 
                     <!-- Resend -->
                     <div class="text-sm text-surface-500 dark:text-surface-400">
                         {{ t('forgot_password_page.didnt_receive') }}
-                        <button
-                            @click="sendResetLink"
-                            :disabled="loading.isFormSending"
-                            class="text-codly-purple-500 font-bold hover:underline cursor-pointer ml-1"
-                        >
+                        <button @click="sendResetLink" :disabled="loading.isFormSending" class="text-codly-purple-500 font-bold hover:underline cursor-pointer ml-1">
                             {{ t('forgot_password_page.resend_link') }}
                         </button>
                     </div>
@@ -139,14 +136,7 @@ const sendResetLink = async () => {
                             <FloatLabel variant="on" class="w-full">
                                 <IconField>
                                     <InputIcon class="pi pi-at" />
-                                    <InputText
-                                        id="email"
-                                        type="email"
-                                        v-model="email"
-                                        class="w-full"
-                                        :invalid="authStore.errors.email ? true : false"
-                                        @input="() => authStore.clearErrors(['email'])"
-                                    />
+                                    <InputText id="email" type="email" v-model="email" class="w-full" :invalid="authStore.errors.email ? true : false" @input="() => authStore.clearErrors(['email'])" />
                                 </IconField>
                                 <label for="email">{{ t('forgot_password_page.email') }} *</label>
                             </FloatLabel>
@@ -177,9 +167,8 @@ const sendResetLink = async () => {
 
             <!-- Footer Links -->
             <div class="mt-12 lg:mt-24 flex gap-6 text-xs text-surface-400 font-medium">
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Privacy Policy</a>
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Terms of Service</a>
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Contact Support</a>
+                <router-link to="/privacy-policy" class="hover:text-codly-purple-500 transition-colors">{{ t('auth.privacy_policy') }}</router-link>
+                <router-link to="/terms-of-service" class="hover:text-codly-purple-500 transition-colors">{{ t('auth.terms_of_service') }}</router-link>
             </div>
         </div>
     </div>

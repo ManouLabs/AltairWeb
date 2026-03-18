@@ -8,6 +8,11 @@ export const useShipperService = {
         return response.data;
     },
 
+    async getShippersList(): Promise<ShippersResponse> {
+        const response = await apiClient.get<ShippersResponse>('/api/admin/shippers/active');
+        return response.data;
+    },
+
     async getShipper(shipperId: number): Promise<ShipperApiResponse> {
         const response = await apiClient.get<ShipperApiResponse>(`/api/admin/shippers/${shipperId}`);
         return response.data;

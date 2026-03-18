@@ -22,6 +22,7 @@ declare module 'vue' {
     ConfirmDialog: typeof import('primevue/confirmdialog')['default']
     ConfirmPopup: typeof import('primevue/confirmpopup')['default']
     Contact: typeof import('./src/components/Contact.vue')['default']
+    CustomerCard: typeof import('./src/components/common/CustomerCard.vue')['default']
     DataCell: typeof import('./src/components/DataCell.vue')['default']
     DataTable: typeof import('primevue/datatable')['default']
     DataTableHighlightTag: typeof import('./src/components/DataTableHighlightTag.vue')['default']

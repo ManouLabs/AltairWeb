@@ -185,9 +185,9 @@ const resetPassword = async () => {
 
             <!-- Footer Links -->
             <div class="mt-12 lg:mt-24 flex gap-6 text-xs text-surface-400 font-medium">
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Privacy Policy</a>
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Terms of Service</a>
-                <a href="#" class="hover:text-codly-purple-500 transition-colors">Contact Support</a>
+                <router-link to="/privacy-policy" class="hover:text-codly-purple-500 transition-colors">{{ t('auth.privacy_policy') }}</router-link>
+                <router-link to="/terms-of-service" class="hover:text-codly-purple-500 transition-colors">{{ t('auth.terms_of_service') }}</router-link>
+                <a href="#" class="hover:text-codly-purple-500 transition-colors">{{ t('auth.contact_support') }}</a>
             </div>
         </div>
     </div>

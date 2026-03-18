@@ -20,6 +20,8 @@ interface ActionItem {
     severity?: 'danger' | 'warning' | 'success' | 'secondary';
     command: () => void;
     visible?: boolean;
+    disabled?: boolean;
+    tooltip?: string;
 }
 
 defineProps<{
@@ -49,16 +51,21 @@ const onHide = () => {
         </button>
         <Menu ref="menu" id="row-action-overlay" :model="actions.filter((a) => a.visible !== false)" :popup="true" class="row-action-dropdown" @show="onShow" @hide="onHide">
             <template #item="{ item }">
-                <button
-                    class="row-action-item"
-                    :class="{
-                        'row-action-item--danger': item.severity === 'danger',
-                        'row-action-item--warning': item.severity === 'warning'
-                    }"
-                >
-                    <i v-if="item.icon" :class="item.icon" />
-                    <span>{{ item.label }}</span>
-                </button>
+                <div v-tooltip.left="item.disabled && item.tooltip ? item.tooltip : undefined">
+                    <button
+                        class="row-action-item"
+                        :class="{
+                            'row-action-item--danger': item.severity === 'danger',
+                            'row-action-item--warning': item.severity === 'warning',
+                            'row-action-item--disabled': item.disabled
+                        }"
+                        :disabled="!!item.disabled"
+                        @click="!item.disabled && item.command?.({ originalEvent: $event, item })"
+                    >
+                        <i v-if="item.icon" :class="item.icon" />
+                        <span>{{ item.label }}</span>
+                    </button>
+                </div>
             </template>
         </Menu>
     </div>
@@ -121,6 +128,15 @@ const onHide = () => {
 
     &:hover {
         background: var(--surface-hover);
+    }
+
+    &--disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+
+        &:hover {
+            background: none;
+        }
     }
 
     i {

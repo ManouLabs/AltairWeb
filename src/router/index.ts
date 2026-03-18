@@ -193,7 +193,25 @@ const adminRoutes: RouteRecordRaw[] = [
         name: 'order-show',
         component: () => import('@/views/admin/orders/Form.vue'),
         meta: { requiresAuth: true, requiresPermission: 'view_orders', activeMenu: '/admin/orders' }
-    }
+    },
+    {
+        path: 'exchanges',
+        name: 'exchanges',
+        component: () => import('@/views/admin/exchanges/Exchanges.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'view_exchanges' }
+    },
+    {
+        path: 'exchanges/create',
+        name: 'exchange-create',
+        component: () => import('@/views/admin/exchanges/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'create_exchanges', activeMenu: '/admin/exchanges' }
+    },
+    {
+        path: 'exchanges/:id/edit',
+        name: 'exchange-edit',
+        component: () => import('@/views/admin/exchanges/Form.vue'),
+        meta: { requiresAuth: true, requiresPermission: 'update_exchanges', activeMenu: '/admin/exchanges' }
+    },
 ];
 
 const routes: RouteRecordRaw[] = [
@@ -221,6 +239,16 @@ const routes: RouteRecordRaw[] = [
         name: 'reset-password',
         component: () => import('@/views/pages/auth/ResetPassword.vue'),
         meta: { requiresGuest: true }
+    },
+    {
+        path: '/privacy-policy',
+        name: 'privacy-policy',
+        component: () => import('@/views/pages/PrivacyPolicy.vue')
+    },
+    {
+        path: '/terms-of-service',
+        name: 'terms-of-service',
+        component: () => import('@/views/pages/TermsOfService.vue')
     },
     { path: '/auth/access', name: 'accessDenied', component: () => import('@/views/pages/auth/Access.vue') },
     { path: '/auth/error', name: 'error', component: () => import('@/views/pages/auth/Error.vue') },

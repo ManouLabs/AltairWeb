@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CustomerCard from '@/components/common/CustomerCard.vue';
 import InitialsAvatar from '@/components/common/InitialsAvatar.vue';
 import ReputationBadge from '@/components/common/ReputationBadge.vue';
 import { useOrderHelpers } from '@/composables/useOrderHelpers';
@@ -48,6 +49,20 @@ function editOrder(): void {
     visible.value = false;
     if (order.value) {
         router.push({ name: 'order-edit', params: { id: order.value.id } });
+    }
+}
+
+function createExchange(): void {
+    visible.value = false;
+    if (order.value) {
+        router.push({ name: 'exchange-create', query: { order_id: order.value.id } });
+    }
+}
+
+function viewExchange(): void {
+    visible.value = false;
+    if (order.value?.exchange_id) {
+        router.push({ name: 'exchange-edit', params: { id: order.value.exchange_id } });
     }
 }
 
@@ -106,17 +121,7 @@ function changedFields(activity: OrderActivity): { field: string; oldVal: unknow
     return fields;
 }
 
-function getCustomerPhone(order: OrderData): string | null {
-    if (order.customer?.phone) return order.customer.phone;
-    const phoneMethod = order.customer?.contactMethods?.find((c: any) => c.type === 'mobile' || c.type === 'phone');
-    return phoneMethod?.value ?? null;
-}
 
-function getCustomerEmail(order: OrderData): string | null {
-    if (order.customer?.email) return order.customer.email;
-    const emailMethod = order.customer?.contactMethods?.find((c: any) => c.type === 'email');
-    return emailMethod?.value ?? null;
-}
 </script>
 
 <template>
@@ -132,7 +137,11 @@ function getCustomerEmail(order: OrderData): string | null {
                     <Tag :value="t(`order.statuses.${order.status}`)" :severity="statusSeverity(order.status)" :icon="statusIcon(order.status)" class="!py-1.5 !px-2.5 !capitalize" />
                     <Tag :value="t(`order.payment_statuses.${order.payment_status}`)" :severity="paymentSeverity(order.payment_status)" :icon="paymentIcon(order.payment_status)" class="!py-1.5 !px-2.5 !capitalize" />
                 </div>
-                <Button :label="t('order.quick_view.edit_order')" icon="pi pi-pencil" severity="primary" @click="editOrder" />
+                <div class="flex items-center gap-2">
+                    <Button v-if="order.status === 'returned'" :label="t('entity.exchange')" icon="pi pi-arrows-h" severity="warn" size="small" @click="createExchange" />
+                    <Button v-else-if="order.status === 'exchanged'" :label="t('order.labels.see_exchange')" icon="pi pi-arrows-h" severity="warn" size="small" @click="viewExchange" />
+                    <Button :label="t('order.quick_view.edit_order')" icon="pi pi-pencil" severity="primary" @click="editOrder" />
+                </div>
             </div>
             <div class="text-xs text-surface-400">{{ formatDate(order.created_at) }}</div>
 
@@ -195,24 +204,7 @@ function getCustomerEmail(order: OrderData): string | null {
                 <!-- ── Customer Card ────────────────────────────────── -->
                 <div v-if="order.customer" class="w-full">
                     <h4 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-3"><i class="pi pi-user mr-1.5"></i>{{ t('order.quick_view.customer') }}</h4>
-                    <div class="flex items-start gap-3 p-3 border border-surface-200 dark:border-surface-700 rounded-xl">
-                        <InitialsAvatar :name="order.customer.name" size="lg" />
-                        <div class="flex-1 min-w-0">
-                            <div class="font-semibold text-sm text-surface-800 dark:text-surface-100">{{ order.customer.name }}</div>
-                            <div class="flex flex-col gap-0.5 mt-1 text-xs text-surface-500">
-                                <span v-if="getCustomerPhone(order)" class="flex items-center gap-1"> <i class="pi pi-phone text-[10px]"></i> {{ getCustomerPhone(order) }} </span>
-                                <span v-if="getCustomerEmail(order)" class="flex items-center gap-1 truncate"> <i class="pi pi-envelope text-[10px]"></i> {{ getCustomerEmail(order) }} </span>
-                            </div>
-                            <div class="mt-2">
-                                <ReputationBadge :reputation="order.customer.reputation as any" size="sm" />
-                            </div>
-                            <!-- Address -->
-                            <div v-if="order.customer.addresses?.length" class="mt-2 text-xs text-surface-400 flex items-start gap-1">
-                                <i class="pi pi-map-marker text-[10px] mt-0.5"></i>
-                                <span>{{ order.customer.addresses[0].street }}{{ order.customer.addresses[0].city ? ', ' + order.customer.addresses[0].city.name : '' }}</span>
-                            </div>
-                        </div>
-                    </div>
+                    <CustomerCard :customer="order.customer" size="md" />
                 </div>
             </div>
             <Divider />

@@ -5,10 +5,13 @@ export function useOrderHelpers() {
         const map: Record<string, string> = {
             pending: 'warn',
             confirmed: 'info',
+            in_preparation: 'info',
+            in_dispatch: 'info',
             shipping: 'info',
             delivered: 'success',
             cancelled: 'danger',
-            returned: 'danger'
+            returned: 'danger',
+            exchanged: 'warn'
         };
         return map[status] || 'secondary';
     };
@@ -17,10 +20,13 @@ export function useOrderHelpers() {
         const map: Record<string, string> = {
             pending: 'pi pi-clock',
             confirmed: 'pi pi-check',
+            in_preparation: 'pi pi-cog',
+            in_dispatch: 'pi pi-send',
             shipping: 'pi pi-truck',
             delivered: 'pi pi-check-circle',
             cancelled: 'pi pi-times-circle',
-            returned: 'pi pi-replay'
+            returned: 'pi pi-replay',
+            exchanged: 'pi pi-arrows-h'
         };
         return map[status] || 'pi pi-question-circle';
     };
