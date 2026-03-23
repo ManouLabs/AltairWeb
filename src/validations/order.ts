@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 const requiredString = z.preprocess((v: unknown) => (v === null || v === undefined ? '' : v), z.string().min(1, { message: 'common.messages.is_required' }));
 
+const requiredId = z.preprocess((v: unknown) => (v === null || v === undefined ? undefined : v), z.number({ required_error: 'common.messages.is_required' }).min(1, { message: 'common.messages.is_required' }));
+
 const coerceNumber = (v: unknown) => {
     if (v === null || v === undefined || v === '') return 0;
     const n = Number(v);
@@ -10,16 +12,16 @@ const coerceNumber = (v: unknown) => {
 };
 
 export const orderSchema = z.object({
-    customer_id: z.number().nullable().optional(),
-    shop_id: z.number().nullable().optional(),
-    shipper_id: z.number().nullable().optional(),
+    customer_id: requiredId,
+    shop_id: requiredId,
+    shipper_id: requiredId,
     shipping_fee: z.preprocess(coerceNumber, z.number().min(0).default(0)),
     discount_amount: z.preprocess(coerceNumber, z.number().min(0).default(0)),
     discount_percentage: z.preprocess(coerceNumber, z.number().min(0).max(100).default(0)),
     shipping_type: requiredString,
-    source: z.string().nullable().optional(),
+    source: requiredString,
     status: z.string().optional(),
-    payment_status: z.string().optional(),
+    payment_status: requiredString,
     note: z.string().max(2000).optional().nullable(),
     items: z
         .array(

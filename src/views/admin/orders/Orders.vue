@@ -20,7 +20,7 @@ import { ACTIONS, useShowToast } from '@/utilities/toast';
 import type { OrderData } from '@/types/order';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import DataTableSkeleton from '@/components/DataTableSkeleton.vue';
@@ -39,14 +39,36 @@ const defaultFiltersConfig = {
     status: FilterMatchMode.EQUALS,
     source: FilterMatchMode.EQUALS,
     shop: FilterMatchMode.EQUALS,
-    payment_status: FilterMatchMode.EQUALS
+    payment_status: FilterMatchMode.EQUALS,
+    date_range: FilterMatchMode.BETWEEN,
+    exchange_only: FilterMatchMode.EQUALS
 };
 
 const dataLoaded = ref(false);
 const drawerVisible = ref(false);
 const drawerOrderId = ref<number | null>(null);
 
-const { total, rows, records, selectedRecords, recordDataTable, filters, onPage, onSort, onFilter, clearFilter, searchDone, exportCSV, initialize } = useDataTable(
+// External filter refs
+const statusFilter = ref<string | null>(null);
+const paymentFilter = ref<string | null>(null);
+const dateRange = ref<Date[] | null>(null);
+const exchangeOnly = ref(false);
+
+const {
+    total,
+    rows,
+    records,
+    selectedRecords,
+    recordDataTable,
+    filters,
+    onPage,
+    onSort,
+    onFilter,
+    clearFilter: baseClearFilter,
+    searchDone,
+    exportCSV,
+    initialize
+} = useDataTable(
     (params: any) =>
         useOrderService.getOrders(params).then((data) => {
             dataLoaded.value = true;
@@ -57,6 +79,32 @@ const { total, rows, records, selectedRecords, recordDataTable, filters, onPage,
         }),
     defaultFiltersConfig
 );
+
+function applyExternalFilters(): void {
+    filters.value.status.value = statusFilter.value;
+    filters.value.payment_status.value = paymentFilter.value;
+    filters.value.date_range.value = dateRange.value && dateRange.value[0] ? dateRange.value.map((d: Date | null) => d?.toISOString() ?? null) : null;
+    filters.value.exchange_only.value = exchangeOnly.value || null;
+    searchDone();
+}
+
+function clearFilter(): void {
+    statusFilter.value = null;
+    paymentFilter.value = null;
+    dateRange.value = null;
+    exchangeOnly.value = false;
+    baseClearFilter();
+}
+
+watch(statusFilter, () => applyExternalFilters());
+watch(paymentFilter, () => applyExternalFilters());
+watch(dateRange, () => {
+    // Only apply when both dates are selected (or cleared)
+    if (!dateRange.value || (dateRange.value[0] && dateRange.value[1]) || (!dateRange.value[0] && !dateRange.value[1])) {
+        applyExternalFilters();
+    }
+});
+watch(exchangeOnly, () => applyExternalFilters());
 
 const { highlights, markHighlight, getRowClass } = useRowEffects();
 const defaultFields = ['reference', 'customer', 'products', 'status', 'source', 'shipping_type', 'shop', 'shipper', 'subtotal', 'shipping_fee', 'total', 'payment_status'];
@@ -320,12 +368,83 @@ onUnmounted(() => {
                 <template #header>
                     <Toolbar class="w-full">
                         <template #start>
-                            <div class="flex space-x-2">
+                            <div class="flex flex-wrap items-end gap-4">
+                                <!-- Order Status -->
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-xs font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('order.filters.order_status') }}</label>
+                                    <Select
+                                        v-model="statusFilter"
+                                        :options="[
+                                            { label: t('order.statuses.pending'), value: 'pending' },
+                                            { label: t('order.statuses.confirmed'), value: 'confirmed' },
+                                            { label: t('order.statuses.in_preparation'), value: 'in_preparation' },
+                                            { label: t('order.statuses.in_dispatch'), value: 'in_dispatch' },
+                                            { label: t('order.statuses.shipping'), value: 'shipping' },
+                                            { label: t('order.statuses.delivered'), value: 'delivered' },
+                                            { label: t('order.statuses.cancelled'), value: 'cancelled' },
+                                            { label: t('order.statuses.returned'), value: 'returned' },
+                                            { label: t('order.statuses.exchanged'), value: 'exchanged' }
+                                        ]"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        :placeholder="t('order.placeholders.all_statuses')"
+                                        showClear
+                                        class="w-52"
+                                        size="small"
+                                    >
+                                        <template #value="slotProps">
+                                            <Tag v-if="slotProps.value" :value="t(`order.statuses.${slotProps.value}`)" :severity="statusSeverity(slotProps.value)" :icon="statusIcon(slotProps.value)" class="!capitalize !py-1 !px-2 !text-xs" />
+                                            <span v-else>{{ slotProps.placeholder }}</span>
+                                        </template>
+                                        <template #option="slotProps">
+                                            <Tag :value="slotProps.option.label" :severity="statusSeverity(slotProps.option.value)" :icon="statusIcon(slotProps.option.value)" class="!capitalize !py-1 !px-2 !text-xs" />
+                                        </template>
+                                    </Select>
+                                </div>
+
+                                <!-- Payment Status -->
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-xs font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('order.filters.payment_status') }}</label>
+                                    <Select
+                                        v-model="paymentFilter"
+                                        :options="[
+                                            { label: t('order.payment_statuses.paid'), value: 'paid' },
+                                            { label: t('order.payment_statuses.not_paid'), value: 'not_paid' }
+                                        ]"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        :placeholder="t('order.placeholders.all_payments')"
+                                        showClear
+                                        class="w-48"
+                                        size="small"
+                                    >
+                                        <template #value="slotProps">
+                                            <Tag v-if="slotProps.value" :value="t(`order.payment_statuses.${slotProps.value}`)" :severity="paymentSeverity(slotProps.value)" :icon="paymentIcon(slotProps.value)" class="!capitalize !py-1 !px-2 !text-xs" />
+                                            <span v-else>{{ slotProps.placeholder }}</span>
+                                        </template>
+                                        <template #option="slotProps">
+                                            <Tag :value="slotProps.option.label" :severity="paymentSeverity(slotProps.option.value)" :icon="paymentIcon(slotProps.option.value)" class="!capitalize !py-1 !px-2 !text-xs" />
+                                        </template>
+                                    </Select>
+                                </div>
+
+                                <!-- Date Range -->
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-xs font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('order.filters.date_range') }}</label>
+                                    <DatePicker v-model="dateRange" selectionMode="range" :manualInput="false" showIcon showButtonBar class="w-64" size="small" :numberOfMonths="2" />
+                                </div>
+
+                                <!-- Exchange Only -->
+                                <div class="flex flex-col gap-1 items-center">
+                                    <label class="text-xs font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider">{{ t('order.filters.exchange_only') }}</label>
+                                    <ToggleSwitch v-model="exchangeOnly" />
+                                </div>
+
                                 <Button v-tooltip.top="t('common.tooltips.clear_all_filters')" severity="secondary" type="button" icon="pi pi-filter-slash" :label="t('common.labels.clear_all_filters')" outlined @click="clearFilter()" />
                             </div>
                         </template>
                         <template #center>
-                            <FloatLabel class="w-full" variant="on">
+                            <FloatLabel variant="on">
                                 <MultiSelect id="selected_columns" :modelValue="selectedColumns" display="chip" :maxSelectedLabels="0" :options="defaultColumns" optionLabel="header" @update:modelValue="columnChanged" />
                                 <label for="selected_columns">{{ t('common.placeholders.displayed_columns') }}</label>
                             </FloatLabel>
@@ -786,7 +905,7 @@ onUnmounted(() => {
                                     {
                                         label: data.status === 'exchanged' ? t('order.labels.see_exchange') : t('entity.exchange'),
                                         icon: 'pi pi-arrows-h',
-                                        command: () => data.status === 'exchanged' ? viewExchange(data) : createExchange(data),
+                                        command: () => (data.status === 'exchanged' ? viewExchange(data) : createExchange(data)),
                                         disabled: data.status !== 'returned' && data.status !== 'exchanged',
                                         tooltip: data.status === 'exchanged' ? undefined : t('exchange.form.only_returned_tooltip')
                                     },

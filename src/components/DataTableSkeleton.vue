@@ -28,11 +28,33 @@ defineProps({
     <div class="border border-surface-200 dark:border-surface-700 rounded-3xl overflow-hidden">
         <!-- Skeleton Toolbar -->
         <div class="flex items-center justify-between px-4 py-6 bg-surface-50 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700">
-            <div class="flex gap-2">
-                <Skeleton width="9rem" height="2.25rem" borderRadius="8px" />
+            <div class="flex flex-wrap items-end gap-4">
+                <!-- Order Status -->
+                <div class="flex flex-col gap-1">
+                    <Skeleton width="5rem" height="0.6rem" />
+                    <Skeleton width="10rem" height="2.25rem" borderRadius="8px" />
+                </div>
+                <!-- Payment Status -->
+                <div class="flex flex-col gap-1">
+                    <Skeleton width="6rem" height="0.6rem" />
+                    <Skeleton width="10rem" height="2.25rem" borderRadius="8px" />
+                </div>
+                <!-- Date Range -->
+                <div class="flex flex-col gap-1">
+                    <Skeleton width="4.5rem" height="0.6rem" />
+                    <Skeleton width="14rem" height="2.25rem" borderRadius="8px" />
+                </div>
+                <!-- Exchange Only -->
+                <div class="flex flex-col gap-1 items-center">
+                    <Skeleton width="5.5rem" height="0.6rem" />
+                    <Skeleton width="2.5rem" height="1.5rem" borderRadius="16px" />
+                </div>
+                <!-- Clear Filters -->
                 <Skeleton width="9rem" height="2.25rem" borderRadius="8px" />
             </div>
-            <Skeleton width="14rem" height="2.25rem" borderRadius="8px" />
+            <!-- Displayed Columns -->
+            <Skeleton width="12rem" height="2.25rem" borderRadius="8px" />
+            <!-- Search -->
             <Skeleton width="14rem" height="2.25rem" borderRadius="8px" />
         </div>
 

@@ -2,15 +2,19 @@
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useLoading } from '@/stores/useLoadingStore';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useShowToast } from '@/utilities/toast';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
 const layoutStore = useLayoutStore();
-const loading = useLoading();
 const authStore = useAuthStore();
+const loading = useLoading();
+const notificationStore = useNotificationStore();
 const showToast = useShowToast();
 const { t } = useI18n();
+const router = useRouter();
 
 // Locale options & flags
 const supportedLocales = ref(import.meta.env.VITE_SUPPORTED_LOCALES ? import.meta.env.VITE_SUPPORTED_LOCALES.split(',') : ['fr', 'en', 'ar']);
@@ -19,67 +23,78 @@ const setLocale = (locale) => {
     layoutStore.setLocale(locale);
 };
 
-const notifications = ref([]);
 const popNotifications = ref();
 
 const toggle = (event) => {
     popNotifications.value.toggle(event);
 };
 
-const getNotifications = () => {
-    loading.startDataLoading();
-    setTimeout(() => {
-        notifications.value = [
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 1, message: 'New message' },
-            { id: 2, message: 'Friend request' },
-            { id: 3, message: 'Payment received' },
-            { id: 4, message: 'Payment received' },
-            { id: 5, message: 'Payment received' },
-            { id: 6, message: 'Payment received' }
-        ];
-        loading.stopDataLoading();
-    }, 5000); // 5000ms delay for skeleton testing
+const onPopoverShow = () => {
+    notificationStore.fetchNotifications();
 };
+
+const handleMarkAllAsRead = async () => {
+    loading.startPageLoading();
+    try {
+        await notificationStore.markAllAsRead();
+    } catch (error) {
+        showToast('error', 'error', 'notification', 'tc', error);
+    } finally {
+        loading.stopPageLoading();
+    }
+};
+
+const handleMarkAsRead = async (id) => {
+    try {
+        await notificationStore.markAsRead(id);
+    } catch {
+        // silent
+    }
+};
+
+const handleNotificationClick = async (notification) => {
+    handleMarkAsRead(notification.id);
+    popNotifications.value.hide();
+    if (notification.data?.product_id) {
+        router.push(`/admin/products/${notification.data.product_id}`);
+    }
+};
+
+/**
+ * Map notification type to icon + color class.
+ */
+const getNotificationStyle = (data) => {
+    const type = data.type;
+    switch (type) {
+        case 'low_stock':
+            return { icon: 'pi pi-exclamation-triangle', colorClass: 'notification-icon--orange' };
+        default:
+            return { icon: 'pi pi-bell', colorClass: 'notification-icon--blue' };
+    }
+};
+
+/**
+ * Relative time formatting (e.g. "2 mins ago").
+ */
+const timeAgo = (dateStr) => {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diff < 60) return t('notifications.time.just_now');
+    if (diff < 3600) return t('notifications.time.mins_ago', { n: Math.floor(diff / 60) });
+    if (diff < 86400) return t('notifications.time.hours_ago', { n: Math.floor(diff / 3600) });
+    return t('notifications.time.days_ago', { n: Math.floor(diff / 86400) });
+};
+
+onMounted(() => {
+    notificationStore.fetchUnreadCount();
+    notificationStore.startListening();
+});
+
+onUnmounted(() => {
+    notificationStore.stopListening();
+});
 const user = computed(() => authStore.user);
 
 const logoutUser = async () => {
@@ -163,29 +178,30 @@ const menuItems = computed(() => [
             <div class="layout-topbar-menu block">
                 <div class="layout-topbar-menu-content">
                     <div>
-                        <OverlayBadge value="2" severity="danger" size="small">
+                        <OverlayBadge v-if="notificationStore.hasUnread" :value="notificationStore.unreadCount" severity="danger" size="small">
                             <Button icon="pi pi-bell" variant="text" rounded aria-label="Notification" @click="toggle" />
                         </OverlayBadge>
+                        <Button v-else icon="pi pi-bell" variant="text" rounded aria-label="Notification" @click="toggle" />
                         <Popover
                             ref="popNotifications"
                             :showCloseIcon="false"
                             :dismissable="true"
                             :position="'bottom'"
-                            :style="{ width: '320px' }"
+                            :style="{ width: '360px' }"
                             :pt="{
                                 content: { style: 'padding:0 !important' }
                             }"
-                            @show="getNotifications()"
+                            @show="onPopoverShow()"
                         >
                             <div class="notification-popover">
                                 <!-- Header -->
                                 <div class="notification-header">
-                                    <span class="notification-title">Notifications</span>
-                                    <button class="mark-read-btn">MARK ALL AS READ</button>
+                                    <span class="notification-title">{{ t('notifications.title') }}</span>
+                                    <button v-if="notificationStore.hasUnread" class="mark-read-btn" :disabled="loading.isFormSending" @click="handleMarkAllAsRead">{{ t('notifications.mark_all_read') }}</button>
                                 </div>
 
                                 <!-- Notification List -->
-                                <div v-if="loading.isDataLoading" class="notification-list">
+                                <div v-if="notificationStore.loading" class="notification-list">
                                     <div v-for="i in 3" :key="i" class="notification-item">
                                         <Skeleton shape="circle" size="2.5rem" />
                                         <div class="notification-content">
@@ -195,45 +211,27 @@ const menuItems = computed(() => [
                                         </div>
                                     </div>
                                 </div>
-                                <div v-else class="notification-list">
-                                    <!-- New Shop Added -->
-                                    <div class="notification-item">
-                                        <div class="notification-icon notification-icon--purple">
-                                            <i class="pi pi-shopping-bag"></i>
-                                        </div>
-                                        <div class="notification-content">
-                                            <div class="notification-item-title">New Shop added</div>
-                                            <div class="notification-item-desc">Fashion Hub has joined the platform.</div>
-                                            <div class="notification-item-time">2 mins ago</div>
-                                        </div>
-                                    </div>
-                                    <!-- Payment Received -->
-                                    <div class="notification-item">
-                                        <div class="notification-icon notification-icon--blue">
-                                            <i class="pi pi-dollar"></i>
-                                        </div>
-                                        <div class="notification-content">
-                                            <div class="notification-item-title">Payment received</div>
-                                            <div class="notification-item-desc">Withdrawal for Nexus Logistics approved.</div>
-                                            <div class="notification-item-time">45 mins ago</div>
-                                        </div>
-                                    </div>
-                                    <!-- Low Credits Warning -->
-                                    <div class="notification-item">
-                                        <div class="notification-icon notification-icon--orange">
-                                            <i class="pi pi-exclamation-triangle"></i>
-                                        </div>
-                                        <div class="notification-content">
-                                            <div class="notification-item-title">Low Credits Warning</div>
-                                            <div class="notification-item-desc">Swift Freight balance is below threshold.</div>
-                                            <div class="notification-item-time">2 hours ago</div>
-                                        </div>
-                                    </div>
+                                <div v-else-if="notificationStore.notifications.length === 0" class="notification-empty">
+                                    <i class="pi pi-inbox" style="font-size: 2rem; color: var(--text-color-secondary); opacity: 0.5"></i>
+                                    <span>{{ t('notifications.empty') }}</span>
                                 </div>
-
-                                <!-- Footer -->
-                                <div class="notification-footer">
-                                    <button class="view-all-btn">View all notifications</button>
+                                <div v-else class="notification-list">
+                                    <div
+                                        v-for="notification in notificationStore.notifications"
+                                        :key="notification.id"
+                                        class="notification-item"
+                                        :class="{ 'notification-item--unread': !notification.read_at }"
+                                        @click="handleNotificationClick(notification)"
+                                    >
+                                        <div class="notification-icon" :class="getNotificationStyle(notification.data).colorClass">
+                                            <i :class="getNotificationStyle(notification.data).icon"></i>
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-item-title">{{ notification.data.message }}</div>
+                                            <div class="notification-item-time">{{ timeAgo(notification.created_at) }}</div>
+                                        </div>
+                                        <div v-if="!notification.read_at" class="notification-unread-dot"></div>
+                                    </div>
                                 </div>
                             </div>
                         </Popover>

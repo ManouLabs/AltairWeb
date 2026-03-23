@@ -205,8 +205,7 @@ const statusOptions = [
     { label: t('order.statuses.shipping'), value: 'shipping', icon: 'pi pi-truck', color: '#8b5cf6' },
     { label: t('order.statuses.delivered'), value: 'delivered', icon: 'pi pi-check-circle', color: '#22c55e' },
     { label: t('order.statuses.cancelled'), value: 'cancelled', icon: 'pi pi-times-circle', color: '#ef4444' },
-    { label: t('order.statuses.returned'), value: 'returned', icon: 'pi pi-replay', color: '#f97316' },
-    { label: t('order.statuses.exchanged'), value: 'exchanged', icon: 'pi pi-arrows-h', color: '#eab308' }
+    { label: t('order.statuses.returned'), value: 'returned', icon: 'pi pi-replay', color: '#f97316' }
 ];
 
 // Computed totals
@@ -522,7 +521,7 @@ onMounted(async () => {
                                     </div>
                                 </template>
                             </AutoComplete>
-                            <Message v-if="authStore.errors?.['customer_id']?.[0]" severity="error" size="small">{{ authStore.errors?.['customer_id']?.[0] }}</Message>
+                            <Message v-if="authStore.errors?.['customer_id']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['customer_id']?.[0]) }}</Message>
                             <Button v-if="!selectedCustomer" :label="t('order.labels.or_create_new')" icon="pi pi-user-plus" severity="primary" class="" @click="openCustomerDialog" />
                         </div>
 
@@ -579,7 +578,7 @@ onMounted(async () => {
                                     </Select>
                                     <label for="shop_id">{{ t('order.columns.shop') }}</label>
                                 </FloatLabel>
-                                <Message v-if="authStore.errors?.['shop_id']?.[0]" severity="error" size="small">{{ authStore.errors?.['shop_id']?.[0] }}</Message>
+                                <Message v-if="authStore.errors?.['shop_id']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['shop_id']?.[0]) }}</Message>
                             </div>
 
                             <!-- Shipper -->
@@ -618,7 +617,7 @@ onMounted(async () => {
                                     </Select>
                                     <label for="shipper_id">{{ t('order.columns.shipper') }}</label>
                                 </FloatLabel>
-                                <Message v-if="authStore.errors?.['shipper_id']?.[0]" severity="error" size="small">{{ authStore.errors?.['shipper_id']?.[0] }}</Message>
+                                <Message v-if="authStore.errors?.['shipper_id']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['shipper_id']?.[0]) }}</Message>
                             </div>
 
                             <!-- Shipping Type -->
@@ -682,7 +681,7 @@ onMounted(async () => {
                                     </Select>
                                     <label for="source">{{ t('order.columns.source') }}</label>
                                 </FloatLabel>
-                                <Message v-if="authStore.errors?.['source']?.[0]" severity="error" size="small">{{ authStore.errors?.['source']?.[0] }}</Message>
+                                <Message v-if="authStore.errors?.['source']?.[0]" severity="error" size="small">{{ t(authStore.errors?.['source']?.[0]) }}</Message>
                             </div>
                         </div>
                     </div>

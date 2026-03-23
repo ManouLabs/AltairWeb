@@ -1389,7 +1389,16 @@
             "scan_or_search": "Scan barcode or type SKU / Product Name...",
             "scan_to_add": "Scan item to add...",
             "percentage": "Discount %",
-            "amount": "Amount"
+            "amount": "Amount",
+            "all_statuses": "All Statuses",
+            "all_payments": "All Payments"
+        },
+        "filters": {
+            "order_status": "Order Status",
+            "payment_status": "Payment Status",
+            "date_range": "Date Range",
+            "exchange_only": "Exchange Only",
+            "to": "TO"
         },
         "quick_view": {
             "order_journey": "Order Journey",
@@ -1599,6 +1608,17 @@
             "exchange": "Exchange in progress",
             "return_for_credit": "Return for Credit",
             "returned": "Returned"
+        }
+    },
+    "notifications": {
+        "title": "Notifications",
+        "mark_all_read": "MARK ALL AS READ",
+        "empty": "No notifications yet",
+        "time": {
+            "just_now": "Just now",
+            "mins_ago": "{n} min ago | {n} mins ago",
+            "hours_ago": "{n} hour ago | {n} hours ago",
+            "days_ago": "{n} day ago | {n} days ago"
         }
     }
 }
