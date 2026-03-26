@@ -179,6 +179,7 @@
         },
         "columns": {
             "id": "ID",
+            "number": "#",
             "created_at": "Created at",
             "updated_at": "Updated at",
             "actions": "Actions"

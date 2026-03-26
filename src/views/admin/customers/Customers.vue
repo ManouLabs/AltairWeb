@@ -421,6 +421,14 @@ async function handleBulkAction(payload: { key: string; value?: string }): Promi
                     </Toolbar>
                 </template>
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
+                <Column columnKey="number" field="number" sortable class="min-w-28">
+                    <template #header>
+                        <span class="font-semibold">{{ t('common.columns.number') }}</span>
+                    </template>
+                    <template #body="{ data }">
+                        <DataCell><span class="font-mono text-primary font-semibold">{{ data.number }}</span></DataCell>
+                    </template>
+                </Column>
 
                 <!-- Name Column -->
                 <Column

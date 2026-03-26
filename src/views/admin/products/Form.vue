@@ -1036,7 +1036,21 @@ onMounted(async () => {
 
                                     <!-- Value-based types: color, dropdown, multiselect, radio -->
                                     <template v-if="hasValues(attr.type)">
-                                        <div class="flex flex-wrap gap-2">
+                                        <!-- Dropdown type: PrimeVue Select with filter -->
+                                        <template v-if="attr.type === 'dropdown'">
+                                            <Select
+                                                :modelValue="selectedValueIds[attr.id]?.[0] ?? null"
+                                                @update:modelValue="(val: number | null) => { selectedValueIds[attr.id] = val ? [val] : []; if (variants.length > 0) variantsOutOfSync = true; }"
+                                                :options="attr.values || []"
+                                                optionLabel="value"
+                                                optionValue="id"
+                                                :placeholder="t('common.placeholders.select')"
+                                                filter
+                                                showClear
+                                                class="w-full"
+                                            />
+                                        </template>
+                                        <div v-else class="flex flex-wrap gap-2">
                                             <!-- Color swatch design -->
                                             <template v-if="attr.type === 'color'">
                                                 <div
@@ -1062,7 +1076,7 @@ onMounted(async () => {
                                                     </span>
                                                 </div>
                                             </template>
-                                            <!-- Default chip design (dropdown, multiselect, radio) -->
+                                            <!-- Default chip design (multiselect, radio) -->
                                             <template v-else>
                                                 <div
                                                     v-for="val in attr.values || []"

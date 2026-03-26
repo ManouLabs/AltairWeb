@@ -359,11 +359,14 @@ onUnmounted(() => {
                     </Toolbar>
                 </template>
                 <Column columnKey="select" selectionMode="multiple" style="width: 3rem" :exportable="false" :reorderableColumn="false" />
-                <!-- <Column columnKey="id" field="id" header="ID" sortable class="min-w-32">
-                    <template #body="{ data }">
-                        <DataCell>{{ data.id }}</DataCell>
+                <Column columnKey="number" field="number" sortable class="min-w-28">
+                    <template #header>
+                        <span class="font-semibold">{{ t('common.columns.number') }}</span>
                     </template>
-                </Column> -->
+                    <template #body="{ data }">
+                        <DataCell><span class="font-mono text-primary font-semibold">{{ data.number }}</span></DataCell>
+                    </template>
+                </Column>
                 <Column
                     :showClearButton="false"
                     :showApplyButton="false"
